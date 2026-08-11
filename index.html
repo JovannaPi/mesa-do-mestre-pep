@@ -106,7 +106,13 @@
       <button id="btn-rename-map" class="btn btn-ghost">Renomear</button>
       <button id="btn-delete-map" class="btn btn-danger">Excluir mapa</button>
     </div>
-    <p class="field-hint">Clique no mapa para adicionar um marcador. Arraste um marcador para movê-lo. Clique num marcador para editar ou remover.</p>
+    <div class="panel-toolbar">
+      <button id="btn-map-add-npc" class="btn btn-secondary">+ NPC do banco</button>
+      <button id="btn-map-add-monster" class="btn btn-secondary">+ Monstro do banco</button>
+      <button id="btn-map-add-pc" class="btn btn-secondary">+ Princesa</button>
+      <button id="btn-map-add-generic" class="btn btn-secondary">+ Outra coisa (marco, item, ponto de interesse...)</button>
+    </div>
+    <p class="field-hint">Escolha um botão acima para adicionar um marcador vindo do banco, ou clique direto no mapa para um marcador livre. Arraste um marcador para movê-lo. Clique num marcador para editar ou remover.</p>
     <div id="map-canvas" class="map-canvas">
       <div class="empty-state">Nenhum mapa ainda. Clique em "+ Novo mapa" para enviar uma imagem.</div>
     </div>
@@ -379,6 +385,18 @@
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- MODAL MAP PICKER -->
+<div id="modal-map-picker" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="map-picker-title">Adicionar marcador</h2>
+    <div id="map-picker-list" class="from-npc-list"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="btn-cancel-map-picker">Fechar</button>
+    </div>
   </div>
 </div>
 

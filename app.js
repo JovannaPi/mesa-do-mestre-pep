@@ -1832,6 +1832,59 @@ formToken.addEventListener("submit", (e) => {
   renderMap();
 });
 
+function addTokenToMap(nome, cor, x, y) {
+  const map = activeMap();
+  if (!map) {
+    alert("Crie ou selecione um mapa primeiro.");
+    return null;
+  }
+  const token = { id: uid(), nome, cor: cor || TOKEN_COLORS[map.tokens.length % TOKEN_COLORS.length], x, y };
+  map.tokens.push(token);
+  saveState();
+  renderMap();
+  return token;
+}
+
+const mapPickerModal = document.getElementById("modal-map-picker");
+document.getElementById("btn-cancel-map-picker").addEventListener("click", () => mapPickerModal.classList.add("hidden"));
+
+function openMapPicker(title, entries) {
+  document.getElementById("map-picker-title").textContent = title;
+  const list = document.getElementById("map-picker-list");
+  if (entries.length === 0) {
+    list.innerHTML = `<div class="empty-state">Nada cadastrado ainda.</div>`;
+  } else {
+    list.innerHTML = entries
+      .map((e) => `<div class="from-npc-item"><span>${escapeHtml(e.nome)}</span><button class="btn btn-secondary" data-pick="${e.id}">+ Adicionar</button></div>`)
+      .join("");
+    list.querySelectorAll("[data-pick]").forEach((btn) => {
+      const entry = entries.find((e) => e.id === btn.dataset.pick);
+      btn.addEventListener("click", () => {
+        const jitter = () => 40 + Math.random() * 20;
+        addTokenToMap(entry.nome, entry.cor, jitter(), jitter());
+      });
+    });
+  }
+  mapPickerModal.classList.remove("hidden");
+}
+
+document.getElementById("btn-map-add-npc").addEventListener("click", () => {
+  const entries = state.npcs.filter((n) => n.tipo !== "Monstro").map((n) => ({ id: n.id, nome: n.nome, cor: TOKEN_COLORS[1] }));
+  openMapPicker("Adicionar NPC do banco", entries);
+});
+document.getElementById("btn-map-add-monster").addEventListener("click", () => {
+  const entries = state.npcs.filter((n) => n.tipo === "Monstro").map((n) => ({ id: n.id, nome: n.nome, cor: TOKEN_COLORS[2] }));
+  openMapPicker("Adicionar Monstro do banco", entries);
+});
+document.getElementById("btn-map-add-pc").addEventListener("click", () => {
+  const entries = state.pcs.map((p) => ({ id: p.id, nome: p.nome, cor: TOKEN_COLORS[3] }));
+  openMapPicker("Adicionar Princesa", entries);
+});
+document.getElementById("btn-map-add-generic").addEventListener("click", () => {
+  const token = addTokenToMap("Marcador", TOKEN_COLORS[0], 50, 50);
+  if (token) openTokenModal(token, true);
+});
+
 function onMapCanvasClick(e) {
   if (e.target !== mapCanvas) return;
   const map = activeMap();
