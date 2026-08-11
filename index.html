@@ -27,7 +27,9 @@
   </div>
   <nav class="tabs">
     <button class="tab-btn active" data-tab="combate">⚔️ Combate</button>
+    <button class="tab-btn" data-tab="pcs">👑 Personagens</button>
     <button class="tab-btn" data-tab="npcs">🧙 NPCs &amp; Monstros</button>
+    <button class="tab-btn" data-tab="campanha">📖 Campanha</button>
     <button class="tab-btn" data-tab="sessoes">📜 Sessões</button>
   </nav>
 </header>
@@ -39,12 +41,21 @@
     <div class="panel-toolbar">
       <button id="btn-add-combatant" class="btn btn-primary">+ Adicionar combatente</button>
       <button id="btn-add-from-npc" class="btn btn-secondary">+ Do banco de NPCs</button>
-      <button id="btn-roll-init" class="btn btn-secondary">🎲 Rolar iniciativa (d20, roll-under)</button>
+      <button id="btn-add-from-pc" class="btn btn-secondary">+ De uma Princesa</button>
+      <button id="btn-roll-init" class="btn btn-secondary">🎲 Rolar iniciativa (d20)</button>
       <button id="btn-next-turn" class="btn btn-secondary">➡️ Próximo turno</button>
       <button id="btn-clear-combat" class="btn btn-danger">🧹 Limpar combate</button>
     </div>
     <div class="round-indicator">Rodada <span id="round-number">1</span></div>
     <div id="combat-list" class="combat-list"></div>
+  </section>
+
+  <!-- PCS (PERSONAGENS) -->
+  <section id="tab-pcs" class="tab-panel">
+    <div class="panel-toolbar">
+      <button id="btn-add-pc" class="btn btn-primary">+ Nova Princesa</button>
+    </div>
+    <div id="pc-list" class="card-grid"></div>
   </section>
 
   <!-- NPCS -->
@@ -54,6 +65,22 @@
       <input id="npc-search" class="input" type="text" placeholder="Buscar por nome ou tag...">
     </div>
     <div id="npc-list" class="card-grid"></div>
+  </section>
+
+  <!-- CAMPANHA -->
+  <section id="tab-campanha" class="tab-panel">
+    <div class="campaign-block">
+      <h2>🎯 Objetivos principais</h2>
+      <div id="objective-list" class="objective-list"></div>
+      <button id="btn-add-objective" class="btn btn-ghost">+ Novo objetivo</button>
+    </div>
+    <div class="campaign-block">
+      <div class="panel-toolbar">
+        <h2 style="margin:0">📚 Notas &amp; Lore</h2>
+        <button id="btn-add-note" class="btn btn-primary">+ Nova nota</button>
+      </div>
+      <div id="note-list" class="session-list"></div>
+    </div>
   </section>
 
   <!-- SESSOES -->
@@ -94,21 +121,92 @@
         </label>
       </div>
       <div class="attr-grid">
-        <label>PV máx.
-          <input type="number" id="npc-pv" min="0" value="10">
+        <label>Coração (PC)
+          <input type="number" id="npc-coracao" min="0" value="10">
         </label>
-        <label>Defesa
-          <input type="number" id="npc-defesa" min="0" value="10">
+        <label>Salvamento
+          <input type="number" id="npc-salvamento" min="0" value="10">
+        </label>
+        <label>Armadura
+          <input type="number" id="npc-armadura" min="0" value="0">
         </label>
       </div>
       <label>Tags (separadas por vírgula)
-        <input type="text" id="npc-tags" placeholder="ex: floresta, bruxa, chefe">
+        <input type="text" id="npc-tags" placeholder="ex: cervovale, chefe, bosque emaranhado">
       </label>
-      <label>Descrição / dons / anotações
-        <textarea id="npc-notas" rows="4" placeholder="Aparência, personalidade, dons da Fada Madrinha, táticas de combate..."></textarea>
+      <label>Descrição / ataques / dons / anotações
+        <textarea id="npc-notas" rows="4" placeholder="Aparência, personalidade, ataques, suscetibilidades, táticas..."></textarea>
       </label>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-npc">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL PC -->
+<div id="modal-pc" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="pc-modal-title">Nova Princesa</h2>
+    <form id="form-pc">
+      <input type="hidden" id="pc-id">
+      <label>Nome da Princesa
+        <input type="text" id="pc-nome" required>
+      </label>
+      <label>Jogadora
+        <input type="text" id="pc-jogadora">
+      </label>
+      <label>Dom (nome)
+        <input type="text" id="pc-dom-nome" placeholder="ex: Coração Selvagem">
+      </label>
+      <label>Descrição do Dom
+        <textarea id="pc-dom-descricao" rows="2"></textarea>
+      </label>
+      <div class="attr-grid">
+        <label>Determinação
+          <input type="number" id="pc-determinacao" min="1" max="20" value="10">
+        </label>
+        <label>Graça
+          <input type="number" id="pc-graca" min="1" max="20" value="10">
+        </label>
+        <label>Astúcia
+          <input type="number" id="pc-astucia" min="1" max="20" value="10">
+        </label>
+      </div>
+      <div class="attr-grid">
+        <label>Coração máx.
+          <input type="number" id="pc-coracao-max" min="0" value="10">
+        </label>
+        <label>Armadura
+          <input type="number" id="pc-armadura" min="0" value="0">
+        </label>
+        <label>Dinheiro (pp)
+          <input type="number" id="pc-dinheiro" min="0" value="0">
+        </label>
+      </div>
+      <div class="attr-grid">
+        <label>Dados de Coração (total)
+          <input type="number" id="pc-dado-coracao-total" min="0" max="8" value="4">
+        </label>
+        <label>Dados de Dom (total)
+          <input type="number" id="pc-dado-dom-total" min="0" max="8" value="4">
+        </label>
+      </div>
+      <label>Arma
+        <input type="text" id="pc-arma" placeholder="ex: Espada (d8)">
+      </label>
+      <label>Talentos (separados por vírgula)
+        <input type="text" id="pc-talentos" placeholder="ex: Folclore, Orientação">
+      </label>
+      <label>Minhas Coisas / inventário (separados por vírgula)
+        <input type="text" id="pc-inventario" placeholder="ex: corda, ração, kit de costura">
+      </label>
+      <label>Trauma
+        <input type="text" id="pc-trauma">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-pc">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>
@@ -127,13 +225,13 @@
         <label>Iniciativa
           <input type="number" id="c-iniciativa" value="10">
         </label>
-        <label>PV máx.
-          <input type="number" id="c-pv-max" min="0" value="10">
+        <label>Coração máx.
+          <input type="number" id="c-coracao-max" min="0" value="10">
         </label>
       </div>
       <label>
         <input type="checkbox" id="c-is-pc">
-        É um personagem de jogador (PC)
+        É uma Princesa (PC)
       </label>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-combatant">Cancelar</button>
@@ -150,6 +248,17 @@
     <div id="from-npc-list" class="from-npc-list"></div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" id="btn-cancel-from-npc">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FROM PC BANK -->
+<div id="modal-from-pc" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Adicionar Princesa ao combate</h2>
+    <div id="from-pc-list" class="from-npc-list"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="btn-cancel-from-pc">Fechar</button>
     </div>
   </div>
 </div>
@@ -174,6 +283,26 @@
       </label>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-session">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL NOTE -->
+<div id="modal-note" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="note-modal-title">Nova nota</h2>
+    <form id="form-note">
+      <input type="hidden" id="note-id">
+      <label>Título
+        <input type="text" id="note-titulo" required placeholder="ex: Cervovale — visão geral">
+      </label>
+      <label>Texto
+        <textarea id="note-texto" rows="8"></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-note">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>

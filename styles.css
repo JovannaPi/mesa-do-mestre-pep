@@ -277,6 +277,56 @@ body {
 
 .empty-state { color: var(--text-dim); text-align: center; padding: 40px 20px; }
 
+/* Afflictions */
+.affliction-toggles { display: flex; gap: 4px; }
+.affliction-btn {
+  border: 1px solid var(--border); background: var(--bg); color: var(--text-dim);
+  font-size: 0.7rem; padding: 3px 8px; border-radius: 999px; cursor: pointer;
+}
+.affliction-btn.active.cansada { background: var(--warning); border-color: var(--warning); color: #1a1523; }
+.affliction-btn.active.ferida { background: var(--danger); border-color: var(--danger); color: #1a1523; }
+.affliction-btn.active.confusa { background: var(--accent); border-color: var(--accent); color: #1a1523; }
+
+/* PC cards */
+.pc-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--success);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pc-card h3 { margin: 0; }
+.pc-player { color: var(--text-dim); font-size: 0.8rem; margin: -4px 0 0; }
+.pc-dom { font-size: 0.85rem; color: var(--accent); }
+.pc-dom-desc { font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+.pc-stats { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.82rem; color: var(--text-dim); }
+.pc-stats b { color: var(--text); }
+.dice-track { display: flex; gap: 3px; align-items: center; font-size: 0.78rem; color: var(--text-dim); }
+.dice-pip {
+  width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg);
+  display: inline-block; cursor: pointer;
+}
+.dice-pip.filled { background: var(--accent-strong); border-color: var(--accent-strong); }
+.pc-misc { font-size: 0.8rem; color: var(--text-dim); }
+.pc-misc b { color: var(--text); }
+.pc-card-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 6px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+
+/* Campaign / objectives */
+.campaign-block { margin-bottom: 28px; }
+.campaign-block h2 { font-size: 1.1rem; margin-bottom: 10px; }
+.objective-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.objective-row {
+  display: flex; align-items: center; gap: 10px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px;
+}
+.objective-row input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; }
+.objective-row span { flex: 1; }
+.objective-row.done span { text-decoration: line-through; color: var(--text-dim); }
+.objective-row input[type="text"] { border: none; background: transparent; padding: 0; }
+
 @media (max-width: 560px) {
   .attr-grid { grid-template-columns: 1fr 1fr; }
   .header-inner { flex-direction: column; align-items: flex-start; }

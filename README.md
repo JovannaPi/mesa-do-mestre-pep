@@ -6,8 +6,10 @@ Site estático, sem backend — todos os dados ficam salvos no `localStorage` do
 
 ## Funcionalidades
 
-- **Combate**: rastreador de iniciativa com rolagem de d20, controle de PV, indicador de turno/rodada.
-- **NPCs & Monstros**: banco de fichas rápidas (atributos, PV, defesa, tags, anotações) que podem ser adicionadas direto ao combate.
+- **Combate**: rastreador de iniciativa com rolagem de d20, controle de Coração (PC), Aflições (Cansada/Ferida/Confusa), indicador de turno/rodada.
+- **Personagens**: fichas completas das Princesas — Dom da Fada Madrinha, atributos, Coração, Armadura, Dados de Coração/Dom, Talentos, arma, inventário, dinheiro e Trauma.
+- **NPCs & Monstros**: banco de fichas rápidas (atributos, Coração, Salvamento, Armadura, tags, anotações) que podem ser adicionadas direto ao combate. Já vem com os principais NPCs e monstros da campanha de Cervovale pré-cadastrados.
+- **Campanha**: checklist dos 3 objetivos principais e notas de referência rápida (lore, locais, ganchos).
 - **Sessões**: diário de campanha com resumo e ganchos para a próxima sessão.
 - **Backup**: exporte/importe todos os dados em um arquivo `.json`.
 
@@ -20,5 +22,5 @@ Abra o `index.html` em qualquer navegador — não precisa de instalação nem s
 ```
 index.html   estrutura da página e modais
 styles.css   tema visual
-app.js       estado da aplicação (localStorage) e lógica das três abas
+app.js       estado da aplicação (localStorage), dados pré-cadastrados de Cervovale e lógica das abas
 ```
