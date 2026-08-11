@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesa do Mestre — Perigos & Princesas</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">🗡️</span>
+      <div>
+        <h1 id="campaign-name">Minha Campanha</h1>
+        <p class="subtitle">Perigos &amp; Princesas — mesa do mestre</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="btn-rename-campaign" class="btn btn-ghost" title="Renomear campanha">✏️</button>
+      <button id="btn-export" class="btn btn-ghost" title="Exportar backup (.json)">⬇️ Backup</button>
+      <label class="btn btn-ghost" title="Importar backup (.json)">
+        ⬆️ Importar
+        <input type="file" id="import-file" accept="application/json" hidden>
+      </label>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="combate">⚔️ Combate</button>
+    <button class="tab-btn" data-tab="npcs">🧙 NPCs &amp; Monstros</button>
+    <button class="tab-btn" data-tab="sessoes">📜 Sessões</button>
+  </nav>
+</header>
+
+<main class="app-main">
+
+  <!-- COMBATE -->
+  <section id="tab-combate" class="tab-panel active">
+    <div class="panel-toolbar">
+      <button id="btn-add-combatant" class="btn btn-primary">+ Adicionar combatente</button>
+      <button id="btn-add-from-npc" class="btn btn-secondary">+ Do banco de NPCs</button>
+      <button id="btn-roll-init" class="btn btn-secondary">🎲 Rolar iniciativa (d20, roll-under)</button>
+      <button id="btn-next-turn" class="btn btn-secondary">➡️ Próximo turno</button>
+      <button id="btn-clear-combat" class="btn btn-danger">🧹 Limpar combate</button>
+    </div>
+    <div class="round-indicator">Rodada <span id="round-number">1</span></div>
+    <div id="combat-list" class="combat-list"></div>
+  </section>
+
+  <!-- NPCS -->
+  <section id="tab-npcs" class="tab-panel">
+    <div class="panel-toolbar">
+      <button id="btn-add-npc" class="btn btn-primary">+ Novo NPC/Monstro</button>
+      <input id="npc-search" class="input" type="text" placeholder="Buscar por nome ou tag...">
+    </div>
+    <div id="npc-list" class="card-grid"></div>
+  </section>
+
+  <!-- SESSOES -->
+  <section id="tab-sessoes" class="tab-panel">
+    <div class="panel-toolbar">
+      <button id="btn-add-session" class="btn btn-primary">+ Nova sessão</button>
+    </div>
+    <div id="session-list" class="session-list"></div>
+  </section>
+
+</main>
+
+<!-- MODAL NPC -->
+<div id="modal-npc" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="npc-modal-title">Novo NPC/Monstro</h2>
+    <form id="form-npc">
+      <input type="hidden" id="npc-id">
+      <label>Nome
+        <input type="text" id="npc-nome" required>
+      </label>
+      <label>Tipo
+        <select id="npc-tipo">
+          <option value="NPC">NPC</option>
+          <option value="Monstro">Monstro</option>
+          <option value="Aliado">Aliado</option>
+        </select>
+      </label>
+      <div class="attr-grid">
+        <label>Determinação
+          <input type="number" id="npc-determinacao" min="1" max="20" value="10">
+        </label>
+        <label>Graça
+          <input type="number" id="npc-graca" min="1" max="20" value="10">
+        </label>
+        <label>Astúcia
+          <input type="number" id="npc-astucia" min="1" max="20" value="10">
+        </label>
+      </div>
+      <div class="attr-grid">
+        <label>PV máx.
+          <input type="number" id="npc-pv" min="0" value="10">
+        </label>
+        <label>Defesa
+          <input type="number" id="npc-defesa" min="0" value="10">
+        </label>
+      </div>
+      <label>Tags (separadas por vírgula)
+        <input type="text" id="npc-tags" placeholder="ex: floresta, bruxa, chefe">
+      </label>
+      <label>Descrição / dons / anotações
+        <textarea id="npc-notas" rows="4" placeholder="Aparência, personalidade, dons da Fada Madrinha, táticas de combate..."></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-npc">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL COMBATANT -->
+<div id="modal-combatant" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Adicionar combatente</h2>
+    <form id="form-combatant">
+      <label>Nome
+        <input type="text" id="c-nome" required>
+      </label>
+      <div class="attr-grid">
+        <label>Iniciativa
+          <input type="number" id="c-iniciativa" value="10">
+        </label>
+        <label>PV máx.
+          <input type="number" id="c-pv-max" min="0" value="10">
+        </label>
+      </div>
+      <label>
+        <input type="checkbox" id="c-is-pc">
+        É um personagem de jogador (PC)
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-combatant">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Adicionar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL FROM NPC BANK -->
+<div id="modal-from-npc" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Adicionar do banco de NPCs</h2>
+    <div id="from-npc-list" class="from-npc-list"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="btn-cancel-from-npc">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SESSION -->
+<div id="modal-session" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="session-modal-title">Nova sessão</h2>
+    <form id="form-session">
+      <input type="hidden" id="session-id">
+      <label>Título
+        <input type="text" id="session-titulo" required placeholder="ex: Sessão 3 — A Torre Congelada">
+      </label>
+      <label>Data
+        <input type="date" id="session-data">
+      </label>
+      <label>Resumo do que aconteceu
+        <textarea id="session-resumo" rows="4"></textarea>
+      </label>
+      <label>Ganchos / próximos passos
+        <textarea id="session-ganchos" rows="3"></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-session">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
