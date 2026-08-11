@@ -4,11 +4,11 @@
   --bg-elevated: #fffaf8;
   --bg-card: #ffffff;
   --parchment: #fff8ec;
-  --parchment-text: #5b3a56;
+  --parchment-text: #4a2e46;
   --border: #f2cbe4;
   --border-soft: #e9a9d3;
-  --text: #5a3a56;
-  --text-dim: #a480a0;
+  --text: #3c2338;
+  --text-dim: #8b6287;
   --accent: #c2529e;
   --accent-strong: #d888c2;
   --accent-deep: #9c3f83;
@@ -102,7 +102,10 @@ h1, h2, h3 {
   padding: 0 16px;
   overflow-x: auto;
   border-top: 1px solid rgba(194, 82, 158, 0.1);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.tabs::-webkit-scrollbar { display: none; }
 
 .tab-btn {
   background: none;
@@ -378,7 +381,31 @@ h1, h2, h3 {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 16px 44px rgba(156, 63, 131, 0.28);
+  position: relative;
 }
+
+.btn-close-modal {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 1.6rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+.btn-close-modal:hover { color: var(--danger); }
+
+/* Locais */
+.location-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.location-btn {
+  border: 2px solid var(--border-soft); background: var(--bg-card); color: var(--accent-deep);
+  padding: 10px 18px; border-radius: 999px; cursor: pointer; font-weight: 700; font-family: "Quicksand", sans-serif;
+}
+.location-btn.active { background: linear-gradient(135deg, var(--accent-strong), var(--accent)); color: #fff; border-color: var(--accent); }
+.location-section-title { font-size: 1.15rem; color: var(--accent); font-weight: 700; margin: 22px 0 10px; }
 .modal h2 { margin-top: 0; color: var(--accent); font-weight: 600; }
 
 .modal form { display: flex; flex-direction: column; gap: 13px; }
@@ -398,7 +425,11 @@ h1, h2, h3 {
   background: var(--bg-deep); border: 1px solid var(--border); border-radius: 14px; padding: 9px 14px;
 }
 
-.empty-state { color: var(--text-dim); text-align: center; padding: 40px 20px; font-weight: 600; }
+.empty-state {
+  color: var(--text-dim); text-align: center; padding: 40px 20px; font-weight: 600;
+  border: 2px dashed var(--border-soft); border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.55);
+}
 
 /* Afflictions */
 .affliction-toggles { display: flex; gap: 5px; flex-wrap: wrap; }

@@ -33,6 +33,7 @@
     <button class="tab-btn" data-tab="pcs">Personagens</button>
     <button class="tab-btn" data-tab="npcs">NPCs &amp; Monstros</button>
     <button class="tab-btn" data-tab="itens">Itens</button>
+    <button class="tab-btn" data-tab="locais">Locais</button>
     <button class="tab-btn" data-tab="mapa">Mapa</button>
     <button class="tab-btn" data-tab="campanha">Campanha</button>
     <button class="tab-btn" data-tab="sessoes">Sessões</button>
@@ -88,6 +89,12 @@
     <div id="item-list" class="card-grid"></div>
   </section>
 
+  <!-- LOCAIS -->
+  <section id="tab-locais" class="tab-panel">
+    <div id="location-picker" class="location-picker"></div>
+    <div id="location-content"></div>
+  </section>
+
   <!-- MAPA -->
   <section id="tab-mapa" class="tab-panel">
     <div class="panel-toolbar">
@@ -135,6 +142,7 @@
 <!-- MODAL NPC -->
 <div id="modal-npc" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2 id="npc-modal-title">Novo NPC/Monstro</h2>
     <form id="form-npc">
       <input type="hidden" id="npc-id">
@@ -191,6 +199,7 @@
 <!-- MODAL PC -->
 <div id="modal-pc" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2 id="pc-modal-title">Nova Princesa</h2>
     <form id="form-pc">
       <input type="hidden" id="pc-id">
@@ -275,6 +284,7 @@
 <!-- MODAL COMBATANT -->
 <div id="modal-combatant" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2>Adicionar combatente</h2>
     <form id="form-combatant">
       <label>Nome
@@ -303,6 +313,7 @@
 <!-- MODAL FROM NPC BANK -->
 <div id="modal-from-npc" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2>Adicionar do banco de NPCs</h2>
     <div id="from-npc-list" class="from-npc-list"></div>
     <div class="modal-actions">
@@ -314,6 +325,7 @@
 <!-- MODAL FROM PC BANK -->
 <div id="modal-from-pc" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2>Adicionar Princesa ao combate</h2>
     <div id="from-pc-list" class="from-npc-list"></div>
     <div class="modal-actions">
@@ -325,6 +337,7 @@
 <!-- MODAL SESSION -->
 <div id="modal-session" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2 id="session-modal-title">Nova sessão</h2>
     <form id="form-session">
       <input type="hidden" id="session-id">
@@ -351,6 +364,7 @@
 <!-- MODAL NOTE -->
 <div id="modal-note" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2 id="note-modal-title">Nova nota</h2>
     <form id="form-note">
       <input type="hidden" id="note-id">
@@ -371,6 +385,7 @@
 <!-- MODAL ITEM -->
 <div id="modal-item" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2 id="item-modal-title">Novo item</h2>
     <form id="form-item">
       <input type="hidden" id="item-id">
@@ -400,6 +415,7 @@
 <!-- MODAL TOKEN -->
 <div id="modal-token" class="modal-overlay hidden">
   <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2>Marcador</h2>
     <form id="form-token">
       <input type="hidden" id="token-id">

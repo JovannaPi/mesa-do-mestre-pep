@@ -20,6 +20,7 @@ function defaultState() {
     seededV2: false,
     seededItems: false,
     seededFullText: false,
+    seededExtras2: false,
   };
 }
 
@@ -708,10 +709,157 @@ function seedFullAdventureText() {
   });
 }
 
+function seedExtraLoot() {
+  if (state.seededExtras2) return;
+  state.seededExtras2 = true;
+
+  const extraNotes = [
+    {
+      titulo: "Maldição Doce — tabela completa (6 tipos x 3 estágios)",
+      texto:
+"Ao longo da aventura, as Princesas terão várias oportunidades de cair vítimas da Maldição Doce. Uma vez amaldiçoada, a Princesa só pode ser curada se a maldição for quebrada por completo. Use qualquer um dos efeitos abaixo ou crie os seus próprios, usando os exemplos como guia.\n\n" +
+"Para cada indivíduo amaldiçoado, a Maldição Doce progride em 4 estágios, avançados pela Mestra conforme apropriado ou quando o texto indicar. Os 3 primeiros representam os efeitos crescentes da aflição específica da pessoa. No 4º estágio, a vítima vira uma versão de confeitaria de si mesma por completo e fica incapaz de se mover, falar ou agir até a maldição ser quebrada.\n\n" +
+"CONDIÇÕES E PREOCUPAÇÕES DA CONFEITARIA\n" +
+"Derreter: exposição direta a calor extremo ou mais que uma quantidade pequena de água, sem proteção, derrete a parte afetada. Perde d4 de PC máximo.\n" +
+"Mofar: role d6 no início de cada dia; tirar 1 = começa a mofar, perde d4 de PC máximo, passa a feder e atrair insetos (desvantagem em Testes de Virtude sociais onde o cheiro de podre for desagradável).\n" +
+"Reparo e Conservação: dá pra mitigar os efeitos — disfarçar o cheiro apetitoso, criar armadura à prova d'água. Partes de confeitaria quebradas/perdidas podem ser substituídas com Astúcia, magia e ingredientes de confeitaria.\n\n" +
+"1. BOLO DE MEL\n" +
+"Estágio 1: cheira a cravo, canela e gengibre; sangue vira mel dourado.\n" +
+"Estágio 2: pele vira bolo pegajoso ensopado de mel. Ao Gastar Tempo na floresta, role d8 — tirar 1 atrai um Ratel.\n" +
+"Estágio 3: grandes partes viram bolo de mel, suscetível a Derreter se molhar e a Mofar. Vantagem em Testes de Virtude para ser lisonjeadora/sedutora com a voz.\n\n" +
+"2. PÉ DE MOLEQUE\n" +
+"Estágio 1: hálito encorpado e amendoado; amendoins granulam sob a pele.\n" +
+"Estágio 2: carne fica quebradiça — qualquer impacto que cause perda de PC quebra pedaços; precisa Gastar Tempo juntando-os ou eles somem do PC máximo permanentemente.\n" +
+"Estágio 3: grande parte do corpo é doce frágil, risco de se despedaçar. Em vez de rolar na Tabela de Ferimentos, sofre 1 ponto de Trauma e fica Cansada e Atordoada até achar refúgio seguro. Pode gastar Dados de Dom para invocar [SOMA] esquilos prestativos (ajudam com uma tarefa em troca de amendoins arrancados da própria carne).\n\n" +
+"3. SONHO DE CREME\n" +
+"Estágio 1: corpo fica macio e massudo; sangue vira de framboesa.\n" +
+"Estágio 2: polvilhada de açúcar de confeiteiro que deixa rastro — desvantagem em Testes de Virtude para se esconder/ser furtiva.\n" +
+"Estágio 3: grandes porções viram sonho de creme — suscetível a Mofar e a Derreter se molhar. Quedas/impactos contundentes não machucam nem tiram PC.\n\n" +
+"4. PUXA-PUXA\n" +
+"Estágio 1: pele colorida e vibrante; cheiro doce e frutado; gosto salgado constante nos lábios.\n" +
+"Estágio 2: pele terrivelmente pegajosa — desvantagem em Testes de Virtude de motricidade fina, arremessar, atirar com arco etc.\n" +
+"Estágio 3: membros viram puxa-puxa elástico — esticam até o dobro do tamanho (teste Determinação pra voltar ao normal); esticar além do dobro rompe o membro.\n\n" +
+"5. SORVETE\n" +
+"Estágio 1: espiral de chocolate/baunilha no rosto como marca de nascença; solta granulados coloridos do cabelo.\n" +
+"Estágio 2: ânsia por frio, calor incomoda — desvantagem em Testes de Virtude sob sol direto ou perto de fogo.\n" +
+"Estágio 3: corpo de sorvete extremamente propenso a Derreter com sol/calor/água. Pode gastar Dados de Dom pra congelar instantaneamente o que morder — numa criatura, causa [SOMA] de dano e a congela no lugar por [DADOS] minutos.\n\n" +
+"6. MARSHMALLOW\n" +
+"Estágio 1: até o toque mais leve deixa marcas no corpo fofinho e macio.\n" +
+"Estágio 2: falar fica difícil, lábios de marshmallow grudam — desvantagem em Testes de Virtude com a voz.\n" +
+"Estágio 3: chamas atraem. Ao ver fogo, teste Determinação; falha = caminha até o fogo e fica tostada/queimada. Marca 1 ponto de Trauma e a Determinação aumenta permanentemente em 1 (esse Trauma não causa medo de fogo).",
+    },
+    {
+      titulo: "Combate contra criaturas de doce — Fogo e Água",
+      texto:
+"Armadura: dano de fogo ignora a Armadura em criaturas de doce derretíveis.\n\n" +
+"Tochas: acertar um monstro com tocha acesa causa d4 de dano. A tocha se consome ao fim do combate. Acender uma tocha com pederneira conta como uma Ação durante a luta.\n\n" +
+"Acertos críticos com tocha: tirar 1 no ataque = acerto em cheio, 2d4 de dano, mas a tocha se apaga com o impacto. Tirar 20 = erra e a tocha se apaga.\n\n" +
+"Óleo de lamparina: criaturas de doce podem ser incendiadas com combustível. Durante a luta, teste Graça para banhar o monstro com óleo/substância inflamável; falha = erra e o frasco é desperdiçado.\n\n" +
+"Em chamas: incendiar com óleo causa d8 de dano imediato. Se ainda em chamas no turno seguinte, o alvo pode: gastar o turno apagando as chamas, ou sofrer d4 de dano adicional enquanto faz outra coisa em chamas.\n\n" +
+"Água: grandes quantidades (especialmente fervendo!) podem ajudar contra certas criaturas de doce, dependendo do tipo. Ficar encharcada pode: causar dano que ignora Armadura; deixar a criatura lenta e pegajosa (vantagem na Defesa contra ela); ou distraí-la, dando vantagem a outra Princesa no ataque.",
+    },
+    {
+      titulo: "Achados — Cervovale",
+      texto:
+"ACHADOS NARRATIVOS\n" +
+"Bilhete amassado — Praça da Vila, perto do poço. Caligrafia de Selene: \"...três coisas. O Rato, o Anel, e algo dela mesma. Preciso ir ver o espelho antes que —\" (rasgado)\n" +
+"Caderno de receitas — Padaria do Geraldo. Página emocional sobre o bolo de aniversário de Rui, que ele promete fazer todo ano até o filho voltar.\n" +
+"Carta nunca enviada — Ferraria da Maya, atrás de uma bigorna. Carta de Maya para Élton, nunca mandada por não saber pra onde.\n" +
+"Livro de hóspedes — Estalagem A Cabra Sorridente. Último nome antes da maldição: \"Élvar\" — nota de Hannah sobre um cliente esquisito perguntando sobre \"convites\".\n" +
+"Lista de encomendas antigas — Armazém do Zeca. Pedido de quase um ano atrás endereçado à \"Torre ao Norte do Bosque\" (era de Dulcineia).\n" +
+"Desenho de criança — Salão Comunitário. Desenho a giz de cera de uma torre, lua cheia e figuras de mãos dadas: \"nós vamos voltar pra casa.\"\n" +
+"Anotações de patrulha — com Baz ou no Salão Comunitário. Entrada sobre as ausências suspeitas de Selene nas patrulhas noturnas.\n" +
+"Cartaz desbotado — Mansão da Prefeitura ou Praça. Anúncio de um festival de colheita de antes da maldição, assinado por Teodoro.\n\n" +
+"ACHADOS ÚTEIS (dinheiro e itens)\n" +
+"Moedas na rachadura do poço — Praça da Vila. 8 pp entalhadas numa fresta, precisa de faca ou objeto fino pra tirar.\n" +
+"Bolsa esquecida — Estalagem, debaixo de uma cama no quarto vazio. 12 pp e um Kit de Costura (1).\n" +
+"Pote de mel puro — Padaria, atrás de sacos de farinha. Não amaldiçoado; ingrediente ou vale 2 refeições de viagem.\n" +
+"Bolsa de moedas sob a tábua solta — Armazém do Zeca, perto do balcão. 15 pp (se devolvidas, Zeca fica muito grato e pode dar desconto permanente em trocas).\n" +
+"Faca de cozinha bem feita — Padaria. (1) d4 de dano — fabricação incomum, ligeiramente élfica. Ninguém sabe explicar a origem.\n\n" +
+"Resumo de valor total em Cervovale: ~35 pp, além de Kit de Costura, pote de mel e faca de cozinha.",
+    },
+    {
+      titulo: "Achados — Bosque Emaranhado",
+      texto:
+"ACHADOS NARRATIVOS\n" +
+"Símbolo entalhado numa árvore — perto da trilha principal, onde Rui foi encontrado. Um coração com \"R\" dentro.\n" +
+"Página de diário de patrulha — perto da Cova Misteriosa. Anotação de Selene sobre a terra \"não natural\" do local.\n" +
+"Ninho de esquilo — em qualquer árvore alta. Além dos óculos do Geraldo, uma coleção de bugigangas trocadas ao longo dos anos.\n" +
+"Marca de casco queimada — em qualquer trilha secundária. Sinal recente da passagem do Cavaleiro de Chocolate Amargo.\n" +
+"Corda puída amarrada num galho — perto do Lago da Saudade Eterna. Ninguém sabe de quem é.\n" +
+"Carta amassada num tronco oco — em qualquer parte densa do bosque. Carta antiga nunca entregue, sugerindo que a Colher de Mel foi vendida para saldar uma dívida.\n\n" +
+"ACHADOS ÚTEIS (dinheiro e itens)\n" +
+"Bolsa de couro de um viajante perdido — perto de uma trilha secundária. 6 pp e uma bússola enferrujada que ainda funciona.\n" +
+"Poção de cura comum — meio enterrada perto de um tronco caído, frasco quebrado mas vedado.\n" +
+"Corda e gazuas — dentro de um tronco oco. Kit de gazuas (1) e 15 metros de corda resistente.\n" +
+"Saquinho de sementes raras — perto da Área de Coleta. Rosa (Cervovale) pagaria bem, ou Zeca as identifica com a luneta.\n" +
+"Anel de latão sem valor mágico — perto do Círculo de Cogumelos. Vale 5 pp se vendido.\n\n" +
+"Resumo de valor total no Bosque: ~11 pp, além de bússola, poção de cura, gazuas+corda, sementes raras e anel.",
+    },
+    {
+      titulo: "Achados — Vale das Bagas",
+      texto:
+"ACHADOS NARRATIVOS\n" +
+"Cartas de amor em miniatura — Praça da Aldeia. Bilhetinhos entre duas fadas pequenas, amarrados com fio de teia.\n" +
+"Diário de bordo do apiário — Fazenda Mel Crista. Última entrada do Fazendeiro Listra-d'Olmo sobre o \"pólen estranho\".\n" +
+"Ficha de negociação antiga — Castelo da Rainha Gardênia. Registro formal da troca da Colher de Mel por um \"pingente de prata... forte presença mágica\".\n" +
+"Cartaz de \"procurada\" desbotado — Entrada da Vila. Retrato rabiscado de uma \"ladra de colheres\" — Dulcineia.\n" +
+"Bilhete de Castanho — Depósito Auxiliar de Alimentos, perto de onde o vaga-lume ficou preso. \"Volto pra te buscar, prometo. Não apaga.\"\n\n" +
+"ACHADOS ÚTEIS (dinheiro e itens)\n" +
+"Moedas de fada — espalhadas na Praça da Aldeia. Um punhado vale 10 pp se trocado com um humano interessado em curiosidades (Zeca compraria).\n" +
+"Frasco de mel puro do mercado — Praça da Aldeia, barraca abandonada. Vantagem em um único Teste de Virtude de persuasão, como os Bolos de Mel em menor escala.\n" +
+"Tesourinha élfica — Fazenda Mel Crista, entre as ferramentas. Corta com precisão absurda, nunca fica cega.\n" +
+"Bolsinha com pequenas gemas — perto do Castelo da Rainha Gardênia. 3 gemas, 20 pp juntas — origem feérica óbvia, vendê-las na vila humana pode levantar sobrancelhas.\n\n" +
+"Resumo de valor total em Vale das Bagas: ~30 pp (moeda de fada), além de mel puro e tesourinha élfica.",
+    },
+    {
+      titulo: "Achados — Baile Eterno",
+      texto:
+"ACHADOS NARRATIVOS\n" +
+"Cartão de dança rabiscado — O Jardim. Nome de Aurélio repetido de forma obsessiva — pertence à Senhora Amaris.\n" +
+"Carta de amor escondida atrás de um vaso — O Jardim. Carta não assinada de Aurélio para Penélope.\n" +
+"Cardápio manchado de vinho — O Banquete. \"Torta de Amora Silvestre — a favorita de E.\" (Élton.)\n" +
+"Bilhete de aposta — perto da mesa de Encrenca em Dobro. Dívida de Finnegan com o Rei-Elfo: uma memória de infância.\n" +
+"Página de partitura rasgada — Salão de Baile. Verso inacabado de Arturo sobre \"a bruxa doce que trocou juventude por —\".\n\n" +
+"ACHADOS ÚTEIS (dinheiro e itens)\n" +
+"Moedas de ouro fada — chão do Salão de Baile. 25 pp em moedas ornamentadas — 1 em 6 de virarem folhas secas sem valor ao sair do reino das fadas (a critério da Mestra).\n" +
+"Broche perdido — O Jardim, entre arbustos aparados. Broche de prata em forma de flor, vale 40 pp.\n" +
+"Frasco de vinho encantado — O Banquete, mesa lateral. Um gole cura 1d4 PC, mas deixa Confusa por 1 rodada.\n" +
+"Par de luvas de seda finas — Salão de Baile, idênticas ao prêmio de Encrenca em Dobro. Valem 60 pp.\n\n" +
+"Resumo de valor total no Baile Eterno: ~65 pp (parte instável), além de broche, vinho encantado e luvas de seda.",
+    },
+    {
+      titulo: "Achados — Torre da Bruxa",
+      texto:
+"ACHADOS NARRATIVOS\n" +
+"Carta de juventude de Dulcineia — Escritório (Sala 5), entre os livros. Rascunho nunca enviado para a mãe dela, sobre não querer envelhecer.\n" +
+"Lista de compras da bruxa — Cozinha (Sala 3), na bancada. Ingredientes do Chá de Soneca, com reclamação sobre Fantasma.\n" +
+"Bilhete de criança — Torreão (Sala 8), sob os colchões. Assinado \"Rui, Ana, Théo e mais uns que eu esqueci o nome.\"\n" +
+"Recibo de compra — Sala de Experimentos (Sala 6), entre os frascos. Registro formal da troca fada-bruxa pela Colher de Mel/Pingente.\n" +
+"Anotação de Selene — Dreno da Torre (Sala 1) ou Porta da Frente (Sala 2). Aviso sobre o Espelho Maléfico: \"não confiem no espelho de mão. Ele mente sobre o preço.\"\n\n" +
+"ACHADOS ÚTEIS (dinheiro e itens)\n" +
+"Moedas espalhadas pela cozinha — Sala 3. 10 pp em moedas antigas.\n" +
+"Bolsa de couro com ferramentas de alquimia — Sala de Experimentos (Sala 6), gaveta trancada (fácil de arrombar). Funciona como Kit de Cura (1) em situações com poções/venenos.\n" +
+"Frasco extra de poção não rotulada — Escritório (Sala 5), atrás dos livros. Poção de Cura Comum esquecida, intacta.\n" +
+"Joias pequenas soltas — Quarto da Bruxa (Sala 9), no chão perto da penteadeira (além do baú). 30 pp em brincos e anéis simples sem valor mágico.\n\n" +
+"Resumo de valor total na Torre: ~40 pp, além de ferramentas de alquimia e uma poção extra.\n\n" +
+"RESUMO GERAL — se tudo for encontrado em todos os locais: Cervovale ~35 pp, Bosque Emaranhado ~11 pp, Vale das Bagas ~30 pp (fada), Baile Eterno ~65 pp (instável), Torre da Bruxa ~40 pp. Ajuste os valores conforme o ritmo econômico da sua mesa.",
+    },
+  ];
+
+  const existingTitles = new Set(state.notes.map((n) => n.titulo));
+  extraNotes.forEach((n) => {
+    if (!existingTitles.has(n.titulo)) {
+      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto });
+    }
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
 seedFullAdventureText();
+seedExtraLoot();
 saveState();
 
 // ---------- Tabs ----------
@@ -721,6 +869,14 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "locais") renderLocationView();
+  });
+});
+
+// ---------- Close modal (X) ----------
+document.querySelectorAll(".js-close-modal").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    btn.closest(".modal-overlay").classList.add("hidden");
   });
 });
 
@@ -1023,24 +1179,8 @@ function deleteItem(id) {
   renderItems();
 }
 
-function renderItems() {
-  const list = document.getElementById("item-list");
-  const query = document.getElementById("item-search").value.trim().toLowerCase();
-  const filtered = state.items.filter((i) => {
-    if (!query) return true;
-    return (
-      i.nome.toLowerCase().includes(query) ||
-      i.descricao.toLowerCase().includes(query) ||
-      i.tags.some((t) => t.toLowerCase().includes(query))
-    );
-  });
-  if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhum item encontrado.</div>`;
-    return;
-  }
-  list.innerHTML = filtered
-    .map(
-      (i) => `
+function itemCardHtml(i) {
+  return `
     <div class="npc-card">
       <div class="npc-card-header">
         <h3>${escapeHtml(i.nome)}</h3>
@@ -1054,9 +1194,23 @@ function renderItems() {
         <button class="btn btn-danger" data-delete-item="${i.id}">Excluir</button>
       </div>
     </div>
-  `
-    )
-    .join("");
+  `;
+}
+
+function renderItems() {
+  const list = document.getElementById("item-list");
+  const query = document.getElementById("item-search").value.trim().toLowerCase();
+  const filtered = state.items.filter((i) => {
+    if (!query) return true;
+    return (
+      i.nome.toLowerCase().includes(query) ||
+      i.descricao.toLowerCase().includes(query) ||
+      i.tags.some((t) => t.toLowerCase().includes(query))
+    );
+  });
+  list.innerHTML = filtered.length
+    ? filtered.map(itemCardHtml).join("")
+    : `<div class="empty-state">Nenhum item encontrado.</div>`;
 
   list.querySelectorAll("[data-edit-item]").forEach((btn) =>
     btn.addEventListener("click", () => openItemModal(state.items.find((i) => i.id === btn.dataset.editItem)))
@@ -1067,6 +1221,83 @@ function renderItems() {
 }
 
 document.getElementById("item-search").addEventListener("input", renderItems);
+
+// ==================== Locais (visão cruzada por local) ====================
+const LOCATIONS = [
+  { tag: "cervovale", label: "Cervovale" },
+  { tag: "bosque emaranhado", label: "Bosque Emaranhado" },
+  { tag: "vale das bagas", label: "Vale das Bagas" },
+  { tag: "baile eterno", label: "Baile Eterno" },
+  { tag: "torre da bruxa", label: "Torre da Bruxa" },
+];
+let activeLocation = LOCATIONS[0].tag;
+
+function renderLocationPicker() {
+  const picker = document.getElementById("location-picker");
+  picker.innerHTML = LOCATIONS.map(
+    (l) => `<button class="location-btn ${l.tag === activeLocation ? "active" : ""}" data-loc="${l.tag}">${l.label}</button>`
+  ).join("");
+  picker.querySelectorAll("[data-loc]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      activeLocation = btn.dataset.loc;
+      renderLocationPicker();
+      renderLocationView();
+    })
+  );
+}
+
+function renderLocationView() {
+  const content = document.getElementById("location-content");
+  const npcs = state.npcs.filter((n) => n.tags.includes(activeLocation) && n.tipo !== "Monstro");
+  const monsters = state.npcs.filter((n) => n.tags.includes(activeLocation) && n.tipo === "Monstro");
+  const items = state.items.filter((i) => i.tags.includes(activeLocation));
+  const locationLabel = LOCATIONS.find((l) => l.tag === activeLocation).label;
+  const notes = state.notes.filter(
+    (n) => n.titulo.toLowerCase().includes(locationLabel.toLowerCase()) || n.texto.toLowerCase().includes(activeLocation)
+  );
+
+  content.innerHTML = `
+    <div class="location-section-title">NPCs &amp; Aliados</div>
+    <div class="card-grid">${npcs.length ? npcs.map(npcCardHtml).join("") : `<div class="empty-state">Nenhum NPC marcado com esse local ainda.</div>`}</div>
+    <div class="location-section-title">Monstros</div>
+    <div class="card-grid">${monsters.length ? monsters.map(npcCardHtml).join("") : `<div class="empty-state">Nenhum monstro marcado com esse local ainda.</div>`}</div>
+    <div class="location-section-title">Itens</div>
+    <div class="card-grid">${items.length ? items.map(itemCardHtml).join("") : `<div class="empty-state">Nenhum item marcado com esse local ainda.</div>`}</div>
+    <div class="location-section-title">Notas relacionadas</div>
+    <div class="session-list">${
+      notes.length
+        ? notes
+            .map(
+              (n) => `
+      <div class="session-card">
+        <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
+        <p class="session-text note-collapsed">${escapeHtml(n.texto)}</p>
+        <div class="session-card-actions">
+          <button class="btn btn-ghost" data-open-note="${n.id}">Ver / editar</button>
+        </div>
+      </div>`
+            )
+            .join("")
+        : `<div class="empty-state">Nenhuma nota encontrada para esse local.</div>`
+    }</div>
+  `;
+
+  content.querySelectorAll("[data-edit-npc]").forEach((btn) =>
+    btn.addEventListener("click", () => openNpcModal(state.npcs.find((n) => n.id === btn.dataset.editNpc)))
+  );
+  content.querySelectorAll("[data-delete-npc]").forEach((btn) =>
+    btn.addEventListener("click", () => { deleteNpc(btn.dataset.deleteNpc); renderLocationView(); })
+  );
+  content.querySelectorAll("[data-edit-item]").forEach((btn) =>
+    btn.addEventListener("click", () => openItemModal(state.items.find((i) => i.id === btn.dataset.editItem)))
+  );
+  content.querySelectorAll("[data-delete-item]").forEach((btn) =>
+    btn.addEventListener("click", () => { deleteItem(btn.dataset.deleteItem); renderLocationView(); })
+  );
+  content.querySelectorAll("[data-open-note]").forEach((btn) =>
+    btn.addEventListener("click", () => openNoteModal(state.notes.find((n) => n.id === btn.dataset.openNote)))
+  );
+}
 
 // ==================== PCs (Princesas) ====================
 const pcModal = document.getElementById("modal-pc");
@@ -1898,6 +2129,7 @@ function renderAll() {
   renderPcs();
   renderNpcs();
   renderItems();
+  renderLocationPicker();
   renderMap();
   renderObjectives();
   renderNotes();
