@@ -13,6 +13,8 @@ function defaultState() {
     notes: [],
     objectives: [],
     combat: { round: 1, currentIndex: 0, combatants: [] },
+    maps: [],
+    activeMapId: null,
     seeded: false,
     seededV2: false,
   };
@@ -388,6 +390,56 @@ function parseTags(str) {
   return str.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
+function fileToResizedDataUrl(file, maxDim) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function setupPhotoInput(inputId, previewId, onChange) {
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+    const dataUrl = await fileToResizedDataUrl(file, 300);
+    preview.src = dataUrl;
+    preview.classList.remove("hidden");
+    onChange(dataUrl);
+  });
+}
+
+function showPhotoPreview(previewId, dataUrl) {
+  const preview = document.getElementById(previewId);
+  if (dataUrl) {
+    preview.src = dataUrl;
+    preview.classList.remove("hidden");
+  } else {
+    preview.src = "";
+    preview.classList.add("hidden");
+  }
+}
+
 function dieTrack(total, used, dataAttr, id) {
   let html = `<div class="dice-track">`;
   for (let i = 0; i < total; i++) {
@@ -401,11 +453,16 @@ function dieTrack(total, used, dataAttr, id) {
 // ==================== NPCs ====================
 const npcModal = document.getElementById("modal-npc");
 const formNpc = document.getElementById("form-npc");
+let currentNpcFoto = null;
+setupPhotoInput("npc-foto", "npc-foto-preview", (url) => { currentNpcFoto = url; });
 
 function openNpcModal(npc) {
   document.getElementById("npc-modal-title").textContent = npc ? "Editar NPC/Monstro" : "Novo NPC/Monstro";
   document.getElementById("npc-id").value = npc ? npc.id : "";
   document.getElementById("npc-nome").value = npc ? npc.nome : "";
+  document.getElementById("npc-foto").value = "";
+  currentNpcFoto = npc ? npc.foto || null : null;
+  showPhotoPreview("npc-foto-preview", currentNpcFoto);
   document.getElementById("npc-tipo").value = npc ? npc.tipo : "NPC";
   document.getElementById("npc-determinacao").value = npc ? npc.determinacao : 10;
   document.getElementById("npc-graca").value = npc ? npc.graca : 10;
@@ -438,6 +495,7 @@ formNpc.addEventListener("submit", (e) => {
     armadura: Number(document.getElementById("npc-armadura").value) || 0,
     tags: parseTags(document.getElementById("npc-tags").value),
     notas: document.getElementById("npc-notas").value.trim(),
+    foto: currentNpcFoto,
   };
   if (id) {
     const idx = state.npcs.findIndex((n) => n.id === id);
@@ -472,9 +530,12 @@ function renderNpcs() {
     .map(
       (n) => `
     <div class="npc-card">
-      <div class="npc-card-header">
-        <h3>${escapeHtml(n.nome)}</h3>
-        <span class="npc-type-badge">${escapeHtml(n.tipo)}</span>
+      <div class="card-header-row">
+        ${n.foto ? `<img class="avatar" src="${n.foto}" alt="${escapeHtml(n.nome)}">` : ""}
+        <div class="npc-card-header">
+          <h3>${escapeHtml(n.nome)}</h3>
+          <span class="npc-type-badge">${escapeHtml(n.tipo)}</span>
+        </div>
       </div>
       <div class="npc-attrs">
         <span>DET <b>${n.determinacao}</b></span>
@@ -508,6 +569,8 @@ document.getElementById("npc-search").addEventListener("input", renderNpcs);
 // ==================== PCs (Princesas) ====================
 const pcModal = document.getElementById("modal-pc");
 const formPc = document.getElementById("form-pc");
+let currentPcFoto = null;
+setupPhotoInput("pc-foto", "pc-foto-preview", (url) => { currentPcFoto = url; });
 
 const DOM_DESCRICOES = {
   "Coração Selvagem": "Por causa de sua natureza animalística, você pode chamar as criaturas da floresta e invocá-las em seu auxílio. Talentos iniciais: Caça, Pesca, Orientação.",
@@ -531,6 +594,9 @@ function openPcModal(pc) {
   document.getElementById("pc-id").value = pc ? pc.id : "";
   document.getElementById("pc-nome").value = pc ? pc.nome : "";
   document.getElementById("pc-jogadora").value = pc ? pc.jogadora : "";
+  document.getElementById("pc-foto").value = "";
+  currentPcFoto = pc ? pc.foto || null : null;
+  showPhotoPreview("pc-foto-preview", currentPcFoto);
   document.getElementById("pc-dom-nome").value = pc ? pc.domNome : "";
   document.getElementById("pc-dom-descricao").value = pc ? pc.domDescricao : "";
   document.getElementById("pc-determinacao").value = pc ? pc.determinacao : 10;
@@ -582,6 +648,7 @@ formPc.addEventListener("submit", (e) => {
     inventario: parseTags(document.getElementById("pc-inventario").value),
     trauma: document.getElementById("pc-trauma").value.trim(),
     aflicoes: existing ? existing.aflicoes : { cansada: false, atordoada: false, confusa: false },
+    foto: currentPcFoto,
   };
   if (id) {
     const idx = state.pcs.findIndex((p) => p.id === id);
@@ -629,8 +696,13 @@ function renderPcs() {
     .map(
       (p) => `
     <div class="pc-card">
-      <h3>${escapeHtml(p.nome)}</h3>
-      ${p.jogadora ? `<p class="pc-player">Jogadora: ${escapeHtml(p.jogadora)}</p>` : ""}
+      <div class="card-header-row">
+        ${p.foto ? `<img class="avatar" src="${p.foto}" alt="${escapeHtml(p.nome)}">` : ""}
+        <div class="pc-card-title">
+          <h3>${escapeHtml(p.nome)}</h3>
+          ${p.jogadora ? `<p class="pc-player">Jogadora: ${escapeHtml(p.jogadora)}</p>` : ""}
+        </div>
+      </div>
       ${p.domNome ? `<div class="pc-dom">✨ ${escapeHtml(p.domNome)}</div>` : ""}
       ${p.domDescricao ? `<p class="pc-dom-desc">${escapeHtml(p.domDescricao)}</p>` : ""}
       <div class="pc-stats">
@@ -909,6 +981,204 @@ function renderCombat() {
   );
 }
 
+// ==================== Mapa ====================
+const mapCanvas = document.getElementById("map-canvas");
+const mapSelect = document.getElementById("map-select");
+const mapUpload = document.getElementById("map-upload");
+const tokenModal = document.getElementById("modal-token");
+const formToken = document.getElementById("form-token");
+const TOKEN_COLORS = ["#b483d1", "#93cfa3", "#e88ba0", "#e8c07a", "#7ab8e8", "#e8956a", "#c9d97a", "#f3ead9"];
+let pendingNewTokenId = null;
+
+function activeMap() {
+  return state.maps.find((m) => m.id === state.activeMapId) || null;
+}
+
+mapUpload.addEventListener("change", async () => {
+  const file = mapUpload.files[0];
+  if (!file) return;
+  const nome = prompt("Nome do mapa:", file.name.replace(/\.[^.]+$/, "")) || "Mapa sem nome";
+  const dataUrl = await fileToResizedDataUrl(file, 1600);
+  const map = { id: uid(), nome, imagem: dataUrl, tokens: [] };
+  state.maps.push(map);
+  state.activeMapId = map.id;
+  saveState();
+  renderMap();
+  mapUpload.value = "";
+});
+
+mapSelect.addEventListener("change", () => {
+  state.activeMapId = mapSelect.value || null;
+  saveState();
+  renderMap();
+});
+
+document.getElementById("btn-rename-map").addEventListener("click", () => {
+  const map = activeMap();
+  if (!map) return;
+  const nome = prompt("Novo nome do mapa:", map.nome);
+  if (nome && nome.trim()) {
+    map.nome = nome.trim();
+    saveState();
+    renderMap();
+  }
+});
+
+document.getElementById("btn-delete-map").addEventListener("click", () => {
+  const map = activeMap();
+  if (!map) return;
+  if (!confirm(`Excluir o mapa "${map.nome}" e todos os seus marcadores?`)) return;
+  state.maps = state.maps.filter((m) => m.id !== map.id);
+  state.activeMapId = state.maps.length ? state.maps[0].id : null;
+  saveState();
+  renderMap();
+});
+
+function renderColorPicker(selected) {
+  const wrap = document.getElementById("token-color-picker");
+  wrap.innerHTML = TOKEN_COLORS.map(
+    (c) => `<span class="color-swatch ${c === selected ? "selected" : ""}" style="background:${c}" data-color="${c}"></span>`
+  ).join("");
+  wrap.querySelectorAll(".color-swatch").forEach((sw) =>
+    sw.addEventListener("click", () => {
+      wrap.querySelectorAll(".color-swatch").forEach((s) => s.classList.remove("selected"));
+      sw.classList.add("selected");
+      document.getElementById("token-cor").value = sw.dataset.color;
+    })
+  );
+}
+
+function openTokenModal(token, isNew) {
+  pendingNewTokenId = isNew ? token.id : null;
+  document.getElementById("token-id").value = token.id;
+  document.getElementById("token-nome").value = token.nome;
+  document.getElementById("token-cor").value = token.cor;
+  renderColorPicker(token.cor);
+  tokenModal.classList.remove("hidden");
+}
+
+function closeTokenModal() {
+  tokenModal.classList.add("hidden");
+  pendingNewTokenId = null;
+}
+
+document.getElementById("btn-cancel-token").addEventListener("click", () => {
+  const map = activeMap();
+  if (pendingNewTokenId && map) {
+    map.tokens = map.tokens.filter((t) => t.id !== pendingNewTokenId);
+    saveState();
+    renderMap();
+  }
+  closeTokenModal();
+});
+
+document.getElementById("btn-delete-token").addEventListener("click", () => {
+  const map = activeMap();
+  const id = document.getElementById("token-id").value;
+  if (map && id) {
+    map.tokens = map.tokens.filter((t) => t.id !== id);
+    saveState();
+    renderMap();
+  }
+  closeTokenModal();
+});
+
+formToken.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const map = activeMap();
+  if (!map) return;
+  const id = document.getElementById("token-id").value;
+  const token = map.tokens.find((t) => t.id === id);
+  if (token) {
+    token.nome = document.getElementById("token-nome").value.trim() || "Marcador";
+    token.cor = document.getElementById("token-cor").value;
+  }
+  pendingNewTokenId = null;
+  saveState();
+  closeTokenModal();
+  renderMap();
+});
+
+function onMapCanvasClick(e) {
+  if (e.target !== mapCanvas) return;
+  const map = activeMap();
+  if (!map) return;
+  const rect = mapCanvas.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width) * 100;
+  const y = ((e.clientY - rect.top) / rect.height) * 100;
+  const token = { id: uid(), nome: "Marcador", cor: TOKEN_COLORS[map.tokens.length % TOKEN_COLORS.length], x, y };
+  map.tokens.push(token);
+  saveState();
+  renderMap();
+  openTokenModal(token, true);
+}
+
+function attachTokenDrag(el, token) {
+  let dragging = false;
+  let moved = false;
+  el.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+    dragging = true;
+    moved = false;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    moved = true;
+    const rect = mapCanvas.getBoundingClientRect();
+    let x = ((e.clientX - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - rect.top) / rect.height) * 100;
+    x = Math.max(0, Math.min(100, x));
+    y = Math.max(0, Math.min(100, y));
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+  });
+  el.addEventListener("pointerup", (e) => {
+    e.stopPropagation();
+    dragging = false;
+    if (moved) {
+      const rect = mapCanvas.getBoundingClientRect();
+      let x = ((e.clientX - rect.left) / rect.width) * 100;
+      let y = ((e.clientY - rect.top) / rect.height) * 100;
+      token.x = Math.max(0, Math.min(100, x));
+      token.y = Math.max(0, Math.min(100, y));
+      saveState();
+    } else {
+      openTokenModal(token, false);
+    }
+  });
+}
+
+function renderMap() {
+  mapSelect.innerHTML = state.maps.length
+    ? state.maps.map((m) => `<option value="${m.id}" ${m.id === state.activeMapId ? "selected" : ""}>${escapeHtml(m.nome)}</option>`).join("")
+    : `<option value="">Nenhum mapa</option>`;
+
+  const map = activeMap();
+  mapCanvas.removeEventListener("click", onMapCanvasClick);
+  if (!map) {
+    mapCanvas.style.backgroundImage = "";
+    mapCanvas.innerHTML = `<div class="empty-state">Nenhum mapa ainda. Clique em "+ Novo mapa" para enviar uma imagem.</div>`;
+    return;
+  }
+  mapCanvas.style.backgroundImage = `url(${map.imagem})`;
+  mapCanvas.innerHTML = map.tokens
+    .map(
+      (t) => `
+    <div class="map-token" style="left:${t.x}%; top:${t.y}%" data-token-id="${t.id}">
+      <div class="map-token-dot" style="background:${t.cor}"></div>
+      <span class="map-token-label">${escapeHtml(t.nome)}</span>
+    </div>
+  `
+    )
+    .join("");
+  mapCanvas.querySelectorAll(".map-token").forEach((el) => {
+    const token = map.tokens.find((t) => t.id === el.dataset.tokenId);
+    attachTokenDrag(el, token);
+  });
+  mapCanvas.addEventListener("click", onMapCanvasClick);
+}
+
 // ==================== Campanha: objetivos ====================
 document.getElementById("btn-add-objective").addEventListener("click", () => {
   const texto = prompt("Novo objetivo:");
@@ -1110,6 +1380,7 @@ function renderAll() {
   renderCombat();
   renderPcs();
   renderNpcs();
+  renderMap();
   renderObjectives();
   renderNotes();
   renderSessions();

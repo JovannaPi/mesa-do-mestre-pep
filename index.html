@@ -34,6 +34,7 @@
     <button class="tab-btn active" data-tab="combate">⚔️ Combate</button>
     <button class="tab-btn" data-tab="pcs">👑 Personagens</button>
     <button class="tab-btn" data-tab="npcs">🧙 NPCs &amp; Monstros</button>
+    <button class="tab-btn" data-tab="mapa">🗺️ Mapa</button>
     <button class="tab-btn" data-tab="campanha">📖 Campanha</button>
     <button class="tab-btn" data-tab="sessoes">📜 Sessões</button>
   </nav>
@@ -72,6 +73,23 @@
     <div id="npc-list" class="card-grid"></div>
   </section>
 
+  <!-- MAPA -->
+  <section id="tab-mapa" class="tab-panel">
+    <div class="panel-toolbar">
+      <select id="map-select" class="input"></select>
+      <label class="btn btn-primary">
+        + Novo mapa
+        <input type="file" id="map-upload" accept="image/*" hidden>
+      </label>
+      <button id="btn-rename-map" class="btn btn-ghost">✏️ Renomear</button>
+      <button id="btn-delete-map" class="btn btn-danger">🗑️ Excluir mapa</button>
+    </div>
+    <p class="field-hint">Clique no mapa para adicionar um marcador. Arraste um marcador para movê-lo. Clique num marcador para editar ou remover.</p>
+    <div id="map-canvas" class="map-canvas">
+      <div class="empty-state">Nenhum mapa ainda. Clique em "+ Novo mapa" para enviar uma imagem.</div>
+    </div>
+  </section>
+
   <!-- CAMPANHA -->
   <section id="tab-campanha" class="tab-panel">
     <div class="campaign-block">
@@ -107,6 +125,10 @@
       <label>Nome
         <input type="text" id="npc-nome" required>
       </label>
+      <label>Foto (opcional)
+        <input type="file" id="npc-foto" accept="image/*">
+      </label>
+      <img id="npc-foto-preview" class="photo-preview hidden" alt="Prévia da foto">
       <label>Tipo
         <select id="npc-tipo">
           <option value="NPC">NPC</option>
@@ -162,6 +184,10 @@
       <label>Jogadora
         <input type="text" id="pc-jogadora">
       </label>
+      <label>Foto (opcional)
+        <input type="file" id="pc-foto" accept="image/*">
+      </label>
+      <img id="pc-foto-preview" class="photo-preview hidden" alt="Prévia da foto">
       <label>Dom (Fada Madrinha)
         <select id="pc-dom-nome">
           <option value="">— escolher —</option>
@@ -320,6 +346,28 @@
       </label>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-note">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL TOKEN -->
+<div id="modal-token" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Marcador</h2>
+    <form id="form-token">
+      <input type="hidden" id="token-id">
+      <label>Nome
+        <input type="text" id="token-nome" required placeholder="ex: Baz, Ursinho de Goma...">
+      </label>
+      <label>Cor
+        <div id="token-color-picker" class="color-picker"></div>
+        <input type="hidden" id="token-cor" value="#b483d1">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete-token">🗑️ Remover</button>
+        <button type="button" class="btn btn-ghost" id="btn-cancel-token">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>
