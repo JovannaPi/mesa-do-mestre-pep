@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0,0&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -20,23 +21,21 @@
       </div>
     </div>
     <div class="header-actions">
-      <button id="btn-rename-campaign" class="btn btn-ghost" title="Renomear campanha">Renomear</button>
-      <button id="btn-export" class="btn btn-ghost" title="Exportar backup (.json)">Backup</button>
+      <button id="btn-rename-campaign" class="btn btn-ghost" title="Renomear campanha"><span class="icon">edit</span> Renomear</button>
+      <button id="btn-export" class="btn btn-ghost" title="Exportar backup (.json)"><span class="icon">download</span> Backup</button>
       <label class="btn btn-ghost" title="Importar backup (.json)">
-        Importar
+        <span class="icon">upload</span> Importar
         <input type="file" id="import-file" accept="application/json" hidden>
       </label>
     </div>
   </div>
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="combate">Combate</button>
-    <button class="tab-btn" data-tab="pcs">Personagens</button>
-    <button class="tab-btn" data-tab="npcs">NPCs &amp; Monstros</button>
-    <button class="tab-btn" data-tab="itens">Itens</button>
-    <button class="tab-btn" data-tab="locais">Locais</button>
-    <button class="tab-btn" data-tab="mapa">Mapa</button>
-    <button class="tab-btn" data-tab="campanha">Campanha</button>
-    <button class="tab-btn" data-tab="sessoes">Sessões</button>
+    <button class="tab-btn active" data-tab="combate"><span class="icon">shield</span> Combate</button>
+    <button class="tab-btn" data-tab="pcs"><span class="icon">face_3</span> Personagens</button>
+    <button class="tab-btn" data-tab="compendio"><span class="icon">groups</span> Compêndio</button>
+    <button class="tab-btn" data-tab="mapa"><span class="icon">map</span> Mapa</button>
+    <button class="tab-btn" data-tab="campanha"><span class="icon">menu_book</span> Campanha</button>
+    <button class="tab-btn" data-tab="sessoes"><span class="icon">history_edu</span> Sessões</button>
   </nav>
 </header>
 
@@ -45,12 +44,12 @@
   <!-- COMBATE -->
   <section id="tab-combate" class="tab-panel active">
     <div class="panel-toolbar">
-      <button id="btn-add-combatant" class="btn btn-primary">+ Adicionar combatente</button>
-      <button id="btn-add-from-npc" class="btn btn-secondary">+ Do banco de NPCs</button>
-      <button id="btn-add-from-pc" class="btn btn-secondary">+ De uma Princesa</button>
-      <button id="btn-roll-init" class="btn btn-secondary">Rolar iniciativa (d20)</button>
-      <button id="btn-next-turn" class="btn btn-secondary">Próximo turno</button>
-      <button id="btn-clear-combat" class="btn btn-danger">Limpar combate</button>
+      <button id="btn-add-combatant" class="btn btn-primary"><span class="icon">add</span> Adicionar combatente</button>
+      <button id="btn-add-from-npc" class="btn btn-secondary"><span class="icon">person_add</span> Do banco de NPCs</button>
+      <button id="btn-add-from-pc" class="btn btn-secondary"><span class="icon">group_add</span> De uma Princesa</button>
+      <button id="btn-roll-init" class="btn btn-secondary"><span class="icon">casino</span> Rolar iniciativa (d20)</button>
+      <button id="btn-next-turn" class="btn btn-secondary"><span class="icon">skip_next</span> Próximo turno</button>
+      <button id="btn-clear-combat" class="btn btn-danger"><span class="icon">delete_sweep</span> Limpar combate</button>
     </div>
     <div class="round-indicator">Rodada <span id="round-number">1</span></div>
     <div id="combat-list" class="combat-list"></div>
@@ -59,40 +58,47 @@
   <!-- PCS (PERSONAGENS) -->
   <section id="tab-pcs" class="tab-panel">
     <div class="panel-toolbar">
-      <button id="btn-add-pc" class="btn btn-primary">+ Nova Princesa</button>
+      <button id="btn-add-pc" class="btn btn-primary"><span class="icon">add</span> Nova Princesa</button>
     </div>
     <div id="pc-list" class="card-grid"></div>
   </section>
 
-  <!-- NPCS -->
-  <section id="tab-npcs" class="tab-panel">
-    <div class="panel-toolbar">
-      <button id="btn-add-npc" class="btn btn-primary">+ Novo NPC/Monstro</button>
-      <input id="npc-search" class="input" type="text" placeholder="Buscar por nome ou tag...">
-    </div>
-    <div class="campaign-block">
-      <h2>NPCs &amp; Aliados</h2>
+  <!-- COMPENDIO (NPCs, Monstros, Itens, Locais) -->
+  <section id="tab-compendio" class="tab-panel">
+    <nav class="subtabs">
+      <button class="subtab-btn active" data-subtab="npcs">NPCs &amp; Aliados</button>
+      <button class="subtab-btn" data-subtab="monstros">Monstros</button>
+      <button class="subtab-btn" data-subtab="itens">Itens</button>
+      <button class="subtab-btn" data-subtab="locais">Por Local</button>
+    </nav>
+
+    <div id="subtab-npcs" class="subtab-panel active">
+      <div class="panel-toolbar">
+        <button id="btn-add-npc" class="btn btn-primary"><span class="icon">add</span> Novo NPC/Monstro</button>
+        <input id="npc-search" class="input" type="text" placeholder="Buscar por nome ou tag... (filtra NPCs e Monstros)">
+      </div>
       <div id="npc-list" class="card-grid"></div>
     </div>
-    <div class="campaign-block">
-      <h2>Monstros</h2>
+
+    <div id="subtab-monstros" class="subtab-panel">
+      <div class="panel-toolbar">
+        <button id="btn-add-monster" class="btn btn-primary"><span class="icon">add</span> Novo Monstro</button>
+      </div>
       <div id="monster-list" class="card-grid"></div>
     </div>
-  </section>
 
-  <!-- ITENS -->
-  <section id="tab-itens" class="tab-panel">
-    <div class="panel-toolbar">
-      <button id="btn-add-item" class="btn btn-primary">+ Novo item</button>
-      <input id="item-search" class="input" type="text" placeholder="Buscar por nome, efeito ou tag...">
+    <div id="subtab-itens" class="subtab-panel">
+      <div class="panel-toolbar">
+        <button id="btn-add-item" class="btn btn-primary"><span class="icon">add</span> Novo item</button>
+        <input id="item-search" class="input" type="text" placeholder="Buscar por nome, efeito ou tag...">
+      </div>
+      <div id="item-list" class="card-grid"></div>
     </div>
-    <div id="item-list" class="card-grid"></div>
-  </section>
 
-  <!-- LOCAIS -->
-  <section id="tab-locais" class="tab-panel">
-    <div id="location-picker" class="location-picker"></div>
-    <div id="location-content"></div>
+    <div id="subtab-locais" class="subtab-panel">
+      <div id="location-picker" class="location-picker"></div>
+      <div id="location-content"></div>
+    </div>
   </section>
 
   <!-- MAPA -->
@@ -100,17 +106,17 @@
     <div class="panel-toolbar">
       <select id="map-select" class="input"></select>
       <label class="btn btn-primary">
-        + Novo mapa
+        <span class="icon">add</span> Novo mapa
         <input type="file" id="map-upload" accept="image/*" hidden>
       </label>
-      <button id="btn-rename-map" class="btn btn-ghost">Renomear</button>
-      <button id="btn-delete-map" class="btn btn-danger">Excluir mapa</button>
+      <button id="btn-rename-map" class="btn btn-ghost"><span class="icon">edit</span> Renomear</button>
+      <button id="btn-delete-map" class="btn btn-danger"><span class="icon">delete</span> Excluir mapa</button>
     </div>
     <div class="panel-toolbar">
-      <button id="btn-map-add-npc" class="btn btn-secondary">+ NPC do banco</button>
-      <button id="btn-map-add-monster" class="btn btn-secondary">+ Monstro do banco</button>
-      <button id="btn-map-add-pc" class="btn btn-secondary">+ Princesa</button>
-      <button id="btn-map-add-generic" class="btn btn-secondary">+ Outra coisa (marco, item, ponto de interesse...)</button>
+      <button id="btn-map-add-npc" class="btn btn-secondary"><span class="icon">person_add</span> NPC do banco</button>
+      <button id="btn-map-add-monster" class="btn btn-secondary"><span class="icon">pest_control</span> Monstro do banco</button>
+      <button id="btn-map-add-pc" class="btn btn-secondary"><span class="icon">group_add</span> Princesa</button>
+      <button id="btn-map-add-generic" class="btn btn-secondary"><span class="icon">add_location_alt</span> Outra coisa</button>
     </div>
     <p class="field-hint">Escolha um botão acima para adicionar um marcador vindo do banco, ou clique direto no mapa para um marcador livre. Arraste um marcador para movê-lo. Clique num marcador para editar ou remover.</p>
     <div id="map-canvas" class="map-canvas">
@@ -123,14 +129,15 @@
     <div class="campaign-block">
       <h2>Objetivos principais</h2>
       <div id="objective-list" class="objective-list"></div>
-      <button id="btn-add-objective" class="btn btn-ghost">+ Novo objetivo</button>
+      <button id="btn-add-objective" class="btn btn-ghost"><span class="icon">add</span> Novo objetivo</button>
     </div>
     <div class="campaign-block">
       <div class="panel-toolbar">
         <h2 style="margin:0">Notas &amp; Lore</h2>
-        <button id="btn-add-note" class="btn btn-primary">+ Nova nota</button>
+        <button id="btn-add-note" class="btn btn-primary"><span class="icon">add</span> Nova nota</button>
         <input id="note-search" class="input" type="text" placeholder="Buscar regra, lore, NPC...">
       </div>
+      <div id="note-category-picker" class="location-picker"></div>
       <div id="note-list" class="session-list"></div>
     </div>
   </section>
@@ -138,7 +145,7 @@
   <!-- SESSOES -->
   <section id="tab-sessoes" class="tab-panel">
     <div class="panel-toolbar">
-      <button id="btn-add-session" class="btn btn-primary">+ Nova sessão</button>
+      <button id="btn-add-session" class="btn btn-primary"><span class="icon">add</span> Nova sessão</button>
     </div>
     <div id="session-list" class="session-list"></div>
   </section>
@@ -167,24 +174,24 @@
         </select>
       </label>
       <div class="attr-grid">
-        <label>Determinação
+        <label><span class="icon attr-icon">local_fire_department</span>Determinação
           <input type="number" id="npc-determinacao" min="1" max="20" value="10">
         </label>
-        <label>Graça
+        <label><span class="icon attr-icon">auto_awesome</span>Graça
           <input type="number" id="npc-graca" min="1" max="20" value="10">
         </label>
-        <label>Astúcia
+        <label><span class="icon attr-icon">visibility</span>Astúcia
           <input type="number" id="npc-astucia" min="1" max="20" value="10">
         </label>
       </div>
       <div class="attr-grid">
-        <label>Coração (PC)
+        <label><span class="icon attr-icon">favorite</span>Coração (PC)
           <input type="number" id="npc-coracao" min="0" value="10">
         </label>
-        <label>Salvamento
+        <label><span class="icon attr-icon">health_and_safety</span>Salvamento
           <input type="number" id="npc-salvamento" min="0" value="10">
         </label>
-        <label>Armadura
+        <label><span class="icon attr-icon">shield</span>Armadura
           <input type="number" id="npc-armadura" min="0" value="0">
         </label>
       </div>
@@ -238,21 +245,21 @@
       </label>
       <p class="field-hint">Atributos: role 4d4 para cada Virtude (pode reordenar/rerrolar uma). Teste de Virtude = role d20 e tire igual ou menos que o atributo. 1 é sempre sucesso, 20 é sempre falha.</p>
       <div class="attr-grid">
-        <label>Determinação
+        <label><span class="icon attr-icon">local_fire_department</span>Determinação
           <input type="number" id="pc-determinacao" min="1" max="20" value="10">
         </label>
-        <label>Graça
+        <label><span class="icon attr-icon">auto_awesome</span>Graça
           <input type="number" id="pc-graca" min="1" max="20" value="10">
         </label>
-        <label>Astúcia
+        <label><span class="icon attr-icon">visibility</span>Astúcia
           <input type="number" id="pc-astucia" min="1" max="20" value="10">
         </label>
       </div>
       <div class="attr-grid">
-        <label>Coração máx. <small>(d4+4 inicial)</small>
+        <label><span class="icon attr-icon">favorite</span>Coração máx. <small>(d4+4 inicial)</small>
           <input type="number" id="pc-coracao-max" min="0" value="7">
         </label>
-        <label>Armadura
+        <label><span class="icon attr-icon">shield</span>Armadura
           <input type="number" id="pc-armadura" min="0" value="0">
         </label>
         <label>Dinheiro (pp)
@@ -300,7 +307,7 @@
         <label>Iniciativa
           <input type="number" id="c-iniciativa" value="10">
         </label>
-        <label>Coração máx.
+        <label><span class="icon attr-icon">favorite</span>Coração máx.
           <input type="number" id="c-coracao-max" min="0" value="10">
         </label>
       </div>
@@ -376,6 +383,14 @@
       <input type="hidden" id="note-id">
       <label>Título
         <input type="text" id="note-titulo" required placeholder="ex: Cervovale — visão geral">
+      </label>
+      <label>Categoria
+        <select id="note-categoria">
+          <option value="lore">Lore</option>
+          <option value="regras">Regras</option>
+          <option value="aventura">Aventura completa</option>
+          <option value="achados">Achados</option>
+        </select>
       </label>
       <label>Texto
         <textarea id="note-texto" rows="8"></textarea>

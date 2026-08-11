@@ -56,6 +56,7 @@ function seedCampaignData() {
     {
       id: uid(),
       titulo: "Premissa da campanha",
+      categoria: "lore",
       texto:
         "Vocês são Princesas num mundo de conto de fadas com um verniz mais sombrio do que o normal. Uma de vocês tem uma amiga mensageira que sumiu há quase um ano; preocupada, formou um grupo de busca com as outras.\n\n" +
         "O mundo: reinos próximos, vilas pequenas, florestas encantadas com reputações e perigos próprios. Magia existe e é aceita, mas ainda temida. \"Princesa\" é um título ligado a ter um Dom concedido por uma Fada Madrinha — não precisa ser realeza de sangue.",
@@ -63,6 +64,7 @@ function seedCampaignData() {
     {
       id: uid(),
       titulo: "Gancho inicial — O grito na floresta",
+      categoria: "lore",
       texto:
         "No Bosque Emaranhado, a caminho de Cervovale, um cheiro doce se mistura ao da terra molhada e um grito de criança corta o silêncio. É Rui Silva, preso numa árvore, perseguido por um Ursinho de Goma.\n\n" +
         "Se salvarem Rui: ele guia o grupo até Cervovale e seu pai Geraldo (padeiro) fica aliviado.\n" +
@@ -71,6 +73,7 @@ function seedCampaignData() {
     {
       id: uid(),
       titulo: "A Maldição de Dulcineia",
+      categoria: "lore",
       texto:
         "Há um ano, moradores mataram a bruxa Dulcineia, que sequestrava crianças. Antes de morrer, ela amaldiçoou a vila: todos aos poucos viram doce.\n\n" +
         "A guarda Selene usou o Espelho Maléfico (escondido por Teodoro na Mansão da Prefeitura) para descobrir a cura — e morreu logo depois. A resposta: reunir 3 itens e jogá-los no poço da praça (ver aba Objetivos).\n\n" +
@@ -79,6 +82,7 @@ function seedCampaignData() {
     {
       id: uid(),
       titulo: "Cervovale — locais e NPCs-chave",
+      categoria: "lore",
       texto:
         "Mansão da Prefeitura: Teodoro Éverson (prefeito) — guarda o Espelho Maléfico, escondido num baú sob a cama.\n" +
         "Salão Comunitário: Baz Hartly, líder da guarda.\n" +
@@ -92,6 +96,7 @@ function seedCampaignData() {
     {
       id: uid(),
       titulo: "Bosque Emaranhado — pontos de interesse",
+      categoria: "lore",
       texto:
         "Vale das Bagas: aldeia das fadas pequenas, protegida por névoa; aterrorizada pelo Rei Rato (objetivo 1).\n" +
         "Lago da Saudade Eterna: portal para o Baile Eterno — ativa entrando na água com um item de origem feérica.\n" +
@@ -102,6 +107,7 @@ function seedCampaignData() {
     {
       id: uid(),
       titulo: "Vale das Bagas — o Rei Rato",
+      categoria: "lore",
       texto:
         "Pólen amaldiçoado deixou o mel enfeitiçado; os ratos se uniram pelas caudas em mel pegajoso, formando o Rei Rato, que ocupa o depósito de comida das fadas pequenas.\n\n" +
         "Rainha Gardênia governa a aldeia e ensina como ativar o Lago da Saudade Eterna. Derrotar o Rei Rato e cortar sua cauda dá a Cauda do Rei Rato (objetivo 1).",
@@ -109,6 +115,7 @@ function seedCampaignData() {
     {
       id: uid(),
       titulo: "Baile Eterno — o Anel do Rei-Elfo",
+      categoria: "lore",
       texto:
         "Festa sem fim no reino das fadas altas, dividida em 3 seções: Alvorada (Jardim), Meio-Dia (Banquete) e Crepúsculo (Salão de Baile, onde fica o Rei-Elfo).\n\n" +
         "O Rei-Elfo dá seu anel a quem completar seu desafio cronometrado: conseguir um Sorriso da Senhora Neves, um Segredo do Príncipe Aurélio e um Elogio da Duquesa Jacinda antes que a ampulheta se esgote.\n\n" +
@@ -117,6 +124,7 @@ function seedCampaignData() {
     {
       id: uid(),
       titulo: "Torre da Bruxa — confronto final",
+      categoria: "lore",
       texto:
         "Três entradas: porta da frente (guardada por Construtos de Chocolate com Hortelã), janela do topo (pequena demais) ou dreno sob a torre (leva à cozinha).\n" +
         "Senha para entrar pela frente: \"Maçapão Maravilhoso\".\n\n" +
@@ -216,6 +224,7 @@ function seedRulesReference() {
   const extraNotes = [
     {
       titulo: "Regras rápidas — Testes & dados",
+      categoria: "regras",
       texto:
         "TESTE DE VIRTUDE: role 1d20 — tirar igual ou menos que o atributo (Determinação/Graça/Astúcia) é sucesso. 1 é sempre sucesso; 20 é sempre falha.\n" +
         "Vantagem: role 2d20, use o menor. Desvantagem: role 2d20, use o maior.\n\n" +
@@ -225,6 +234,7 @@ function seedRulesReference() {
     },
     {
       titulo: "Regras rápidas — Combate",
+      categoria: "regras",
       texto:
         "INICIATIVA: teste ASTÚCIA. Sucesso = age antes do inimigo; falha = age depois. Mantém a mesma ordem toda rodada. Tirar 1 é crítico: pode agir duas vezes no primeiro turno.\n\n" +
         "NO SEU TURNO: mover-se Por Perto + uma Ação. Pode Reagir 1x por rodada no turno de qualquer pessoa (ex: usar Dom, gastar Dado Coração).\n\n" +
@@ -235,6 +245,7 @@ function seedRulesReference() {
     },
     {
       titulo: "Regras rápidas — Recuperação, Aflições & Trauma",
+      categoria: "regras",
       texto:
         "PIQUENIQUE: pequena pausa (Gastar Tempo + 1 refeição). Gaste Dados Coração à vontade, role e recupere PC igual à soma.\n" +
         "DESCANSO: 1x a cada 24h. 8h de sono com comida, água e abrigo/fogueira restaura todo o Coração e todos os Dados de Dom/Coração gastos. Consome 1 refeição.\n\n" +
@@ -248,6 +259,7 @@ function seedRulesReference() {
     },
     {
       titulo: "Maldições (tabela oficial, d12)",
+      categoria: "regras",
       texto:
         "1. Condenação — Ferida automaticamente dá 1 Trauma; cura enfrentando a Morte num jogo de sorte/habilidade.\n" +
         "2. Melancolia — não pode usar/se beneficiar de Dados Coração nem efeitos de moral; cura ajudando um grupo de crianças.\n" +
@@ -265,6 +277,7 @@ function seedRulesReference() {
     },
     {
       titulo: "Os 8 Dons das Fadas Madrinhas",
+      categoria: "regras",
       texto:
         "1. Coração Selvagem — chama criaturas da floresta. Talentos: Caça, Pesca, Orientação.\n" +
         "2. Voz Encantadora — arrebata quem a ouve. Talentos: Música, Atuação, Poesia.\n" +
@@ -278,6 +291,7 @@ function seedRulesReference() {
     },
     {
       titulo: "Doce Vingança — ganchos & informações da aventura",
+      categoria: "lore",
       texto:
         "Aventura para 2 a 4 Princesas, do nível 1 ao 4. Combina exploração de masmorra, encontros sociais e resolução de problemas — a ordem fica a critério do grupo.\n\n" +
         "Ganchos alternativos (escolha um ou crie o seu):\n" +
@@ -287,6 +301,7 @@ function seedRulesReference() {
     },
     {
       titulo: "Ferramentas de segurança à mesa",
+      categoria: "regras",
       texto:
         "Doce Vingança toca em temas de horror corporal, sequestro, violência fantasiosa e situações assustadoras, mesmo num cenário de conto de fadas. Ferramentas recomendadas:\n\n" +
         "LINHAS E VÉUS: Linhas são coisas que não devem aparecer no jogo de forma alguma. Véus são coisas que podem acontecer, mas fora de cena, sem serem interpretadas em detalhe.\n\n" +
@@ -298,7 +313,7 @@ function seedRulesReference() {
   const existingTitles = new Set(state.notes.map((n) => n.titulo));
   extraNotes.forEach((n) => {
     if (!existingTitles.has(n.titulo)) {
-      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto });
+      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto, categoria: n.categoria || "lore" });
     }
   });
 
@@ -395,6 +410,7 @@ function seedFullAdventureText() {
   const fullNotes = [
     {
       titulo: "AVENTURA COMPLETA 1/7 — Visão geral, gancho e Cervovale",
+      categoria: "aventura",
       texto:
 "1. VISÃO GERAL DA CAMPANHA\n" +
 "Premissa: Vocês são Princesas vivendo num mundo de conto de fadas com um verniz mais sombrio do que os contos de fadas costumam ter. Uma de vocês tem uma amiga mensageira, uma das poucas pessoas que viaja com frequência entre as vilas levando encomendas. Faz quase um ano que ninguém tem notícia dela. Preocupada, essa Princesa contratou (ou convenceu) as outras a formarem um grupo de busca.\n\n" +
@@ -467,6 +483,7 @@ function seedFullAdventureText() {
     },
     {
       titulo: "AVENTURA COMPLETA 2/7 — O Bosque Emaranhado",
+      categoria: "aventura",
       texto:
 "1. VISÃO GERAL — Cervovale tem cerca de 500 moradores; dois terços já sucumbiram à maldição de Dulcineia. Os restantes fazem o possível pra manter a aldeia funcionando e estão ansiosos para contar tudo sobre a maldição e o Espelho Maléfico.\n\n" +
 "2. LOCAIS NOTÁVEIS DO BOSQUE\n" +
@@ -526,6 +543,7 @@ function seedFullAdventureText() {
     },
     {
       titulo: "AVENTURA COMPLETA 3/7 — Vale das Bagas e o Rei Rato",
+      categoria: "aventura",
       texto:
 "1. VISÃO GERAL — A aldeia das fadas pequenas, Vale das Bagas, é protegida por névoa espessa que desorienta qualquer criatura maior que uma raposa. Nenhum morador vivo de Cervovale jamais pisou lá. O problema atual: pólen amaldiçoado nas abelhas do apiário produziu mel enfeitiçado, deixando abelhas e quem come o mel ferozes. A pior criatura resultante é o Rei Rato — uma massa de ratos amarrados pelas caudas com mel, que ocupou o depósito de comida (uma toca de coelho virada armazém) e está devorando tudo.\n\n" +
 "2. CHEGADA A VALE DAS BAGAS\n" +
@@ -566,6 +584,7 @@ function seedFullAdventureText() {
     },
     {
       titulo: "AVENTURA COMPLETA 4/7 — Lago da Saudade Eterna e o Baile Eterno (parte 1)",
+      categoria: "aventura",
       texto:
 "1. LAGO DA SAUDADE ETERNA — portal para a terra das fadas altas. Precisa ser ativado: entrar na água com a intenção de viajar para lá enquanto se carrega algo de origem feérica.\n" +
 "Quem sabe ativar: a Rainha Gardênia, Ashkan, alguns animais selvagens do Bosque, ou uma Princesa com Intelecto Sábio/Folclore (teste de Astúcia).\n" +
@@ -585,6 +604,7 @@ function seedFullAdventureText() {
     },
     {
       titulo: "AVENTURA COMPLETA 5/7 — Baile Eterno (parte 2: Jardim, Banquete, Salão)",
+      categoria: "aventura",
       texto:
 "6. SEÇÃO ALVORADA: O JARDIM\n" +
 "6.1 Amantes Proibidos: Príncipe Aurélio, prometido à Senhora Amaris por casamento político, ama secretamente Penélope (criada de Amaris). Penélope não quer arriscar a reputação dele. Amaris está disposta ao casamento político mas guarda segredos menos picantes de Aurélio (medo de aranhas, ilusão que usa nos músculos).\n" +
@@ -620,6 +640,7 @@ function seedFullAdventureText() {
     },
     {
       titulo: "AVENTURA COMPLETA 6/7 — A Torre da Bruxa",
+      categoria: "aventura",
       texto:
 "1. CHEGANDO À TORRE — mais de 15 metros de altura, ar denso de cheiro doce com um zumbido grave de magia poderosa por baixo. Três entradas possíveis: porta da frente (guardada por Construtos de Chocolate com Hortelã); janela do topo (pequena demais até para uma criança); dreno sob a torre (leva direto à cozinha).\n" +
 "O Pingente Rouba-Alma está no corpo que Dulcineia construiu no Quarto da Bruxa; só acessível por meios mágicos (Chá de Soneca + atravessar a tapeçaria no Escritório). Objetivo principal 3 da campanha!\n\n" +
@@ -669,6 +690,7 @@ function seedFullAdventureText() {
     },
     {
       titulo: "AVENTURA COMPLETA 7/7 — Confronto final, desfechos e regras extras",
+      categoria: "aventura",
       texto:
 "1. O RETORNO DA BRUXA — ao remover o Pingente Rouba-Alma, a alma de Dulcineia escapa:\n" +
 "Se o Ovo de Dragão foi destruído: ela se prende ao retrato de sua versão jovem no baú e vira uma Aparição, furiosa por interferirem no trabalho de sua vida — ataca com intenção letal.\n" +
@@ -704,7 +726,7 @@ function seedFullAdventureText() {
   const existingTitles = new Set(state.notes.map((n) => n.titulo));
   fullNotes.forEach((n) => {
     if (!existingTitles.has(n.titulo)) {
-      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto });
+      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto, categoria: n.categoria || "lore" });
     }
   });
 }
@@ -716,6 +738,7 @@ function seedExtraLoot() {
   const extraNotes = [
     {
       titulo: "Maldição Doce — tabela completa (6 tipos x 3 estágios)",
+      categoria: "regras",
       texto:
 "Ao longo da aventura, as Princesas terão várias oportunidades de cair vítimas da Maldição Doce. Uma vez amaldiçoada, a Princesa só pode ser curada se a maldição for quebrada por completo. Use qualquer um dos efeitos abaixo ou crie os seus próprios, usando os exemplos como guia.\n\n" +
 "Para cada indivíduo amaldiçoado, a Maldição Doce progride em 4 estágios, avançados pela Mestra conforme apropriado ou quando o texto indicar. Os 3 primeiros representam os efeitos crescentes da aflição específica da pessoa. No 4º estágio, a vítima vira uma versão de confeitaria de si mesma por completo e fica incapaz de se mover, falar ou agir até a maldição ser quebrada.\n\n" +
@@ -750,6 +773,7 @@ function seedExtraLoot() {
     },
     {
       titulo: "Combate contra criaturas de doce — Fogo e Água",
+      categoria: "regras",
       texto:
 "Armadura: dano de fogo ignora a Armadura em criaturas de doce derretíveis.\n\n" +
 "Tochas: acertar um monstro com tocha acesa causa d4 de dano. A tocha se consome ao fim do combate. Acender uma tocha com pederneira conta como uma Ação durante a luta.\n\n" +
@@ -760,6 +784,7 @@ function seedExtraLoot() {
     },
     {
       titulo: "Achados — Cervovale",
+      categoria: "achados",
       texto:
 "ACHADOS NARRATIVOS\n" +
 "Bilhete amassado — Praça da Vila, perto do poço. Caligrafia de Selene: \"...três coisas. O Rato, o Anel, e algo dela mesma. Preciso ir ver o espelho antes que —\" (rasgado)\n" +
@@ -780,6 +805,7 @@ function seedExtraLoot() {
     },
     {
       titulo: "Achados — Bosque Emaranhado",
+      categoria: "achados",
       texto:
 "ACHADOS NARRATIVOS\n" +
 "Símbolo entalhado numa árvore — perto da trilha principal, onde Rui foi encontrado. Um coração com \"R\" dentro.\n" +
@@ -798,6 +824,7 @@ function seedExtraLoot() {
     },
     {
       titulo: "Achados — Vale das Bagas",
+      categoria: "achados",
       texto:
 "ACHADOS NARRATIVOS\n" +
 "Cartas de amor em miniatura — Praça da Aldeia. Bilhetinhos entre duas fadas pequenas, amarrados com fio de teia.\n" +
@@ -814,6 +841,7 @@ function seedExtraLoot() {
     },
     {
       titulo: "Achados — Baile Eterno",
+      categoria: "achados",
       texto:
 "ACHADOS NARRATIVOS\n" +
 "Cartão de dança rabiscado — O Jardim. Nome de Aurélio repetido de forma obsessiva — pertence à Senhora Amaris.\n" +
@@ -830,6 +858,7 @@ function seedExtraLoot() {
     },
     {
       titulo: "Achados — Torre da Bruxa",
+      categoria: "achados",
       texto:
 "ACHADOS NARRATIVOS\n" +
 "Carta de juventude de Dulcineia — Escritório (Sala 5), entre os livros. Rascunho nunca enviado para a mãe dela, sobre não querer envelhecer.\n" +
@@ -850,7 +879,7 @@ function seedExtraLoot() {
   const existingTitles = new Set(state.notes.map((n) => n.titulo));
   extraNotes.forEach((n) => {
     if (!existingTitles.has(n.titulo)) {
-      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto });
+      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto, categoria: n.categoria || "lore" });
     }
   });
 }
@@ -869,7 +898,17 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
-    if (btn.dataset.tab === "locais") renderLocationView();
+  });
+});
+
+// ---------- Subtabs (Compendio) ----------
+document.querySelectorAll(".subtab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".subtab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".subtab-panel").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("subtab-" + btn.dataset.subtab).classList.add("active");
+    if (btn.dataset.subtab === "locais") renderLocationView();
   });
 });
 
@@ -1006,14 +1045,14 @@ const formNpc = document.getElementById("form-npc");
 let currentNpcFoto = null;
 setupPhotoInput("npc-foto", "npc-foto-preview", (url) => { currentNpcFoto = url; });
 
-function openNpcModal(npc) {
+function openNpcModal(npc, defaultTipo) {
   document.getElementById("npc-modal-title").textContent = npc ? "Editar NPC/Monstro" : "Novo NPC/Monstro";
   document.getElementById("npc-id").value = npc ? npc.id : "";
   document.getElementById("npc-nome").value = npc ? npc.nome : "";
   document.getElementById("npc-foto").value = "";
   currentNpcFoto = npc ? npc.foto || null : null;
   showPhotoPreview("npc-foto-preview", currentNpcFoto);
-  document.getElementById("npc-tipo").value = npc ? npc.tipo : "NPC";
+  document.getElementById("npc-tipo").value = npc ? npc.tipo : (defaultTipo || "NPC");
   document.getElementById("npc-determinacao").value = npc ? npc.determinacao : 10;
   document.getElementById("npc-graca").value = npc ? npc.graca : 10;
   document.getElementById("npc-astucia").value = npc ? npc.astucia : 10;
@@ -1028,6 +1067,7 @@ function openNpcModal(npc) {
 function closeNpcModal() { npcModal.classList.add("hidden"); formNpc.reset(); }
 
 document.getElementById("btn-add-npc").addEventListener("click", () => openNpcModal(null));
+document.getElementById("btn-add-monster").addEventListener("click", () => openNpcModal(null, "Monstro"));
 document.getElementById("btn-cancel-npc").addEventListener("click", closeNpcModal);
 
 formNpc.addEventListener("submit", (e) => {
@@ -2018,6 +2058,7 @@ function openNoteModal(note) {
   document.getElementById("note-modal-title").textContent = note ? "Editar nota" : "Nova nota";
   document.getElementById("note-id").value = note ? note.id : "";
   document.getElementById("note-titulo").value = note ? note.titulo : "";
+  document.getElementById("note-categoria").value = note ? note.categoria || "lore" : activeNoteCategory === "todas" ? "lore" : activeNoteCategory;
   document.getElementById("note-texto").value = note ? note.texto : "";
   noteModal.classList.remove("hidden");
 }
@@ -2032,6 +2073,7 @@ formNote.addEventListener("submit", (e) => {
   const data = {
     id: id || uid(),
     titulo: document.getElementById("note-titulo").value.trim(),
+    categoria: document.getElementById("note-categoria").value,
     texto: document.getElementById("note-texto").value.trim(),
   };
   if (id) {
@@ -2052,12 +2094,37 @@ function deleteNote(id) {
   renderNotes();
 }
 
+const NOTE_CATEGORIES = [
+  { key: "todas", label: "Todas" },
+  { key: "regras", label: "Regras" },
+  { key: "lore", label: "Lore" },
+  { key: "aventura", label: "Aventura completa" },
+  { key: "achados", label: "Achados" },
+];
+let activeNoteCategory = "todas";
+
+function renderNoteCategoryPicker() {
+  const picker = document.getElementById("note-category-picker");
+  picker.innerHTML = NOTE_CATEGORIES.map(
+    (c) => `<button class="location-btn ${c.key === activeNoteCategory ? "active" : ""}" data-note-cat="${c.key}">${c.label}</button>`
+  ).join("");
+  picker.querySelectorAll("[data-note-cat]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      activeNoteCategory = btn.dataset.noteCat;
+      renderNoteCategoryPicker();
+      renderNotes();
+    })
+  );
+}
+
 function renderNotes() {
   const list = document.getElementById("note-list");
   const query = document.getElementById("note-search").value.trim().toLowerCase();
-  const filtered = state.notes.filter(
-    (n) => !query || n.titulo.toLowerCase().includes(query) || n.texto.toLowerCase().includes(query)
-  );
+  const filtered = state.notes.filter((n) => {
+    const matchesQuery = !query || n.titulo.toLowerCase().includes(query) || n.texto.toLowerCase().includes(query);
+    const matchesCategory = activeNoteCategory === "todas" || (n.categoria || "lore") === activeNoteCategory;
+    return matchesQuery && matchesCategory;
+  });
   if (filtered.length === 0) {
     list.innerHTML = `<div class="empty-state">Nenhuma nota encontrada.</div>`;
     return;
@@ -2185,6 +2252,7 @@ function renderAll() {
   renderLocationPicker();
   renderMap();
   renderObjectives();
+  renderNoteCategoryPicker();
   renderNotes();
   renderSessions();
 }

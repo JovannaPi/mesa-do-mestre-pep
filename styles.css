@@ -15,6 +15,7 @@
   --danger: #ef7fa0;
   --success: #5fbf94;
   --warning: #f0ab5e;
+  --royal-gold: #d4af37;
   --radius: 18px;
   --shadow: 0 6px 20px rgba(196, 116, 175, 0.18);
   font-size: 18px;
@@ -25,11 +26,31 @@
 body {
   margin: 0;
   font-family: "Quicksand", "Segoe UI", system-ui, sans-serif;
-  background: linear-gradient(160deg, #fdf1f7 0%, #f6e6fb 45%, #ffeef5 100%);
+  background-color: #fdf1f7;
+  background-image:
+    linear-gradient(160deg, #fdf1f7 0%, #f6e6fb 45%, #ffeef5 100%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 22l2.2 8.8L41 33l-8.8 2.2L30 44l-2.2-8.8L19 33l8.8-2.2z' fill='%23e9a9d3' fill-opacity='0.16'/%3E%3C/svg%3E");
   color: var(--text);
   min-height: 100vh;
   position: relative;
 }
+
+/* Material Symbols icon helper */
+.icon {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1.15rem;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  vertical-align: -3px;
+  display: inline-block;
+}
+.attr-icon { color: var(--accent-strong); font-size: 1rem; margin-right: 3px; vertical-align: -2px; }
 
 .page-vignette {
   position: fixed;
@@ -48,12 +69,37 @@ h1, h2, h3 {
 
 .app-header {
   background: linear-gradient(180deg, #fff5fa, #fce6f2);
-  border-bottom: 2px solid var(--border);
+  border-bottom: 2px solid var(--royal-gold);
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: var(--shadow);
 }
+
+/* Subtabs (Compendio) */
+.subtabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.subtab-btn {
+  border: 2px solid var(--border-soft);
+  background: var(--bg-card);
+  color: var(--accent-deep);
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: "Quicksand", sans-serif;
+}
+.subtab-btn.active {
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: #fff;
+  border-color: var(--accent);
+}
+.subtab-panel { display: none; }
+.subtab-panel.active { display: block; animation: fade-in 0.2s ease; }
 
 .header-flourish {
   text-align: center;
@@ -121,6 +167,9 @@ h1, h2, h3 {
   white-space: nowrap;
   border-radius: 10px 10px 0 0;
   transition: color 0.15s ease, background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .tab-btn:hover { color: var(--accent); background: rgba(194, 82, 158, 0.06); }
