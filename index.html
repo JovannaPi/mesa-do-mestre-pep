@@ -6,37 +6,36 @@
 <title>Mesa do Mestre — Perigos & Princesas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="page-vignette"></div>
 <header class="app-header">
-  <div class="header-flourish" aria-hidden="true">❦ ❧ ❦ ❧ ❦ ❧ ❦ ❧ ❦ ❧ ❦ ❧ ❦ ❧ ❦</div>
   <div class="header-inner">
     <div class="brand">
-      <span class="brand-icon">🍭</span>
       <div>
         <h1 id="campaign-name">Minha Campanha</h1>
         <p class="subtitle">Perigos &amp; Princesas — mesa do mestre</p>
       </div>
     </div>
     <div class="header-actions">
-      <button id="btn-rename-campaign" class="btn btn-ghost" title="Renomear campanha">✏️</button>
-      <button id="btn-export" class="btn btn-ghost" title="Exportar backup (.json)">⬇️ Backup</button>
+      <button id="btn-rename-campaign" class="btn btn-ghost" title="Renomear campanha">Renomear</button>
+      <button id="btn-export" class="btn btn-ghost" title="Exportar backup (.json)">Backup</button>
       <label class="btn btn-ghost" title="Importar backup (.json)">
-        ⬆️ Importar
+        Importar
         <input type="file" id="import-file" accept="application/json" hidden>
       </label>
     </div>
   </div>
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="combate">⚔️ Combate</button>
-    <button class="tab-btn" data-tab="pcs">👑 Personagens</button>
-    <button class="tab-btn" data-tab="npcs">🧙 NPCs &amp; Monstros</button>
-    <button class="tab-btn" data-tab="mapa">🗺️ Mapa</button>
-    <button class="tab-btn" data-tab="campanha">📖 Campanha</button>
-    <button class="tab-btn" data-tab="sessoes">📜 Sessões</button>
+    <button class="tab-btn active" data-tab="combate">Combate</button>
+    <button class="tab-btn" data-tab="pcs">Personagens</button>
+    <button class="tab-btn" data-tab="npcs">NPCs &amp; Monstros</button>
+    <button class="tab-btn" data-tab="itens">Itens</button>
+    <button class="tab-btn" data-tab="mapa">Mapa</button>
+    <button class="tab-btn" data-tab="campanha">Campanha</button>
+    <button class="tab-btn" data-tab="sessoes">Sessões</button>
   </nav>
 </header>
 
@@ -48,9 +47,9 @@
       <button id="btn-add-combatant" class="btn btn-primary">+ Adicionar combatente</button>
       <button id="btn-add-from-npc" class="btn btn-secondary">+ Do banco de NPCs</button>
       <button id="btn-add-from-pc" class="btn btn-secondary">+ De uma Princesa</button>
-      <button id="btn-roll-init" class="btn btn-secondary">🎲 Rolar iniciativa (d20)</button>
-      <button id="btn-next-turn" class="btn btn-secondary">➡️ Próximo turno</button>
-      <button id="btn-clear-combat" class="btn btn-danger">🧹 Limpar combate</button>
+      <button id="btn-roll-init" class="btn btn-secondary">Rolar iniciativa (d20)</button>
+      <button id="btn-next-turn" class="btn btn-secondary">Próximo turno</button>
+      <button id="btn-clear-combat" class="btn btn-danger">Limpar combate</button>
     </div>
     <div class="round-indicator">Rodada <span id="round-number">1</span></div>
     <div id="combat-list" class="combat-list"></div>
@@ -70,7 +69,23 @@
       <button id="btn-add-npc" class="btn btn-primary">+ Novo NPC/Monstro</button>
       <input id="npc-search" class="input" type="text" placeholder="Buscar por nome ou tag...">
     </div>
-    <div id="npc-list" class="card-grid"></div>
+    <div class="campaign-block">
+      <h2>NPCs &amp; Aliados</h2>
+      <div id="npc-list" class="card-grid"></div>
+    </div>
+    <div class="campaign-block">
+      <h2>Monstros</h2>
+      <div id="monster-list" class="card-grid"></div>
+    </div>
+  </section>
+
+  <!-- ITENS -->
+  <section id="tab-itens" class="tab-panel">
+    <div class="panel-toolbar">
+      <button id="btn-add-item" class="btn btn-primary">+ Novo item</button>
+      <input id="item-search" class="input" type="text" placeholder="Buscar por nome, efeito ou tag...">
+    </div>
+    <div id="item-list" class="card-grid"></div>
   </section>
 
   <!-- MAPA -->
@@ -81,8 +96,8 @@
         + Novo mapa
         <input type="file" id="map-upload" accept="image/*" hidden>
       </label>
-      <button id="btn-rename-map" class="btn btn-ghost">✏️ Renomear</button>
-      <button id="btn-delete-map" class="btn btn-danger">🗑️ Excluir mapa</button>
+      <button id="btn-rename-map" class="btn btn-ghost">Renomear</button>
+      <button id="btn-delete-map" class="btn btn-danger">Excluir mapa</button>
     </div>
     <p class="field-hint">Clique no mapa para adicionar um marcador. Arraste um marcador para movê-lo. Clique num marcador para editar ou remover.</p>
     <div id="map-canvas" class="map-canvas">
@@ -93,14 +108,15 @@
   <!-- CAMPANHA -->
   <section id="tab-campanha" class="tab-panel">
     <div class="campaign-block">
-      <h2>🎯 Objetivos principais</h2>
+      <h2>Objetivos principais</h2>
       <div id="objective-list" class="objective-list"></div>
       <button id="btn-add-objective" class="btn btn-ghost">+ Novo objetivo</button>
     </div>
     <div class="campaign-block">
       <div class="panel-toolbar">
-        <h2 style="margin:0">📚 Notas &amp; Lore</h2>
+        <h2 style="margin:0">Notas &amp; Lore</h2>
         <button id="btn-add-note" class="btn btn-primary">+ Nova nota</button>
+        <input id="note-search" class="input" type="text" placeholder="Buscar regra, lore, NPC...">
       </div>
       <div id="note-list" class="session-list"></div>
     </div>
@@ -352,6 +368,35 @@
   </div>
 </div>
 
+<!-- MODAL ITEM -->
+<div id="modal-item" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="item-modal-title">Novo item</h2>
+    <form id="form-item">
+      <input type="hidden" id="item-id">
+      <label>Nome
+        <input type="text" id="item-nome" required placeholder="ex: Luneta Feérica">
+      </label>
+      <label>Espaços de inventário / Dados de Dom (opcional)
+        <input type="text" id="item-custo" placeholder="ex: (1), (2 DD), d8 de dano">
+      </label>
+      <label>Origem (opcional)
+        <input type="text" id="item-origem" placeholder="ex: Recompensa de Zeca (consertar objetos)">
+      </label>
+      <label>O que faz
+        <textarea id="item-descricao" rows="4" required></textarea>
+      </label>
+      <label>Tags (separadas por vírgula)
+        <input type="text" id="item-tags" placeholder="ex: cervovale, torre da bruxa, arma">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-item">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- MODAL TOKEN -->
 <div id="modal-token" class="modal-overlay hidden">
   <div class="modal">
@@ -366,7 +411,7 @@
         <input type="hidden" id="token-cor" value="#b483d1">
       </label>
       <div class="modal-actions">
-        <button type="button" class="btn btn-danger" id="btn-delete-token">🗑️ Remover</button>
+        <button type="button" class="btn btn-danger" id="btn-delete-token">Remover</button>
         <button type="button" class="btn btn-ghost" id="btn-cancel-token">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>

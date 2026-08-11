@@ -12,11 +12,14 @@ function defaultState() {
     sessions: [],
     notes: [],
     objectives: [],
+    items: [],
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
     activeMapId: null,
     seeded: false,
     seededV2: false,
+    seededItems: false,
+    seededFullText: false,
   };
 }
 
@@ -89,9 +92,9 @@ function seedCampaignData() {
       id: uid(),
       titulo: "Bosque Emaranhado — pontos de interesse",
       texto:
-        "Vale das Bagas: aldeia das fadas pequenas, protegida por névoa; aterrorizada pelo Rei Rato (→ objetivo 1).\n" +
+        "Vale das Bagas: aldeia das fadas pequenas, protegida por névoa; aterrorizada pelo Rei Rato (objetivo 1).\n" +
         "Lago da Saudade Eterna: portal para o Baile Eterno — ativa entrando na água com um item de origem feérica.\n" +
-        "Torre da Bruxa: isolada e protegida por magia; onde está o Pingente Rouba-Alma (→ objetivo 3).\n" +
+        "Torre da Bruxa: isolada e protegida por magia; onde está o Pingente Rouba-Alma (objetivo 3).\n" +
         "Cova Misteriosa: onde o Espelho Maléfico pode ser recarregado se estiver quebrado.\n" +
         "O Cavaleiro de Chocolate Amargo patrulha a floresta; regenera 1 dia depois de derrotado, a menos que seja derretido/dissolvido.",
     },
@@ -117,8 +120,8 @@ function seedCampaignData() {
         "Três entradas: porta da frente (guardada por Construtos de Chocolate com Hortelã), janela do topo (pequena demais) ou dreno sob a torre (leva à cozinha).\n" +
         "Senha para entrar pela frente: \"Maçapão Maravilhoso\".\n\n" +
         "O Pingente Rouba-Alma está num corpo-construto no Quarto da Bruxa. Ao removê-lo, a alma de Dulcineia escapa:\n" +
-        "— Se o Ovo de Dragão do Viveiro foi destruído → ela vira uma Aparição.\n" +
-        "— Se não foi destruído → ela possui o dragão e ataca Cervovale em ~1 hora.\n\n" +
+        "— Se o Ovo de Dragão do Viveiro foi destruído ela vira uma Aparição.\n" +
+        "— Se não foi destruído ela possui o dragão e ataca Cervovale em ~1 hora.\n\n" +
         "Quebrar a maldição: jogar os 3 itens (Cauda do Rei Rato, Anel do Rei-Elfo, Pingente Rouba-Alma) no poço da praça, DEPOIS de derrotar Dulcineia. Se algum item for destruído na luta, a maldição fica inquebrável.",
     },
   ];
@@ -139,27 +142,27 @@ function seedCampaignData() {
 
   state.npcs = [
     npc("Teodoro Éverson", "NPC", 10, 8, 12, 10, 12, 0, ["cervovale", "prefeito", "mansão"],
-      "Prefeito de Cervovale, transformando-se em algodão-doce. Esconde o Espelho Maléfico (rachado) num baú com fundo falso sob a cama. Missão: ajudar a levantar o moral da vila → Chave de prata da cidade."),
+      "Prefeito de Cervovale, transformando-se em algodão-doce. Esconde o Espelho Maléfico (rachado) num baú com fundo falso sob a cama. Missão: ajudar a levantar o moral da vila Chave de prata da cidade."),
     npc("Baltasar \"Baz\" Hartly", "NPC", 14, 10, 10, 12, 12, 1, ["cervovale", "guarda", "salão comunitário"],
-      "Líder de fato da guarda, virando bala azeda de limão. Sabe sobre fadas na névoa e já lutou contra o Cavaleiro de Chocolate Amargo. Missão: controle de pragas → Hortelãnça (d8, 2d8 em carga)."),
+      "Líder de fato da guarda, virando bala azeda de limão. Sabe sobre fadas na névoa e já lutou contra o Cavaleiro de Chocolate Amargo. Missão: controle de pragas -> Hortelãnça (d8, 2d8 em carga)."),
     npc("Hannah Falcão", "NPC", 8, 12, 10, 8, 10, 0, ["cervovale", "estalagem"],
       "Dona d'A Cabra Sorridente, cheira a canela. Sabe que Élton sonhava com música vinda da floresta antes de sumir."),
     npc("Constança \"Connie\" Oriente", "NPC", 10, 14, 11, 9, 12, 0, ["cervovale", "estalagem", "mensageira"],
       "Mensageira presa na vila, pele virando hortelã listrada. Já enfrentou o Cavaleiro de Chocolate Amargo tentando fugir; tem canivete de prata."),
     npc("Ezequiel \"Zeca\" Grifo", "NPC", 9, 9, 13, 9, 11, 0, ["cervovale", "armazém", "lojista"],
-      "Lojista otimista, troca itens comuns 1-por-1. Missão: consertar objetos quebrados → Luneta Feérica (revela magia, itens escondidos, forma verdadeira de Selene)."),
+      "Lojista otimista, troca itens comuns 1-por-1. Missão: consertar objetos quebrados -> Luneta Feérica (revela magia, itens escondidos, forma verdadeira de Selene)."),
     npc("Geraldo Silva", "NPC", 11, 8, 9, 11, 11, 1, ["cervovale", "padaria"],
-      "Padeiro virando biscoito de gengibre, pai de Rui. Esteve no ataque original a Dulcineia. Missões: óculos perdidos (esquilo levou) → biscoitos com efeito Restauração; achar Biscoitinha, a cadela."),
+      "Padeiro virando biscoito de gengibre, pai de Rui. Esteve no ataque original a Dulcineia. Missões: óculos perdidos (esquilo levou) -> biscoitos com efeito Restauração; achar Biscoitinha, a cadela."),
     npc("Rui Silva", "NPC", 9, 11, 10, 7, 12, 0, ["cervovale", "padaria", "criança"],
       "Filho de Geraldo, resgatado no gancho inicial (ou capturado pelo Cavaleiro, se falharem). Único sequestrado ainda não transformado em doce; lembra da cantiga da bruxa."),
     npc("Rosana \"Rosa\" Águas-Claras", "NPC", 9, 10, 13, 8, 11, 0, ["cervovale", "poções", "irmã de selene"],
-      "Irmã mais nova de Selene, vira bolinho aos poucos, administra a loja de poções sozinha. Missão: testar vacina contra a Maldição Doce (50% de sucesso) → Poção Encolhedora + 2 poções."),
+      "Irmã mais nova de Selene, vira bolinho aos poucos, administra a loja de poções sozinha. Missão: testar vacina contra a Maldição Doce (50% de sucesso) -> Poção Encolhedora + 2 poções."),
     npc("Maya Élis", "NPC", 13, 9, 12, 11, 12, 1, ["cervovale", "ferraria", "lore de fadas"],
-      "Ferreira, esposa do desaparecido Élton. Grande conhecedora de fadas; dá retalhos de ferro contra fadas. Missão: encontrar Élton no Baile Eterno → espada Estalar de Segundos (d8, ataca 2x)."),
+      "Ferreira, esposa do desaparecido Élton. Grande conhecedora de fadas; dá retalhos de ferro contra fadas. Missão: encontrar Élton no Baile Eterno -> espada Estalar de Segundos (d8, ataca 2x)."),
     npc("Ashkan", "NPC", 12, 11, 15, 12, 14, 0, ["bosque emaranhado", "fada alta", "círculo de cogumelos"],
       "Fada alta presa numa pedra por Finnegan, no Círculo de Cogumelos. Se libertado (resposta do enigma: \"laranja\"), ensina a ativar o Lago da Saudade Eterna e menciona a Senhora Neves."),
     npc("Castanho", "NPC", 13, 11, 10, 10, 14, 1, ["vale das bagas", "guarda espinheiro"],
-      "Líder da Guarda Espinheiro, desconfiado de humanos. Missão: achar seu vaga-lume de estimação (preso no Depósito, sala 3, no Limo Vermelho Tóxico) → Arco Ferrão."),
+      "Líder da Guarda Espinheiro, desconfiado de humanos. Missão: achar seu vaga-lume de estimação (preso no Depósito, sala 3, no Limo Vermelho Tóxico) -> Arco Ferrão."),
     npc("Rainha Gardênia", "NPC", 15, 13, 14, 14, 16, 1, ["vale das bagas", "realeza fada"],
       "Monarca das fadas pequenas, enganada por Dulcineia no passado. Sabe ativar o Lago da Saudade Eterna. Devolver a Colher de Mel a deixa em dívida com o grupo."),
     npc("O Rei-Elfo", "Monstro", 18, 16, 20, 15, 15, 0, ["baile eterno", "chefe", "fada alta"],
@@ -167,7 +170,7 @@ function seedCampaignData() {
     npc("Selene (Lobo Mau)", "Monstro", 12, 10, 9, 8, 12, 3, ["bosque emaranhado", "lobisomem"],
       "Ataca duas vezes: Garras (d4) e Mordida (d6). Armas prateadas/encantadas ignoram Armadura. Se Ferida, teste Determinação ou vire lobisomem. Derrotada, volta à forma humana e dá sua Corda de Escalada."),
     npc("O Cavaleiro de Chocolate Amargo", "Monstro", 14, 8, 8, 12, 13, 3, ["bosque emaranhado", "chefe", "regenera"],
-      "Ataca 2x com Espada (d8) ou 1x com Lança (d8, 2d8 em carga montada). Ferida por ele → Maldição Doce (avança 1 estágio se já afligido). Suscetível a derretimento. Regenera após 1 dia, a menos que derretido/dissolvido."),
+      "Ataca 2x com Espada (d8) ou 1x com Lança (d8, 2d8 em carga montada). Ferida por ele -> Maldição Doce (avança 1 estágio se já afligido). Suscetível a derretimento. Regenera após 1 dia, a menos que derretido/dissolvido."),
     npc("Cavalo de Guerra de Chocolate", "Monstro", 10, 8, 6, 6, 6, 0, ["bosque emaranhado", "montaria"],
       "Coice (d6). Montaria leal do Cavaleiro de Chocolate Amargo. Suscetível a derretimento."),
     npc("Ursinho de Goma", "Monstro", 8, 6, 6, 8, 10, 1, ["bosque emaranhado", "gancho inicial"],
@@ -224,7 +227,7 @@ function seedRulesReference() {
       texto:
         "INICIATIVA: teste ASTÚCIA. Sucesso = age antes do inimigo; falha = age depois. Mantém a mesma ordem toda rodada. Tirar 1 é crítico: pode agir duas vezes no primeiro turno.\n\n" +
         "NO SEU TURNO: mover-se Por Perto + uma Ação. Pode Reagir 1x por rodada no turno de qualquer pessoa (ex: usar Dom, gastar Dado Coração).\n\n" +
-        "ATACANDO: teste Determinação (corpo a corpo) ou Graça (à distância). Sucesso → role o dano. Tirar 1 é crítico: role 2 dados de dano e some.\n" +
+        "ATACANDO: teste Determinação (corpo a corpo) ou Graça (à distância). Sucesso role o dano. Tirar 1 é crítico: role 2 dados de dano e some.\n" +
         "DEFENDENDO: teste Graça para evitar o ataque; subtraia a Armadura do dano recebido. O inimigo tirar 20 é crítico: ignora sua Armadura.\n" +
         "MANOBRAS (agarrar, derrubar, empurrar etc.): Teste de Virtude de Determinação, Graça ou Astúcia, conforme a manobra.\n\n" +
         "FERIMENTOS: chegar a 0 Coração = não pode Agir/Mover-se até ser estabilizada. Role d8 na Tabela de Ferimentos (efeitos de curto/médio prazo, algumas permanentes). Dano maior que o dobro do Coração máximo = 1 ponto de Trauma imediato.",
@@ -233,11 +236,11 @@ function seedRulesReference() {
       titulo: "Regras rápidas — Recuperação, Aflições & Trauma",
       texto:
         "PIQUENIQUE: pequena pausa (Gastar Tempo + 1 refeição). Gaste Dados Coração à vontade, role e recupere PC igual à soma.\n" +
-        "DESCANSO: 1x a cada 24h. 8h de sono com comida, água e abrigo/fogueira → restaura todo o Coração e todos os Dados de Dom/Coração gastos. Consome 1 refeição.\n\n" +
+        "DESCANSO: 1x a cada 24h. 8h de sono com comida, água e abrigo/fogueira restaura todo o Coração e todos os Dados de Dom/Coração gastos. Consome 1 refeição.\n\n" +
         "AFLIÇÕES (dão Desvantagem numa Virtude específica):\n" +
-        "• Cansada → Desvantagem em Determinação\n" +
-        "• Atordoada → Desvantagem em Graça\n" +
-        "• Confusa → Desvantagem em Astúcia\n" +
+        "• Cansada Desvantagem em Determinação\n" +
+        "• Atordoada Desvantagem em Graça\n" +
+        "• Confusa Desvantagem em Astúcia\n" +
         "Um Descanso ou Piquenique geralmente encerra uma Aflição, salvo indicação contrária.\n\n" +
         "TRAUMA (ao acumular, role/consulte a Mestra): 1) não pode usar DD por 24h; 2) idem + fica apavorada pela causa até superar o medo; 3) fim de jogo para a personagem (aposentadoria, sono mágico, captura, morte trágica — decidido à mesa).\n\n" +
         "SOBRECARGA: carrega até seu valor de Determinação sem penalidade; fica Cansada acima disso; não pode carregar mais que o dobro da Determinação. Itens Volumosos contam como 2 espaços; consumíveis (flechas, comida, tochas) se amontoam num único espaço.",
@@ -316,8 +319,399 @@ function seedRulesReference() {
   }
 }
 
+function seedItems() {
+  if (state.seededItems) return;
+  state.seededItems = true;
+
+  const item = (nome, custo, origem, descricao, tags) => ({
+    id: uid(), nome, custo, origem, descricao, tags,
+  });
+
+  state.items = [
+    item("Hortelãnça", "(2), d8 de dano (2d8 em carga de cavalo)", "Recompensa de Baz — controle de pragas",
+      "Arma de haste saqueada de um construto de doce. Tem cheirinho de hortelã.", ["cervovale", "arma"]),
+    item("Luneta Feérica", "(1)", "Recompensa de Zeca — consertar objetos quebrados",
+      "Parece quebrada, mas concede visão mágica: revela contornos brilhantes ao redor de itens mágicos (mesmo escondidos), permite enxergar através da névoa das fadas e revela a verdadeira forma de Selene (o lobisomem).", ["cervovale", "utilidade", "detecção"]),
+    item("Pacote de Biscoitos", "(1 lote, 1 por Princesa + 1 extra)", "Recompensa de Geraldo — óculos perdidos",
+      "Efeito do feitiço Restauração.", ["cervovale", "cura"]),
+    item("Poção Encolhedora + 2 poções à escolha", "—", "Recompensa de Rosa — voluntariar-se para testar a vacina",
+      "A única Poção Encolhedora que Rosa tem; ela não sabe preparar outra.", ["cervovale", "poção"]),
+    item("Estalar de Segundos", "d8 de dano", "Recompensa de Maya — devolver Élton",
+      "Espada em forma de ponteiro de relógio. Ataca duas vezes com uma única Ação.", ["cervovale", "arma", "baile eterno"]),
+    item("Chave de Prata da Cidade", "vale 15 pp", "Recompensa de Teodoro — levantar o moral da vila",
+      "Não abre nada, mas tem grande valor sentimental — pode ressoar magicamente se invocada com inteligência (a critério da Mestra).", ["cervovale"]),
+    item("Corda de Escalada Encantada", "—", "Pertence a Selene; dada ao derrotá-la/curá-la",
+      "Corda animada que obedece comandos: amarra e desamarra sozinha, se prende firmemente a construções etc.", ["bosque emaranhado"]),
+    item("Pão de Viagem", "1 pp cada, compra na Padaria", "Padaria de Geraldo",
+      "Pão reforçado cheio de sementes, com cheiro de abóbora e xarope de ácer. Vale como uma ração diária.", ["cervovale", "consumível"]),
+    item("Arco Ferrão", "(1), d6 de dano, 6 Flechas Ferrão (uso único)", "Recompensa de Castanho — achar o vaga-lume",
+      "Flechas disparadas são críticas em 1 ou 2. Quem for atingido testa Determinação ou fica incapaz de agir por 1 rodada.", ["vale das bagas", "arma"]),
+    item("Bolos de Mel", "1 lote com 6 unidades", "Recompensa do Fazendeiro Listra-d'Olmo — curar a asa",
+      "Feitos com mel não amaldiçoado. Concedem vantagem em Testes de Virtude para persuadir, até Gastar Tempo.", ["vale das bagas", "consumível"]),
+    item("Prendedor Borboleta", "(1 DD)", "Recompensa da Rainha Gardênia — derrotar o Rei Rato",
+      "Preso no cabelo, faz brotar asas temporárias de fada pequena — voa como o feitiço Flutuar. Recarrega ao pregar uma peça/brincadeira enquanto o usa.", ["vale das bagas", "voo"]),
+    item("Varinha de Colher de Mel", "(2 DD)", "Vale das Bagas",
+      "Lança Hipnotizar, É Meu! e Amarrar. Recarrega sendo tratada com Geleia Real de uma abelha rainha.", ["vale das bagas", "varinha"]),
+    item("Escudo Hélice", "(2)", "Depósito de Armas — Ninho do Rei Rato (Sala 4)",
+      "Vantagem em Salvamentos contra magia. Desativa quaisquer outros itens mágicos que você carregue e anula magias benéficas recebidas depois de equipado.", ["vale das bagas", "escudo"]),
+    item("Corvo Mensageiro", "—", "Reconciliar Cirilla e Cirillo (Baile Eterno)",
+      "Estátua de latão de um corvo. Sussurre uma mensagem e ele voa para entregá-la a quem você desejar.", ["baile eterno", "utilidade"]),
+    item("Harpa Cantacora", "(2)", "Arturo, o Trovador — dar-lhe uma boa história",
+      "1x/dia, quem a ouve testa Astúcia ou revela o que está no coração através de uma canção. Só usável por quem tem talento musical.", ["baile eterno"]),
+    item("Brincalhetes Sussurrantes", "—", "Duquesa Jacinda — impressioná-la",
+      "Ao esfregar a cabeça do lagarto, sussurra uma fraqueza/segredo de alguém visível à sua escolha. Recarrega contando um segredo depreciativo sobre si mesma.", ["baile eterno"]),
+    item("Varinha do Capricho", "(1 DD)", "Finnegan — se for capturado",
+      "Lança Jato de Purpurina, Puf!, Encolher e Virar Sapo. Recarrega Gastando Tempo numa festa animada.", ["baile eterno", "varinha"]),
+    item("O Anel do Rei-Elfo", "—", "Completar o Desafio do Rei-Elfo (Salão de Baile)",
+      "Enquanto usado/carregado, sua aura fica majestosa; fadas tendem a tratá-la com mais respeito. Objetivo principal da campanha.", ["baile eterno", "objetivo principal"]),
+    item("Adaga Ruína dos Dragões", "d6 de dano, (3 DD)", "Baú no Quarto da Bruxa (Torre, Sala 9)",
+      "Ignora a Armadura de dragões e é capaz de ferir o ovo de dragão do Viveiro. Ao causar dano contra um dragão, pode gastar seus DD para somar ao dano. Recarrega matando um dragão.", ["torre da bruxa", "arma"]),
+    item("Chave Dourada", "—", "Dentro da Gosma de Açúcar (Torre, Sala 1 — Dreno)",
+      "Abre o baú trancado no Quarto da Bruxa (Sala 9).", ["torre da bruxa", "chave"]),
+    item("O Grimório Proibido", "—", "Sala de Experimentos de Dulcineia (Torre, Sala 6)",
+      "Ao se aprofundar nele (rolando na Tabela de Ferimentos como custo), ensina as magias Medo, Drenar e Afligir.", ["torre da bruxa", "magia"]),
+    item("O Chapéu da Bruxa", "concede 1 DD", "Escritório de Dulcineia (Torre, Sala 5)",
+      "Concede 1 Dado de Dom extra, mas o usuário passa a falar com um eco mágico dramático.", ["torre da bruxa"]),
+    item("Pingente Rouba-Alma", "—", "Construto no Quarto da Bruxa (Torre, Sala 9)",
+      "Ao ser tocado pela primeira vez, dá uma sensação de equilíbrio emocional e um flashback vívido — próximo teste com vantagem. Objetivo principal (relíquia da bruxa). Removê-lo do receptáculo libera a alma de Dulcineia.", ["torre da bruxa", "objetivo principal"]),
+    item("Maçã Envenenada", "—", "Itens maravilhosos (livro básico)",
+      "Se comida, causa um efeito perigoso — detalhes a critério da Mestra conforme o livro básico.", ["item maravilhoso"]),
+    item("Martelo de Brigite", "d10 de dano, (1 DD)", "Livro básico — itens mágicos",
+      "Gaste o Dado de Dom para fabricar instantaneamente um item a partir de matérias-primas (ponte, roupas, vinho...), num cubo de [SOMA]+1,5m de lado. Não cria criaturas vivas nem itens mágicos. Recarrega presenteando algo de valor pessoal a uma desconhecida.", ["item mágico", "criação"]),
+    item("Adaga de Prata", "d6 de dano", "Livro básico — itens mágicos",
+      "Pequena adaga revestida de prata. Funciona contra lobisomens, fantasmas, aparições e outros monstros resistentes a armas normais.", ["item mágico", "arma"]),
+    item("Arco da Vingança", "d6 de dano", "Livro básico — itens mágicos",
+      "Gaste Tempo fazendo um juramento de vingança contra um inimigo: vantagem em tiros contra ele, e acertos são sempre críticos. Contra qualquer outro alvo, os tiros são feitos com desvantagem e nunca são críticos. Pode jurar de novo após derrotar o alvo.", ["item mágico", "arma"]),
+    item("Espelho Amaldiçoado (Espelho Maléfico)", "—", "Mansão da Prefeitura (Teodoro)",
+      "Responde com sinceridade a uma pergunta, mas amaldiçoa quem perguntou (quanto maior a questão, mais severa a maldição). Depois de responder, quebra e só volta a funcionar se for recarregado. Recarrega: enterrar por uma noite na Cova Misteriosa do Bosque Emaranhado.", ["cervovale", "objetivo", "maldição"]),
+  ];
+}
+
+function seedFullAdventureText() {
+  if (state.seededFullText) return;
+  state.seededFullText = true;
+
+  const fullNotes = [
+    {
+      titulo: "AVENTURA COMPLETA 1/7 — Visão geral, gancho e Cervovale",
+      texto:
+"1. VISÃO GERAL DA CAMPANHA\n" +
+"Premissa: Vocês são Princesas vivendo num mundo de conto de fadas com um verniz mais sombrio do que os contos de fadas costumam ter. Uma de vocês tem uma amiga mensageira, uma das poucas pessoas que viaja com frequência entre as vilas levando encomendas. Faz quase um ano que ninguém tem notícia dela. Preocupada, essa Princesa contratou (ou convenceu) as outras a formarem um grupo de busca.\n\n" +
+"O mundo: reinos próximos, vilas pequenas. Florestas encantadas são comuns, e cada uma tem sua própria reputação e perigos. Magia existe e é aceita como parte natural do mundo (fadas, feitiços, maldições), mas ainda assim é temida e respeitada. Princesas não são necessariamente realeza no sentido literal — é mais um \"título\" ligado a ter um Dom mágico concedido por uma Fada Madrinha, então cada Princesa pode vir de origem bem diferente.\n\n" +
+"2. GANCHO INICIAL — O GRITO NA FLORESTA\n" +
+"Faz dias que vocês seguem a trilha que leva a Cervovale, cortando o Bosque Emaranhado. As árvores aqui crescem tortas demais pra parecer natural, e a luz do sol mal atravessa a copa fechada. Vocês já ouviram histórias sobre esse lugar — de que coisas entram e não saem, ou saem diferentes do que eram. Até agora, a viagem tem sido tranquila. Estranhamente tranquila.\n\n" +
+"Depois de alguns minutos de viagem, o ar começa a cheirar estranhamente a doce, e um grito de criança corta o silêncio, vindo de fora da trilha.\n\n" +
+"Leitura em voz alta: \"Um cheiro doce e artificial começa a se misturar com o cheiro de terra molhada da floresta — quase enjoativo. E então, um grito. Uma voz de criança, gritando por socorro, em algum lugar fora da trilha.\"\n\n" +
+"Se investigarem: encontram Rui Silva, um garoto ruivo, preso no alto de uma árvore, sendo perseguido por um urso em transformação — meio urso-pardo, meio criatura de doce, com gomas de bala brotando dos ombros como feridas.\n\n" +
+"Combate: Ursinho de Goma — PV 8, Salvamento 10, Armadura 1. Ataca duas vezes: Mordida (d6) e Garras (d4). Suscetível a derretimento (ataques de calor/água ignoram Armadura). Quem for ferido por ele contrai a Maldição Doce (vira doce aos poucos).\n\n" +
+"Se vencerem ou afugentarem o urso: Rui desce da árvore, agradecido e falante, e guia o grupo até Cervovale, respondendo qualquer pergunta simples no caminho (nome, onde mora, etc. — ele não sabe muito sobre a bruxa ainda).\n\n" +
+"Se ignorarem os gritos ou perderem a luta: o urso foge levando Rui — ele reaparece mais tarde na história, capturado por um vilão maior (o Cavaleiro de Chocolate Amargo). Não é o fim do mundo se isso acontecer; só muda o gancho local.\n\n" +
+"Nota de continuidade: o desfecho desta cena afeta a cena de chegada em Cervovale e a disponibilidade inicial de Geraldo na Padaria.\n\n" +
+"3. CHEGADA A CERVOVALE\n" +
+"A trilha se abre numa clareira, e vocês avistam Cervovale pela primeira vez: casas de telhado inclinado, uma pracinha com um poço de pedra no centro, fumaça subindo de algumas chaminés. Só que, ao se aproximar, algo está errado. As pessoas na rua... não são inteiramente pessoas. Uma tem a pele craquelada como caramelo. Outra caminha com as pernas grudentas, deixando um rastro pegajoso no chão. O ar inteiro cheira a confeitaria.\n\n" +
+"Se Rui está com o grupo: o pai dele (Geraldo Silva, o padeiro, virando biscoito de gengibre) corre até o filho, aliviadíssimo.\n\n" +
+"O Prefeito Teodoro Éverson se aproxima e pede pra conversar com o grupo — leva vocês até a Mansão da Prefeitura (ou conversa ali mesmo, se preferir cortar caminho).\n\n" +
+"4. A SITUAÇÃO CENTRAL: A MALDIÇÃO DE DULCINEIA\n" +
+"Isso é o que Teodoro explica ao grupo: há um ano, moradores enfrentaram e mataram uma bruxa que sequestrava crianças da vila. Antes de morrer, ela lançou uma maldição sobre todo mundo: aos poucos, cada morador está virando doce. Uma guarda chamada Selene usou um espelho amaldiçoado pra descobrir como quebrar a maldição — e morreu logo depois de obter a resposta.\n\n" +
+"O espelho revelou (em forma de enigma) que é preciso reunir três itens específicos e jogá-los no poço da vila pra desfazer o feitiço: algo ligado a um Rei dos Ratos; um anel de um Rei-Elfo; uma relíquia da própria bruxa.\n\n" +
+"Tentativas de deixar a vila são bloqueadas por um cavaleiro amaldiçoado (o Cavaleiro de Chocolate Amargo) que patrulha a floresta.\n\n" +
+"Teodoro pede ajuda, oferece hospedagem gratuita na estalagem, e uma recompensa à escolha (dinheiro, uma casa, uma apresentação a um monarca, ou um item misterioso).\n\n" +
+"Os três objetivos principais da campanha (não linear — podem ser buscados em qualquer ordem): item ligado ao Rei dos Ratos; anel do Rei-Elfo; relíquia da bruxa Dulcineia.\n\n" +
+"5. LOCAIS DE CERVOVALE\n\n" +
+"5.1 Mansão da Prefeitura — colina nos arredores, com vista para a aldeia.\n" +
+"NPC: Teodoro Éverson (62) — Preocupado, atarefado, cauteloso. Homem alto, espichado pelas exigências de governar uma vila que vira doce. Cabelos e barba viraram algodão-doce. Sente-se responsável por ter deixado Selene usar o Espelho Maléfico.\n" +
+"Missão — Levantar o Moral da Vila: se ajudarem a pensar numa boa ideia para levantar o moral, ele dá uma chave de prata da cidade (15 pp, valor sentimental que pode ressoar magicamente).\n" +
+"Segredo: ainda tem o Espelho Maléfico, escondido num baú de fundo falso sob a cama. Está rachado e inutilizável até ser recarregado.\n\n" +
+"5.2 Salão Comunitário — abriga quase toda a população.\n" +
+"NPC: Baltasar \"Baz\" Hartly (38) — Rabugento, competente, organizado. Guarda que virou líder de fato desde o sumiço de Selene; vira bala azeda de limão.\n" +
+"O que Baz sabe: esteve no grupo que atacou a bruxa e trabalhou com Selene; sabe que fadas rondam a região enevoada; já lutou contra o Cavaleiro de Chocolate Amargo.\n" +
+"Missão — Controle de Pragas: se inventarem um método melhor de afastar ratos, ele dá uma Hortelãnça (d8 de dano, 2d8 em carga de cavalo).\n\n" +
+"5.3 Estalagem A Cabra Sorridente — comida, cerveja e quartos grátis se ajudarem a vila.\n" +
+"NPC: Hannah Falcão (51) — Calorosa, fofoqueira, curiosa. Dona da estalagem, cheira a canela. Sabia que Élton (marido de Maya) sonhava com uma música estranha vinda da floresta antes de sumir, mas não contou a Maya.\n" +
+"NPC: Constança \"Connie\" Oriente (24) — Impaciente, otimista, direta. Mensageira presa na vila pela maldição, pele virando hortelã listrada. Já tentou fugir várias vezes; foi barrada pelo Cavaleiro. Numa fuga recente, afugentou uma fera enorme com seu canivete de prata.\n\n" +
+"5.4 Armazém / Posto de Troca — Zeca compra itens por preço justo e troca item comum por item comum do mesmo tamanho (não comercializa armas/armaduras).\n" +
+"NPC: Ezequiel \"Zeca\" Grifo (52) — Otimista, distraído, energético. Cabelos viraram minhocas de goma coloridas.\n" +
+"Missão — Consertar os Objetos Quebrados: cada objeto exige um Teste de Virtude apropriado (ou descrição criativa se tiver Talento relevante). Se consertar todos, dá a Luneta Feérica.\n\n" +
+"5.5 Padaria — Pão de Viagem (1 pp) vale como ração diária. Se Rui não foi resgatado, Geraldo está preocupado demais para abrir.\n" +
+"NPC: Geraldo Silva (38) — Vivaz, criativo, generoso. Padeiro, pai de Rui, esteve no ataque original a Dulcineia.\n" +
+"O que Geraldo sabe: a torre da bruxa é uma fortaleza; o grupo esperou ela sair com os cativos pra atacar sob a lua; Selene tentou usar a Corda de Escalada Encantada para falar com as crianças, mas a janela era pequena demais.\n" +
+"O que Rui sabe (se resgatado): é o único sequestrado que não virou doce por completo; a bruxa era obcecada por juventude e \"almas puras\"; lembra de uma cantiga que a bruxa cantava ao sair do cômodo; toda tentativa de fuga deixava tudo nebuloso e todos caíam no sono.\n" +
+"Missão 1 — Os Óculos Perdidos: um esquilo levou os óculos de Geraldo para seu ninho no Bosque Emaranhado. Devolvendo, ele dá biscoitos com efeito do feitiço Restauração.\n" +
+"Missão 2 — Biscoitinha, a Cadela: labradora cor de chocolate perdida na floresta, magicamente fortalecida; se achada, Rui deixa levá-la na jornada.\n\n" +
+"5.6 Loja de Poções — prateleiras quase vazias.\n" +
+"NPC: Rosana \"Rosa\" Águas-Claras (21) — Engenhosa, determinada, persistente. Irmã mais nova de Selene; administra a loja sozinha desde que os pais viraram bolinhos.\n" +
+"O que Rosa sabe: ouve uivos vindos do Bosque à noite e sente uma conexão estranha (é irmã de Selene, que virou loba); usa um pingente de lua de prata, presente de Selene (que usava o do sol); sabe identificar a cura para maldições comuns.\n" +
+"Missão — Vacina contra a Maldição Doce: tem só uma dose para testar; precisa de uma voluntária não amaldiçoada. 50% de chance de sucesso (imunidade) ou falha (Maldição Doce em 24h). Recompensa: uma rara Poção Encolhedora + 2 poções à escolha.\n\n" +
+"5.7 Ferraria.\n" +
+"NPC: Maya Élis (40) — Sóbria, taciturna, saudosa. Ferreira, marido Élton sumiu há 7 anos; acredita que foi levado pelas fadas. Grande conhecedora de fadas (reconhece referências do Rei-Elfo).\n" +
+"O que Maya sabe especificamente: Élton foi abençoado com beleza pela Fada Madrinha dele (provável motivo do sequestro); o Rei-Elfo é um monarca das fadas que adora manipular humanos; suspeita que o portal das fadas fica atrás do véu de névoa que esconde a aldeia das fadas, mas nunca conseguiu atravessar; usa um xale feito por fadas, presente de Élton, muito apegada a ele; dá retalhos de ferro de graça a quem for ajudar a procurar Élton (fadas são vulneráveis a ferro no reino humano, mas o ferro é inútil e até perigoso socialmente se usado no domínio das fadas, como no Baile Eterno).\n" +
+"Missão — Encontrar Élton no Baile Eterno: se reconhecerem Élton entre os convidados e o trouxerem para casa, Maya dá a espada Estalar de Segundos (d8 de dano, ataca duas vezes com uma única Ação — anos de trabalho solitário em sua homenagem).\n\n" +
+"5.8 Praça da Vila — o poço de pedra do enigma do espelho fica aqui.\n" +
+"Boatos que podem ser ouvidos: o marido da ferreira foi abençoado com beleza pelas fadas, não é à toa que arrumou outra amante e foi embora; algo estranho aconteceu quando Selene usou o Espelho — os olhos ficaram amarelados e os dentes brilhavam antes de ela virar pó; o prefeito disse que se livrou do espelho, mas deve estar escondido na mansão; o bosque é estranho — alguém já seguiu o som de uma festa e não encontrou ninguém; existem jeitos de enxergar além da visão humana; pesadelos com o retorno da bruxa, mesmo ela tendo sido morta.\n\n" +
+"6. MORADORES SECUNDÁRIOS PELA VILA\n" +
+"Giles Henderson (caramelo manteigado) — caçador ranzinza, conhece o Bosque Emaranhado.\n" +
+"Milena Silva (profiterole) — açougueira direta, troca caça por prata ou defuma carne.\n" +
+"Ânsio Monteiro (biscoito de gengibre) — alfaiate sociável, cria trajes elegantes (ótimo para um baile de fadas).\n" +
+"Odessa Raposo (bala efervescente) — sapateira trabalhadora, afirma ter aprendido com artesãos fadas, entende muito de fadas.\n" +
+"Élton Barlow (torta de abóbora) — caçador de ratos vaidoso, desavença com quase todo mundo.\n" +
+"Viúva Ravena Colemon (maçapão) — fiandeira observadora, a moradora mais velha, sabe um pouco sobre tudo e todos.\n\n" +
+"7. QUADRO-RESUMO DE MISSÕES PARALELAS DE CERVOVALE\n" +
+"Teodoro (Mansão) — levantar o moral da vila -> Chave de prata da cidade.\n" +
+"Baz (Salão Comunitário) — método melhor de controle de pragas -> Hortelãnça.\n" +
+"Zeca (Armazém) — consertar todos os objetos quebrados -> Luneta Feérica.\n" +
+"Geraldo (Padaria) — devolver os óculos perdidos no Bosque -> Pacote de biscoitos (Restauração).\n" +
+"Rui/Geraldo (Padaria) — encontrar Biscoitinha, a cadela perdida -> uso da Biscoitinha na jornada.\n" +
+"Rosa (Loja de Poções) — voluntariar-se para testar a vacina -> Poção Encolhedora + 2 poções à escolha.\n" +
+"Maya (Ferraria) — encontrar Élton no Baile Eterno -> Espada Estalar de Segundos.",
+    },
+    {
+      titulo: "AVENTURA COMPLETA 2/7 — O Bosque Emaranhado",
+      texto:
+"1. VISÃO GERAL — Cervovale tem cerca de 500 moradores; dois terços já sucumbiram à maldição de Dulcineia. Os restantes fazem o possível pra manter a aldeia funcionando e estão ansiosos para contar tudo sobre a maldição e o Espelho Maléfico.\n\n" +
+"2. LOCAIS NOTÁVEIS DO BOSQUE\n" +
+"2.1 Vale das Bagas (aldeia das fadas): protegida por véu de névoa que só deixa passar criaturas menores que uma raposa. Aterrorizada pelo Rei dos Ratos — derrotá-lo dá a Cauda do Rei Rato (objetivo principal 1).\n" +
+"2.2 Lago da Saudade Eterna: entrada para o reino das fadas. Entrar carregando um item de origem feérica transporta para o Baile Eterno, onde está o Anel do Rei-Elfo (objetivo 2). Também é onde Maya espera reencontrar Élton.\n" +
+"2.3 Torre da Bruxa: isolada, protegida por magia. Dentro está o corpo que Dulcineia pretendia habitar após a morte, e dentro dele o Pingente Rouba-Alma — a relíquia da bruxa (objetivo 3). Perturbar o corpo ou remover o item libera a alma de Dulcineia.\n\n" +
+"3. REGRAS DE EXPLORAÇÃO\n" +
+"3.1 Complicações (Gastar Tempo): role uma Complicação sempre que Gastar Tempo — d8 em terreno desconhecido, d6 em terreno selvagem, d4 em terreno perigoso (como o Pântano). Tirar 1 = Complicação acontece.\n" +
+"3.2 Viagem: 10 km (1 hexágono) por dia em área selvagem, ou 20 km (2 hexágonos) por estrada. Forçar a marcha soma mais 10 km, mas testa Determinação ou acorda Cansada no dia seguinte.\n" +
+"3.3 Perdendo-se: sem ponto de referência claro, a Mestra pode pedir teste de Astúcia de quem guia; falha = grupo perdido (fica no hexágono ou vai parar num adjacente, a critério da Mestra).\n\n" +
+"4. FADAS PEQUENAS E FADAS ALTAS — Fadas pequenas: orelhas arredondadas, asas de inseto, vida longa mas não imortal, poucos centímetros de altura. Fadas altas: orelhas pontudas, variedade de asas (podem ficar invisíveis à vontade), praticamente imortais, altura humana ou mais, magia inata. As duas espécies são orgulhosas e não gostam de ser confundidas uma com a outra.\n\n" +
+"5. RUMORES E AJUDA DA NATUREZA\n" +
+"Uma Princesa com Coração Selvagem ou Conexão Elemental pode pedir ajuda a animais (amigáveis/prestativos ou manhosos/egoístas, podendo já estar amaldiçoados). Animais amaldiçoados desejam açúcar e ficam mais ferozes até obtê-lo; dar açúcar acalma por um tempo curto. 1 em 6 de atrair um animal corrompido ao chamar.\n" +
+"Rumores da natureza (d8): a magia da bruxa antes ficava perto da torre, agora é impossível escapar dela; fiquem longe do lago, gente já entrou e não voltou; uma coruja muito velha já foi animal companheiro de uma grande aventureira; um esquilo está juntando óculos no ninho, só troca por outra coisa; uma fera aterroriza os bichos menores há cerca de um ano, pior na lua cheia; há uma área enevoada onde bichos grandes se perdem e voltam; cuidado com pedrinhas coloridas na floresta — se molhadas, explodem; o Cavaleiro de Chocolate Amargo não gosta de ninguém perto da Torre, nem os bichos chegam perto.\n\n" +
+"6. COMPLICAÇÕES NO BOSQUE EMARANHADO\n" +
+"Noite (d6): pernas presas em Trepadeiras de Alcaçuz; teia gigante de algodão-doce bloqueia o caminho; escuridão faz perder a trilha; pegadas de cachorro em direção preocupante; sussurros sinistros e cheiro doce nauseante; um uivo penetrante e perto.\n" +
+"Dia (d6): cheiro doce e inebriante — aonde leva?; um Ratel raivoso salta da folhagem; um cervo com protuberâncias de açúcar vem na direção de vocês (raiva ou pedido de ajuda?); armadilha de caça esquecida; fada pequena tenta roubar algo brilhante; poça que na verdade é Gosma de Melaço.\n\n" +
+"7. CRIATURAS DO BOSQUE\n" +
+"Ratel — PV 4, Salvamento 6, Armadura 1. Mordida (d6) ou Garra (d4), 1-2x. Perder qualquer PV = frenesi (desvantagem para evitar seus ataques). Fere com Maldição Doce.\n" +
+"Cervo Amaldiçoado — PV 4, Salvamento 6, Armadura 0. Chifres (d4, ou d10 correndo). Fere com Maldição Doce.\n" +
+"Gosma de Melaço — PV 10, Salvamento 6, Armadura 0. Engolfar (d6 automático a quem estiver envolvido, pode gastar ação para se libertar). 50% de desarmar em ataque contundente. Derrete com fogo ou congela para ficar quebradiça. Fere com Maldição Doce.\n" +
+"Trepadeira de Alcaçuz — PV 2, Salvamento 6, Armadura 0. Chicote de Alcaçuz (d4). Fere com Maldição Doce.\n" +
+"Fada Pequena — PV 1, Salvamento 18, Armadura 0. Desarmada (1). Ataques físicos contra ela têm desvantagem. Lança Puf! à vontade; 1 Dado de Dom — Jato de Purpurina.\n\n" +
+"8. ENCONTROS ESPECIAIS LIGADOS À HISTÓRIA\n" +
+"8.1 A Cova Misteriosa: ao norte de Cervovale, lápide sem inscrição além de um símbolo arcano (o mesmo do Espelho Maléfico — enterrá-lo aqui por uma noite o recarrega). A terra daqui foi usada para criar o Cavaleiro de Chocolate Amargo; área infestada de Vultos Sombrios à noite. Ninguém sabe quem está enterrado ali. Pode ser gancho para uma campanha futura ou a sepultura do espírito que responde pelo Espelho.\n" +
+"8.2 Biscoitinha, a Cadelinha Encantada: Dulcineia roubou um tufo de pelo dela para o Cavaleiro de Chocolate Amargo (representação de lealdade canina), então Biscoitinha sempre sabe onde o Cavaleiro está e não sofre a Maldição Doce. PV 4, Salvamento 8, Armadura 0. Mordida (d4). Uma Princesa com Coração Selvagem conversa com ela facilmente.\n" +
+"8.3 Lobo Mau (Selene): Selene não morreu — virou lobisomem e vagueia pelo Bosque, dormindo de dia, caçando à noite. Ataca à primeira vista, mas hesita se perceber vestígios de sua irmã (Rosa) entre as aventureiras. Derrotada, volta à forma humana, inconsciente, e dá sua Corda de Escalada Encantada (guardada em sua casa em Cervovale — corda animada que se prende sozinha).\n" +
+"Lobo Mau — PV 8, Salvamento 12, Armadura 3. Ataca 2x: Garras (d4) e Mordida (d6). Armas prateadas/encantadas ignoram Armadura. Ferida = teste Determinação ou vira lobisomem.\n" +
+"Vulto Sombrio — PV 4, Salvamento 12, Armadura 0. Dedos (d6, ignora Armadura). Seres etéreos que arrastam aventureiros desavisados para as profundezas.\n" +
+"Nota: a Luneta Feérica (recompensa de Zeca) é a ferramenta que revela que o lobisomem é na verdade Selene.\n\n" +
+"9. O CAVALEIRO DE CHOCOLATE AMARGO — Leal mesmo após a morte de Dulcineia, segue as últimas ordens: capturar almas puras e levá-las à sala de detenção no topo da torre; impedir entrada não autorizada na torre; impedir que moradores saiam do Bosque. Não sabe fazer o ritual do açúcar mágico, mas ainda captura qualquer criança que encontrar. Vê uma Princesa com Toque Curativo como alvo prioritário.\n" +
+"Normalmente patrulha; fica hostil se o grupo tentar sair de Cervovale amaldiçoado, carregando algum dos 3 itens do objetivo, ou se alguém for \"pura o bastante\" para virar açúcar mágico. Leva itens confiscados para a torre.\n" +
+"Se Biscoitinha estiver com o grupo, ele tenta matá-la (sente a conexão); ela pode alertar o grupo antes dele chegar.\n" +
+"9.1 Localização inicial (d4): 1 Torre da Bruxa, 2 Lago da Saudade Eterna, 3 Vale das Bagas, 4 Cervovale — comece num hexágono adjacente.\n" +
+"9.2 Movimento: a cada hexágono percorrido ou Gastar Tempo, role d20. 10 ou menos = ele se aproxima 1 hexágono. Se já estiver perseguindo ativamente, se aproxima com 15 ou menos (a menos que o grupo seja furtiva).\n" +
+"9.3 Stat blocks:\n" +
+"O Cavaleiro de Chocolate Amargo — PV 12, Salvamento 13, Armadura 3. Ataca 2x com Espada (d8) ou 1x com Lança (d8, 2d8 em carga montada). Ferida por ele = Maldição Doce (avança 1 estágio se já afligido). Suscetível a derretimento (calor ignora Armadura).\n" +
+"Regeneração: se derrotado, regenera após 1 dia e retoma a patrulha — só derretê-lo/dissolvê-lo completamente impede isso.\n" +
+"Cavalo de Guerra de Chocolate — PV 6, Salvamento 6, Armadura 0. Coice (d6). Montaria leal, suscetível a derretimento.\n\n" +
+"10. REGRAS DE MONTARIA — Cavalos adquiridos usam as mesmas estatísticas do Corcel (exceto a suscetibilidade a derretimento). Viagem a cavalo: 30 km/dia em estrada/planície (40 km forçando a marcha); em terreno acidentado, mesma velocidade que a pé. Sobrecarga: até 35 itens de inventário; cavaleira conta como 10 espaços + seus pertences. Movimento em batalha: o cavalo se move até A Uma Pedrada enquanto a cavaleira faz uma Ação. Carga: lanças/piques causam o dobro do dano normal se atacarem de A Uma Pedrada ou mais montada.\n\n" +
+"11. ENCONTROS OPCIONAIS (use onde fizer sentido no seu mapa, ou omita)\n" +
+"11.1 A Caverna: teias de aranha (parte comum, parte algodão-doce) bloqueiam a entrada; uma aranha gigante espreita. Itens presos na teia (d4): mochila com poção de Vínculo Mental + 20 pp; Martelo de Guerra (d10, emite luz fraca); pergaminho com o feitiço Puf!; bolsa com odres vazios e rações mofadas. Teste de Graça para tirar um item sem alertar a aranha; falha = ela ataca.\n" +
+"Aranha Gigante de Algodão-Doce — PV 8, Salvamento 10, Armadura 1. Mordida (d8). Lança rajada de teia como Ação (agarra, recarrega ao Descansar).\n" +
+"11.2 O Círculo de Cogumelos: sete cogumelos coloridos ao redor de uma pedra ereta onde Ashkan (fada alta) está preso por Finnegan. Enigma na língua das fadas: \"Teste sua astúcia ou tente a sorte / Pra descobrir qual cogumelo arrancar. / Reconhecido pela visão ou paladar / Não sou vermelho nem verde-limão / O esforço de vocês vai se frustrar / Se pedirem que faça uma rima então. / O que sou?\" Resposta: laranja. Arrancar o certo liberta Ashkan; qualquer outro vira um Perseguidor Fungo (e um novo cogumelo da mesma cor cresce no lugar).\n" +
+"Talento em Linguística/Folclore ou teste de Astúcia traduz o enigma na hora (ou Gastar Tempo); Maya ou qualquer fada alta também traduz.\n" +
+"Perseguidor Fungo — PV 2, Salvamento 8, Armadura 0. Cabeçada (d4). 1x/dia libera esporos: todas Por Perto testam Determinação ou sofrem efeito por cor (vermelho: febre e Cansada; amarelo: músculos doloridos e Cansada; verde: visão fragmentada e Atordoada; azul: tontura e Atordoada; anil: mente nublada e Confusa; violeta: alucinações e Confusa).\n" +
+"NPC: Ashkan (~30) — Sincero, introspectivo, afável. Fada alta ponderada, prefere solidão a festas (por isso alvo das peças de Finnegan). Se libertado, mostra como entrar no Baile Eterno, dá bugigangas de origem feérica pra ativar o portal e seu próprio convite não usado. Concede uma bênção: chamá-lo repetindo seu nome 3x. Conhece a Senhora Neves da Corte da Geada e do Pinheiro (mais bondosa do que parece, adora presentes feitos à mão).\n\n" +
+"12. COLETAR ALIMENTOS (na área de coleta, Gastar Tempo; fora dela, também precisa testar Astúcia)\n" +
+"Musgo da Alvorada — suco recupera 1 PC de uma pessoa Ferida (precisa estar fresco, até 3 dias). Ingrediente da poção de cura especial.\n" +
+"Cravos-do-Pântano — compressa mascara cheiro de insetos/animais.\n" +
+"Urtiga Trovão — infusão deixa Confusa. Ingrediente da poção Acorda, Acorda.\n" +
+"Chapéu-de-Agulha — energia criativa: acaba com Cansaço/Confusão, vantagem em Astúcia por um dia (1 em 6 lança magia aleatória).\n" +
+"Flor Ponta-de-Flecha — raízes substituem uma ração diária. Ingrediente da poção Acuidade Felina.\n" +
+"Hera Lupina de Folha Larga — fumaça afasta cães/lobos/lobisomens; tintura interrompe um episódio licantrópico (doloroso, deixa Cansada).\n" +
+"Azevinho de Erudito — baga impede todo sono por d4 dias. Ingrediente da poção Visão de Túnel.\n" +
+"Papoula Noturna — dor de estômago, Atordoada e Cansada. Ingrediente de uma poção letal.",
+    },
+    {
+      titulo: "AVENTURA COMPLETA 3/7 — Vale das Bagas e o Rei Rato",
+      texto:
+"1. VISÃO GERAL — A aldeia das fadas pequenas, Vale das Bagas, é protegida por névoa espessa que desorienta qualquer criatura maior que uma raposa. Nenhum morador vivo de Cervovale jamais pisou lá. O problema atual: pólen amaldiçoado nas abelhas do apiário produziu mel enfeitiçado, deixando abelhas e quem come o mel ferozes. A pior criatura resultante é o Rei Rato — uma massa de ratos amarrados pelas caudas com mel, que ocupou o depósito de comida (uma toca de coelho virada armazém) e está devorando tudo.\n\n" +
+"2. CHEGADA A VALE DAS BAGAS\n" +
+"2.1 Entrada: se chegarem de surpresa, Castanho (líder da Guarda Espinheiro) detém o grupo com desconfiança (fadas pequenas desconfiam de humanos desde que Dulcineia roubou a Colher de Mel). Só leva até a Rainha Gardênia se convencido de que não são ameaça.\n" +
+"NPC: Castanho (46) — Estoico, desconfiado, cauteloso. Asas amarelas de libélula, leal e calmo em crise. Fraqueza: seu vaga-lume de estimação — qualquer Princesa com animal de estimação o conquista rápido.\n" +
+"Missão — O Vaga-lume Perdido: perdeu o vaga-lume numa fuga do depósito (está preso no Depósito Auxiliar de Alimentos, Sala 3, no Limo Vermelho Tóxico). Recompensa: Arco Ferrão (d6 de dano, 6 Flechas Ferrão de uso único, críticas em 1-2; atingida testa Determinação ou fica incapaz de agir 1 rodada).\n" +
+"2.2 Praça da Aldeia: lojas em tocos e cogumelos gigantes — roupas, armarinho, cafeteria.\n\n" +
+"3. RUMORES E GERADORES DE HABITANTES\n" +
+"Rumores (d6): Castanho parece durão mas é molenga com o vaga-lume; o círculo de cogumelos com o pilar de pedra fede a magia de fada alta, melhor evitar; a rainha era fascinada por humanos antes de algo dar errado (ninguém sabe o quê); o melhor artesão sempre visita a Raposa (Odessa, sapateira de Cervovale) na vila humana, perigoso; a rainha conhece fadas altas, talvez peça ajuda a alguma (mas elas são volúveis); a bruxa é culpa de tudo — a senha da Torre é \"Maçapão Maravilhoso\" (ouvida sendo dita em voz alta).\n" +
+"Gerador de fada pequena (role d6 em cada): Asas (borboleta arco-íris / libélula verde / mariposa marrom / abelha translúcida / joaninha vermelha e preta / borboleta-azul-morfo rasgada); Ocupação (Guarda Espinheiro / agricultora / coletora / funileira / manutenção da barreira / conservação de alimentos); Nomes (Malva-Rosa, Calispinho, Salpico, Brilha-Costa, Campânula, Estragão).\n\n" +
+"4. COMPLICAÇÕES EM VALE DAS BAGAS (NOITE, d6): enxame de abelhas loucas por mel; Serpente Mortal Enorme atravessa a névoa; fada charlatã oferece poção inútil; a fada com quem precisam falar só conversa depois de tomar sua bebida favorita; chuva forte (gotas do tamanho de vocês nesse tamanho); fada desconfiada reúne uma gangue achando que vocês causaram a maldição.\n\n" +
+"5. CRIATURAS DE VALE DAS BAGAS\n" +
+"Fada Pequena do Vale das Bagas — PV 4, Salvamento 18, Armadura 0. Desarmada (1); guardas podem ter armas/armadura. Puf! à vontade; 1 Dado de Dom — Jato de Purpurina.\n" +
+"Enxame de Abelhas — PV 10, Salvamento 6, Armadura 0. Ferrão (d8 com saúde cheia, d6 na metade — cada ferroada mata 1 abelha, -1 PV do enxame). Ferroada testa Determinação ou Atordoada. Fere com Maldição Doce.\n" +
+"Serpente Mortal Enorme — PV 10, Salvamento 8, Armadura 0. Mordida (d12), venenosa. Fere com Maldição do Veneno.\n\n" +
+"6. CASTELO DA RAINHA GARDÊNIA — esculpido nas raízes de uma árvore gigante viva.\n" +
+"NPC: Rainha Gardênia (120) — Elegante, cética, prática. Enganada por Dulcineia quando jovem, jurou nunca mais deixar estranhos se aproveitarem de seu povo. Asas de borboleta-monarca.\n" +
+"O que ela sabe/oferece: sabe ativar o Lago da Saudade Eterna e o que esperar do Rei-Elfo; conta a história de Dulcineia e as fadas se questionada; se o grupo trouxer de volta a Colher de Mel roubada, fica em dívida e concede qualquer pedido.\n\n" +
+"7. FAZENDA MEL CRISTA — campos pisoteados, colmeias destruídas pelas abelhas enlouquecidas.\n" +
+"NPC: Fazendeiro Listra-d'Olmo (38) — Dedicado, modesto, franco. Asa ferida.\n" +
+"Missão 1 — Curar a Asa do Fazendeiro: cura (ou dá meio alternativo de voar) → lote de Bolos de Mel (não amaldiçoados, vantagem em persuasão até Gastar Tempo).\n" +
+"Missão 2 — Derrotar o Rei Rato: recompensa da Rainha Gardênia (primeiro presente de fada a humano desde Dulcineia) → Prendedor Borboleta (1 Dado de Dom — voo temporário como Flutuar, recarrega pregando peça/brincadeira).\n" +
+"Outros itens de Vale das Bagas: Varinha de Colher de Mel (2 Dados de Dom — Hipnotizar, É Meu!, Amarrar; recarrega com Geleia Real).\n\n" +
+"8. O NINHO DO REI RATO (MASMORRA) — tábuas pregadas na entrada, sons de guinchos ao vento.\n" +
+"8.1 Complicações (d6): desabamento; barulho de assobio (cobra?); fonte de luz apaga; cheiro de mel e podridão deixa Atordoada; voz pedindo socorro — mais alguém aqui?; armadilha antipeste das fadas — teste Graça ou fique enredada.\n" +
+"8.2 Sala 1 — Entrada: tábuas bloqueiam a passagem (ferramentas desmontam fácil, senão Gastar Tempo). Dois túneis se bifurcam: direita = zumbido fraco; esquerda = cheiros conflitantes e magia.\n" +
+"8.3 Sala 2 — Sala das Poções: miasma denso, poça cintilante no chão — pisar nela causa efeito mágico aleatório (Gastar Tempo aqui = 1 em 6 de efeito). Duas garrafas intactas: poção de cura especial e poção de Estátua Viva.\n" +
+"Efeitos mágicos (d6): cega por 2d6 minutos; aparência muda para a próxima pessoa vista por 6h; não resiste a contar segredos embaraçosos por 1h; mãos insubstanciais por 1h (não segura nada); flutua/voa livremente por 10 min; cura metade do PC máximo.\n" +
+"8.4 Sala 3 — Depósito Auxiliar de Alimentos: brilho verde do vaga-lume de Castanho, preso na parede por Limo Vermelho Tóxico vivo, que envolve quem entra completamente.\n" +
+"Limo Vermelho Tóxico — PV 6, Salvamento 6, Armadura 0. Toque Corrosivo (d6), corrói madeira/metal. Cortar com lâmina divide em 2 gosmas com metade dos PV. Derrete com fogo ou congela para quebrar.\n" +
+"8.5 Sala 4 — Depósito de Armas: abelhas amaldiçoadas transformam a sala numa extensão da colmeia; armas em sua maioria inutilizáveis, mas o Escudo Hélice está preservado em cera (vantagem em Salvamentos contra magia, mas desativa outros itens mágicos e magias benéficas recebidas).\n" +
+"8.6 Sala 5 — A Colmeia Principal: câmara central, células de cera gotejando mel amaldiçoado (quem consumir contrai a Maldição Doce). Uma rachadura no chão marca o túnel do Rei Rato; as abelhas evitam essa área.\n" +
+"8.7 Sala 6 — A Abelha Rainha: maior que as outras, não ataca diretamente, mas tenta hipnotizar para servi-la.\n" +
+"8.8 Sala 7 — Os Túneis dos Ratos: navegar exige teste de Astúcia com desvantagem (anulada com ferramenta de navegação ou talento como Orientação); perdida = Gastar Tempo e tentar de novo, rolando d4 para Imprevistos.\n" +
+"8.9 Sala 8 — A Toca do Rei Rato: amálgama de sete ratos com as caudas emaranhadas e fundidas, enlouquecidos de mel amaldiçoado. Atacando: d6 ratos conseguem atacar por rodada. Cortando a cauda: após 3 ratos derrotados, pode tentar cortá-la direto, com desvantagem (a menos que os restantes estejam distraídos/incapacitados) — se cortada antes de todos derrotados, d4 fogem.\n" +
+"A Cauda do Rei Rato: troféu que cabe no bolso quando humana; todos os roedores a temem instintivamente. Este é o item ligado ao Rei dos Ratos — um dos três objetivos principais!\n\n" +
+"Rato Louco Amaldiçoado (unidade) — PV 4, Salvamento 8, Armadura 0. Mordida (d4).",
+    },
+    {
+      titulo: "AVENTURA COMPLETA 4/7 — Lago da Saudade Eterna e o Baile Eterno (parte 1)",
+      texto:
+"1. LAGO DA SAUDADE ETERNA — portal para a terra das fadas altas. Precisa ser ativado: entrar na água com a intenção de viajar para lá enquanto se carrega algo de origem feérica.\n" +
+"Quem sabe ativar: a Rainha Gardênia, Ashkan, alguns animais selvagens do Bosque, ou uma Princesa com Intelecto Sábio/Folclore (teste de Astúcia).\n" +
+"Sem ativação: entrar só molha. Tentar achar o fundo não dá em nada. Ativado corretamente: sai por um espelho no saguão do Baile Eterno.\n" +
+"Itens de origem feérica conhecidos: algo que a Rainha Gardênia pode fornecer se conquistada; a Máscara de Baile de Hannah; a Corda de Escalada de Selene; talvez itens obscuros da loja de Zeca; o xale de Maya (ela não abre mão dele fácil); itens das próprias Fadas Madrinhas do grupo.\n\n" +
+"2. FADAS ALTAS E HUMANOS — relações variam: Fadas Madrinhas veem humanos como dignos de presentes/proteção; outras os veem como brinquedos; outras simplesmente como outro povo. No Baile Eterno, até as mais amigáveis tendem a esquecer as diferenças entre espécies. A idade de cada convidado é a idade aparente — todos são muito mais velhos do que parecem.\n\n" +
+"3. ENTRANDO NO BAILE ETERNO\n" +
+"3.1 Élvar controla o portal e só admite quem atenda ao código de vestimenta (tema atual: \"Celestial\") e tenha convite ou acompanhante. Fadas às vezes levam humanos para uma noite de festa, então a presença de vocês não chama atenção por si só. Tentar entrar escondida esbarra num escudo de força e Jato de Purpurina (glitter = vergonha, desvantagem em testes sociais).\n" +
+"NPC: Élvar (60) — Esmerado, perspicaz, indiferente. Nunca vai à festa, prefere escolher quem vai. Magro, pálido, bigode roxo-vivo. Lenço bordado com estrelas dá a dica do tema atual.\n\n" +
+"3.2 Visão geral do Baile: jardim bem cuidado, pilares sem teto (só céu — rosado de alvorada perto da entrada, meio-dia mais além, crepúsculo mais longe ainda). Três seções: Alvorada (Jardim), Meio-Dia (Banquete), Crepúsculo (Salão de Baile). Objetivo principal: conseguir um anel do Rei-Elfo, que circula na área do Crepúsculo — só se desfaz dele completando um desafio cronometrado.\n\n" +
+"3.3 Laços com as fadas pequenas: alguma fada do baile pode ter negociado a Colher de Mel com Dulcineia (ou tê-la recebido de outra fada) — boa forma de conectar com a missão da Rainha Gardênia e o item da relíquia da bruxa (Pingente Rouba-Alma).\n\n" +
+"4. COMPLICAÇÕES E FOFOCAS DO BAILE\n" +
+"Complicações: uma fada furiosa confunde vocês com outra pessoa e exige duelo; um nobre flerta pra provocar ciúmes no par (e está funcionando); vocês derrubam a bebida de uma convidada elegante; Finnegan aparece e começa a causar; uma convidada entediante não larga a conversa; um item de um nobre sumiu e acusam vocês.\n" +
+"Fofocas: o Rei-Elfo está entediado, faz séculos que ninguém o desafia; o Príncipe Aurélio troca cartas de amor com a criada da Senhora Amaris; a Duquesa Jacinda sempre sabe irritar todo mundo; um humano bonito está preso no baile há séculos e mal lembra o próprio nome (é Élton); uma fada perde a noção do tempo no reino humano — passa-se um mês por lá num piscar de olhos; a Corte do Sol e do Céu está de mal com a Corte da Lua e das Estrelas — seria bom se Aurélio e Amaris casassem logo.\n\n" +
+"5. TEMPO DAS FADAS — ao sair do lago, role d4: 1 nenhum tempo passou; 2 sete horas; 3 um dia; 4 uma semana (e a Maldição Doce avança um estágio em quem já estiver afligida).\n" +
+"Convidada do Baile Eterno (stat block genérico) — PV 6, Salvamento 14, Armadura 0. Desarmada (1) ou Rapieira (d8). 3 Dados de Dom — Puf!, Enredar, Dardo Mágico, Bolha.",
+    },
+    {
+      titulo: "AVENTURA COMPLETA 5/7 — Baile Eterno (parte 2: Jardim, Banquete, Salão)",
+      texto:
+"6. SEÇÃO ALVORADA: O JARDIM\n" +
+"6.1 Amantes Proibidos: Príncipe Aurélio, prometido à Senhora Amaris por casamento político, ama secretamente Penélope (criada de Amaris). Penélope não quer arriscar a reputação dele. Amaris está disposta ao casamento político mas guarda segredos menos picantes de Aurélio (medo de aranhas, ilusão que usa nos músculos).\n" +
+"NPC: Senhora Amaris (Corte da Lua e das Estrelas, ~30) — Bondosa, sagaz, modesta. Pele morena, olhos como estrelas.\n" +
+"NPC: Príncipe Aurélio (Corte do Sol e do Céu, 30s) — Genial, charmoso, reservado. Clássico Príncipe Encantado; por trás da fachada há um lado sincero raramente visto.\n" +
+"NPC: Penélope (30) — Ansiosa, tímida, devotada. Criada e amiga íntima de Amaris; se corteja secretamente com Aurélio.\n\n" +
+"6.2 Croquê Fada: variante onde o objetivo é acertar a bola com o máximo de floreio (pontuação incompreensível). Aurélio adora — boa forma de se aproximar dele.\n\n" +
+"6.3 Rivalidade entre Irmãos: Cirilla e Cirillo (~18, gêmeos quase idênticos — ela tem marca de estrela sob o olho direito, ele sob o esquerdo) brigam porque apareceram com a mesma roupa e nenhum quer trocar (Cirillo está na seção Crepúsculo). Reconciliá-los dá o Corvo Mensageiro (estátua de latão — sussurre uma mensagem e ele a entrega a quem você quiser).\n\n" +
+"6.4 O Trovador: Arturo procura uma história boa o bastante para sua próxima balada. Se derem uma boa história, dá a Harpa Cantacora (1x/dia, quem ouve testa Astúcia ou revela o coração em canção; só usável por quem tem talento musical).\n" +
+"NPC: Arturo, o Trovador (~40) — Curiosa, teatral, jovial. Sabe tudo sobre todos — muito procurado ou muito evitado, dependendo de quem tem segredos.\n\n" +
+"7. SEÇÃO MEIO-DIA: O BANQUETE — comida de fada é tentadora; qualquer humano que comer fica Confuso e relutante em partir (efeito passa se for levada à força de volta ao reino humano, ou com um objeto ligado a algo que valoriza no mundo humano).\n\n" +
+"7.1 Objeto de Estima: Élton (marido de Maya) está preso no baile por Ilayda. Receber o xale de Maya recupera suas memórias na hora; outros itens da aldeia (biscoitos, a chave da cidade, flores do Bosque) também ajudam. Ilayda só abre mão dele em troca de algo igualmente belo que a convença de estar levando a melhor; tenta impedir se tentarem levá-lo sem negociar.\n" +
+"NPC: Élton Élis (38) — Atordoado, confuso, saudoso. Abençoado com beleza ao nascer, por isso foi alvo de Ilayda. A comida de fada embotou sua personalidade gentil e curiosa.\n" +
+"NPC: Ilayda (~20) — Egoísta, esnobe, impulsiva. Acredita que deve ter qualquer coisa bonita que deseja, incluindo pessoas.\n" +
+"Devolver Élton resolve por completo a missão de Maya (espada Estalar de Segundos).\n\n" +
+"7.2 Encrenca em Dobro: jogo de dados popular das fadas — a primeira a tirar números iguais num par de d6 vence. Boa forma de ganhar favores/informação, mas é preciso apostar algo de valor equivalente.\n" +
+"Recompensas possíveis (d8): moeda que sempre cai cara; fofoca quentíssima; flecha de prata que sempre acerta; apresentação a uma convidada importante; luvas de seda finas (60 pp); broche com joias em forma de besouro (150 pp); fita de cabelo que muda de cor com o humor; apito que imita qualquer canto de pássaro.\n\n" +
+"8. SEÇÃO CREPÚSCULO: O SALÃO DE BAILE — pista de dança enorme sob luz de estrelas; música cativante vem de lugar nenhum. Quem dança fica presa a dançar sem parar sem um teste de Astúcia bem-sucedido (mais de um teste necessário = sai da pista Cansada). O trono do Rei-Elfo geralmente está vazio — ele circula entre os convidados.\n\n" +
+"8.1 Finnegan, o Traquinas: bufão que sempre aparece como criança (~10), deixa um rastro de caos. Se capturado, pode oferecer sua Varinha do Capricho em troca da liberdade (1 Dado de Dom — Jato de Purpurina, Puf!, Encolher, Virar Sapo; recarrega Gastando Tempo numa festa animada). Foi ele quem aprisionou Ashkan na pedra do Círculo de Cogumelos.\n" +
+"NPC: Finnegan (~10) — Leviano, infantil, impulsivo. Valoriza sua liberdade acima de tudo.\n\n" +
+"8.2 Os Nobres: impressionar a Duquesa Jacinda usando uma habilidade em que ela é especialista (Moda, Magia, Dança ou Perspicácia Social — teste com desvantagem) dá os Brincalhetes Sussurrantes (esfregar a cabeça do lagarto revela fraqueza/segredo de alguém visível à sua escolha; recarrega contando um segredo depreciativo sobre si mesma).\n" +
+"NPC: Duquesa Jacinda (Corte da Sombra e da Melancolia, ~40) — Maldosa, crítica, soberba. Intimidadora, hábil em moda/magia/dança.\n" +
+"NPC: Senhora Neves (Corte da Geada e do Pinheiro, ~50) — Reservada, dedicada, nostálgica. Pele quase azul, deixa geada em tudo que toca; ponto fraco por presentes sinceros feitos à mão. Usa uma pulseira de lã tosca, feita e dada por uma antiga tutelada humana, décadas atrás.\n\n" +
+"8.3 O Rei-Elfo — dá seu anel a quem ele favorece; qualquer pessoa presente sabe disso. Pedir um anel gera um desafio cronometrado (ampulheta), com aposta obrigatória de algo de valor. Falha permite tentar de novo dizendo \"dobro ou nada\". Aceita coisas abstratas (memórias, anos de vida, habilidades) — memórias humanas raras (morte, trabalho, um momento com um ente querido) valem mais para ele que ouro.\n" +
+"O Desafio do Rei-Elfo: antes que a ampulheta se esgote, conseguir um Sorriso da Senhora Neves, um Segredo do Príncipe Aurélio e um Elogio da Duquesa Jacinda. O salão é vasto — dividir o grupo pode ser necessário; Gastar Tempo pode fazer perder o prazo.\n" +
+"NPC: O Rei-Elfo (~30) — Enigmático, majestoso, alegre. Veste um conjunto roxo elaborado; sorriso que sugere que sabe algo que você não sabe.\n" +
+"O Rei-Elfo — PV 15, Salvamento 15, Armadura 0. Desarmado (1) ou Rapieira (d8). Quase onipotente em seu domínio — pode lançar qualquer magia e distorcer o espaço à vontade; se reduzido a 0 PC, reaparece curado. Fraqueza: adora apostas de alto risco e é vinculado à própria palavra. 4 Dados de Dom — qualquer feitiço.\n" +
+"O Anel do Rei-Elfo: aura majestosa enquanto usado/carregado; fadas tendem a tratar com mais respeito. Objetivo principal 2 da campanha!\n\n" +
+"9. TERRITÓRIO DE DULCINEIA (além do Rio Fioazul) — cruzar o rio coloca o grupo no domínio da bruxa, onde a maldição é mais forte: 50% de chance de qualquer animal (mesmo invocado) estar corrompido; quem já tem a Maldição Doce sente-a se intensificar (Gastar Tempo: d20, tirar 1 = avança um estágio); o pântano ao redor da torre é um brejo de chocolate — Teste de Virtude para atravessar sem ficar presa ou perder itens.\n" +
+"Atravessando o Rio Fioazul: frio e largo, sem ponte. Teste de Virtude apropriado à solução do grupo (se trabalharem juntas, uma rola por todas — sucesso se metade ou mais teria sucesso individualmente). Falha permite atravessar, mas com uma consequência.\n" +
+"Consequências (d6): encharcada — comida ensopada e intragável; quase afogada — Cansada até Descansar; cortada numa pedra afiada — d6 de dano; tornozelo torcido — Atordoada até ser curada; arrastada — perde um item na água; congelada — Confusa até se secar.\n" +
+"O que tem no rio (d6): poção de cura comum; botas de couro finas enlameadas (10 pp); bolsa com 20 pp; flecha com penas flamejantes; medalhão rachado com pedras semipreciosas (100 pp); anel encantador que não sai depois de colocado.",
+    },
+    {
+      titulo: "AVENTURA COMPLETA 6/7 — A Torre da Bruxa",
+      texto:
+"1. CHEGANDO À TORRE — mais de 15 metros de altura, ar denso de cheiro doce com um zumbido grave de magia poderosa por baixo. Três entradas possíveis: porta da frente (guardada por Construtos de Chocolate com Hortelã); janela do topo (pequena demais até para uma criança); dreno sob a torre (leva direto à cozinha).\n" +
+"O Pingente Rouba-Alma está no corpo que Dulcineia construiu no Quarto da Bruxa; só acessível por meios mágicos (Chá de Soneca + atravessar a tapeçaria no Escritório). Objetivo principal 3 da campanha!\n\n" +
+"2. COMPLICAÇÕES NA TORRE (d6): líquido desconhecido derrama em você (o que ele faz?); chão treme — o que foi ativado?; objeto próximo ganha vida e ataca; um item mágico seu se volta contra você sob a influência de Dulcineia; o familiar da bruxa rouba um item do grupo; passos de armadura — é o Cavaleiro?\n\n" +
+"3. O FAMILIAR DE DULCINEIA: FANTASMA — corvo de chocolate branco. Se entraram com a senha, ele segue mas não ataca (a menos que tentem entrar no quarto da bruxa ou o ataquem primeiro); se entraram escondidas, grasna e ataca na hora. Pode ser conquistado como aliado.\n" +
+"Fantasma — PV 2, Salvamento 8, Armadura 0. Bicar (d4). Não pode ser morto permanentemente — reaparece no Viveiro após o grupo Gastar Tempo. Se vir algo que Dulcineia desaprovaria, grasna como sirene e alerta os Construtos. Conversa livremente com uma Princesa de Coração Selvagem; pode beber uma poção sem rótulo na cozinha para falar por um tempo curto. Não é excessivamente leal — pode ser subornado/persuadido (bondade genuína dá vantagem); se persuadido, revela onde pisar no Viveiro e qual livro puxar na Sala de Experimentos.\n\n" +
+"4. AS SALAS DA TORRE\n" +
+"Sala 1 — Dreno da Torre: entrada gradeada travada, dá para uma pessoa passar. Gosma de Açúcar no porão (PV 10, Salvamento 4, Armadura 0. Toque Corrosivo d6, corrói madeira/metal, corta divide em 2 com metade dos PV, derrete com fogo/gelo, fere com Maldição Doce) guarda a chave dourada do baú de Dulcineia (caiu no ralo por acidente). Grade no teto (teste Determinação) leva à cozinha.\n" +
+"Sala 2 — A Porta da Frente: dois Construtos de Chocolate com Hortelã guardam a entrada, atacam sem a senha correta (\"Maçapão Maravilhoso\").\n" +
+"Construto de Chocolate com Hortelã — PV 8, Salvamento 10, Armadura 3. Ataca 2x: Lança (d8). Suscetível a derretimento (calor/água ignora Armadura). Fere com Maldição Doce.\n" +
+"Sala 3 — A Cozinha: cozinha encantada anima ferramentas contra intrusas sem permissão (Magia da Cozinha ou teste de Astúcia dá controle). Caldeirão animado (chão escorregadio, desvantagem em Graça; cair causa d4 de dano). Três utensílios animados tentam empurrar para o forno.\n" +
+"Utensílio de Cozinha Animado — PV 2, Salvamento 4, Armadura 0. Cortar (d6) ou Golpear (d4).\n" +
+"Tapeçaria de jardim na parede; garrafa \"Chave do Jardim\" (líquido verde) permite atravessar bebendo dela. Ameixas e rosas cristalizadas para o Chá de Soneca crescem só ali. Saída dos fundos leva ao Escritório.\n" +
+"Sala 4 — O Jardim Mágico: prado com maçãs carameladas e ameixas açucaradas; portal de volta à cozinha (chave só é necessária pra entrar, sair é livre). Alistair, espírito preso num coelho de chocolate branco meio derretido, oferece a Roleta do Chá: se todas concordarem em jogar, sentam e não podem se levantar até beber. Mestra rola d6 secretamente por jogadora numerada: número não corresponde = cura d4+1 PC ao beber e pode se levantar; número corresponde = troca de corpo com Alistair (ele foge no corpo dela; ela fica presa no assento dele, com acesso às magias dele). Desfaz-se preparando 2 xícaras a mais e forçando-o a beber uma. Recapturado (ou se ninguém cair no truque), ele revela como entrar na Sala de Experimentos e que há a Adaga Ruína dos Dragões no baú do quarto.\n" +
+"Alistair — PV 3, Salvamento 10, Armadura 0. Desarmado (1). Suscetível a derretimento. 2 Dados de Dom — Mão Amiga, Animar, Aceleração.\n" +
+"Sala 5 — Escritório: estantes com armadilhas mágicas (uma leva à entrada secreta do Escritório; Intelecto Sábio percebe as armadilhas na hora).\n" +
+"Estantes: Abre-te Sésamo (cria dentes e morde); Anfíbios do Bosque Emaranhado (sapo inofensivo pula fora); Curas Curiosas e Remédios Raros (Maldição do Veneno); As Alegrias da Aromaterapia (cheiro calmante); Caçando a Saída (transporta pro Torreão); Insônia e Seus Efeitos (adormece, sono inofensivo); Desenhando Inspiração (2 Dados de Dom — Treco Mágico ao desenhar); O Companheiro do Coletor (transporte para a Área de Coleta e de volta); Além do que se Vê (mostra o lugar que a leitora mais quer ver); As Maiores Conquistas Mágicas do Nosso Tempo (abre a Sala de Experimentos).\n" +
+"Tapeçaria de um quarto na parede (portal pro Quarto da Bruxa, via Chá de Soneca). Poltrona com o diário de Dulcineia e uma xícara com resíduo de Chá de Soneca; livro A Arte da Chocolataria produz um bombom não mágico. Chapéu da Bruxa no gancho (concede 1 Dado de Dom, mas o usuário fala com eco mágico dramático). Escada em caracol leva ao Viveiro.\n" +
+"Sala 6 — A Sala de Experimentos: mesa de trabalho com o livro de progresso dos experimentos e instrumentos. Vitrine vazia do tamanho de um humano (onde ficava o corpo novo da bruxa).\n" +
+"Outros itens (d6): O Grimório Proibido; poção de cura comum; licor de framboesa (cura Aflição/ferimento); bebida gaseificada (efeito de Flutuar, mas indigestão terrível); colherada de açúcar de alma (origem desconhecida); tigela de lodo rançoso (perturbada = teste Determinação ou Maldição do Paladar Infantil).\n" +
+"O Grimório Proibido: pode ser abandonado livremente ou, se aprofundado, causa medo profundo e uma rolagem na Tabela de Ferimentos como custo — em troca ensina as magias Medo, Drenar e Afligir.\n" +
+"Sala 7 — O Viveiro: construtos de doce imóveis em exibição (Unicórnio de Algodão-Doce, Serpente de Alcaçuz, Ursinho de Goma, Ovo do Dragão) servem de segurança — tocar ou sair do caminho seguro os anima (dano deles não transmite Maldição Doce, por serem construtos, não animais afligidos).\n" +
+"Serpente de Alcaçuz — PV 2, Salvamento 8, Armadura 0. Mordida (d12). Fere com Maldição do Paladar Infantil.\n" +
+"Ursinho de Goma (Torre) — PV 8, Salvamento 10, Armadura 2. Ataca 2x: Mordida (d10) e Garra (d6). Suscetível a derretimento.\n" +
+"Unicórnio de Algodão-Doce — PV 10, Salvamento 16, Armadura 1. Investida (d10). Suscetível a derretimento (água ignora Armadura). 3 Dados de Dom — Jato de Purpurina, Bolha, Restauração.\n" +
+"Chão encantado desperta os construtos se pisado fora do caminho seguro (a Luneta Feérica ou visão mágica revela o caminho). Poleiro onde Fantasma reaparece. Ovo de Dragão Gigante de Chocolate, quente ao toque, casca impermeável a armas comuns (só a Adaga Ruína dos Dragões arranha, e mesmo ela sozinha pode não bastar — magia + engenhosidade a critério da Mestra). Se rompido: explosão de canela, 3d6 de dano a quem estiver Por Perto (metade com Graça bem-sucedida), destrói o dragão dentro, tornando-o indisponível para Dulcineia possuir depois. Escada alta leva ao Torreão.\n" +
+"Sala 8 — Torreão: porta destrancada, mas sair aciona Fechadura + névoa mágica (teste Determinação ou dorme por 1h). Colchões de palha onde as crianças dormiam; um amuleto de sorte (joaninha) sob um cobertor. Padrão riscado na parede — notas musicais SOL-LÁ-FÁ-SOL; assobiar/cantar/tocar a melodia permite sair sem impedimento (Voz Encantadora ou talento musical reconhece na hora).\n" +
+"Sala 9 — O Quarto da Bruxa: penteadeira cheia de produtos de beleza. Baú trancado (a chave dourada do dreno abre; forçar, mesmo com sucesso, causa a Maldição do Paladar Infantil). Dentro: joias (400 pp), medalhão com retrato jovem de Dulcineia (25 pp), uma adaga enferrujada (na verdade a Adaga Ruína dos Dragões), vestidos antigos (60 pp).\n" +
+"Construto na forma da Dulcineia jovem, como manequim — dentro está o Pingente Rouba-Alma. Fácil de retirar, mas ao ser perturbado libera a alma de Dulcineia para possuir o dragão do Viveiro (se o ovo não foi destruído) ou virar Aparição (se foi destruído).\n" +
+"O Pingente Rouba-Alma: ao ser tocado pela primeira vez, dá sensação de equilíbrio emocional e um flashback vívido — próximo teste com vantagem. Item da relíquia da bruxa — objetivo principal 3!\n\n" +
+"5. O DIÁRIO DE DULCINEIA (Escritório) — entradas (ordem não necessariamente cronológica no material original):\n" +
+"\"As fadas têm sido bastante hospitaleiras. Encantei sua rainha para que me ensine a magia que ela conhece. Gostaria de dar uma olhada em sua varinha. As propriedades do mel se alinham com meus objetivos de certa forma, então pode ser útil.\"\n" +
+"\"A magia é forte aqui no Bosque Emaranhado. Mesmo como uma bruxa novata, posso senti-la. Este será o local perfeito enquanto persigo minha missão.\"\n" +
+"\"A varinha é INÚTIL. Não estou mais perto de descobrir o segredo da longevidade. Embora talvez eu não deva ser tão apressada. Descobri que, embora não seja a resposta para minhas questões mais profundas, o mel é magicamente potente e fácil de trabalhar. Devo experimentar com outros doces e ver se eles podem aprimorar minha arte.\"\n" +
+"\"Quem vive mais do que as fadas? Quem é mais eternamente belo? Se alguém tem o segredo da longevidade juvenil, são elas. Preciso encontrar uma entrada para o reino das fadas, e acredito que tenho uma pista.\"\n" +
+"\"O experimento com meu cavaleiro de chocolate foi bem-sucedido. Ele é o mais humano de todas as minhas criações de confeitaria. Mas se vou preencher completamente a lacuna entre açúcar e carne, precisarei tentar algo diferente. Tenho uma ideia, mas precisarei pesquisar sobre rituais de vinculação. E crianças.\"\n" +
+"\"Não sei quanto tempo fiquei presa naquele lugar amaldiçoado... Com este Pingente Rouba-Alma, agora tenho uma maneira de manter minha alma preservada, mesmo na morte. Só preciso criar um corpo digno de abrigá-la.\"\n" +
+"\"A lua está cheia, as crianças estão reunidas, o recipiente está completo. Tudo o que resta para a tarefa é a execução... Esta noite, o ritual. Amanhã? Minha verdadeira vida começa.\"\n" +
+"\"As coisas estão progredindo rapidamente. Mal posso suportar ter o recipiente fora da minha vista... Talvez seja hora de mudar de local.\"\n\n" +
+"6. O LIVRO DE EXPERIMENTOS DE DULCINEIA (Sala 6) — tópicos visíveis à primeira vista; decifrar um específico exige teste de Astúcia.\n" +
+"Chá de Soneca: receita com ameixas açucaradas, botões de rosa frescos e hortelã, fervidos e mexidos com pena de corvo de chocolate branco.\n" +
+"Açúcar de Alma: ritual fatal tentado (e falho) para extrair açúcar das almas das crianças roubadas.\n" +
+"O Cavaleiro de Chocolate Amargo: recebeu centelha de vida com terra da Cova Misteriosa e um tufo de pelo de Biscoitinha (lealdade).\n" +
+"Corpo Sintético: diagrama do corpo jovem, com a cavidade no peito para o Pingente — instruções estritas para não perturbá-lo depois de colocado.\n" +
+"O Pingente Rouba-Alma: usado por fadas em projeção astral para garantir retorno ao corpo certo; sem ele, almas desvanecem, viram aparições, ou possuem um receptáculo próximo conveniente.\n" +
+"O Dragão de Canela: último grande projeto antes dos construtos humanoides; interrompido, sem núcleo de vida — aberto a possessão por alma desatrelada. Dulcineia foi ferida várias vezes criando-o (magia volátil), parte do motivo do abandono.",
+    },
+    {
+      titulo: "AVENTURA COMPLETA 7/7 — Confronto final, desfechos e regras extras",
+      texto:
+"1. O RETORNO DA BRUXA — ao remover o Pingente Rouba-Alma, a alma de Dulcineia escapa:\n" +
+"Se o Ovo de Dragão foi destruído: ela se prende ao retrato de sua versão jovem no baú e vira uma Aparição, furiosa por interferirem no trabalho de sua vida — ataca com intenção letal.\n" +
+"Se o Ovo de Dragão NÃO foi destruído: ela possui o dragão não eclodido. A torre desmorona sob o peso do dragão adulto (o grupo precisa descer ou fica presa). Dulcineia leva cerca de 1 hora para chegar a Cervovale e ataca a vila, a menos que o grupo se faça notar antes.\n" +
+"Se as Princesas chegarem cedo demais e perturbarem o Pingente antes do previsto, ainda libera o espírito — elas terminam a tarefa lidando com uma ameaça ativa e iminente.\n\n" +
+"2. CENÁRIOS DE CHEGADA A CERVOVALE (só no cenário do Dragão)\n" +
+"Antes de Dulcineia: tempo para armadilhas, reunir forças, evacuar moradores.\n" +
+"Dentro de 1h da chegada: Dulcineia já ataca; moradores corajosos (Selene, Baz) lideram a defesa; prédios pegando fogo; pode já haver baixas.\n" +
+"Mais de 1h depois, mesmo dia: resistência sufocada, prédios destruídos, muitos mortos ou sucumbiram à Maldição Doce.\n" +
+"1 dia ou mais depois: Dulcineia dominou completamente; relaxa na praça, servida pelos moradores restantes; guarda o poço (sabe da missão); pode oferecer ao grupo desistir em troca de servi-la, antes de atacar.\n\n" +
+"3. QUEBRANDO A MALDIÇÃO — derrotar Dulcineia não basta: é preciso jogar a Cauda do Rei Rato, o Anel do Rei-Elfo e o Pingente Rouba-Alma no poço da vila. Se qualquer item for destruído na luta, a maldição fica inquebrável (só danificado ainda serve).\n\n" +
+"4. STAT BLOCKS: DULCINEIA\n" +
+"Dulcineia (Aparição) — PV 16, Salvamento 14, Armadura 2. Toque Gélido (d8). Armas prateadas/encantadas ignoram Armadura. 4 Dados de Dom — Animar, Puf!, É Meu!, Medo, Drenar, Afligir. Ferida = teste Astúcia ou Maldição Doce começando no 2º estágio (ou avança 1, se já afligida).\n" +
+"Dulcineia (Dragão de Canela) — PV 25, Salvamento 16, Armadura 3. Ataca 3x: Mordida (d12) e 2 Garras (d8). Rajada de fogo de canela: 20 de dano em área (10 com Graça bem-sucedida; recarrega ao Descansar). 3 Dados de Dom — Névoa (nuvem de pó de canela), Emaranhado (blobos de bala de canela), Bola de Fogo (cheira a canela — mecanicamente iguais às versões normais). Ataques de água ignoram Armadura.\n\n" +
+"5. O QUE FAZER A SEGUIR\n" +
+"Se o grupo ficar todo Ferido: alguma fada prestativa pode ajudar. Se perecerem ou falharem em recuperar os itens, Cervovale sucumbe totalmente à maldição, que continua se espalhando. Se falharem em derrotar Dulcineia reanimada, fica uma nova ameaça solta para um futuro grupo de Princesas enfrentar.\n" +
+"Se derrotarem Dulcineia e jogarem os 3 itens no poço: a maldição quebra! A magia de cura se espalha pela vila, transformando doce em carne de novo e reunindo entes queridos. Cervovale aclama o grupo como heroínas, com um grande banquete em sua homenagem (sem sobremesa, por enquanto). Pergunte ao grupo sobre fios soltos com os NPCs, e o que acham que o futuro reserva a cada Princesa.\n\n" +
+"6. FERRAMENTAS DE COMUNICAÇÃO / SEGURANÇA À MESA — Doce Vingança toca em horror corporal, sequestro, violência fantasiosa e situações assustadoras, mesmo num cenário de conto de fadas.\n" +
+"Linhas e Véus: linhas são coisas que não devem aparecer no jogo de forma alguma; véus são coisas que podem acontecer fora de cena, sem serem interpretadas em detalhe.\n" +
+"Carta-X: marcador (ex: cartão com um X) que qualquer pessoa usa para pedir que o jogo pare, por qualquer motivo, sem precisar explicar.\n" +
+"Política de Portas Abertas: deixe claro que qualquer pessoa pode sair da mesa a qualquer momento, por qualquer razão — o jogo nunca é mais importante que o bem-estar de alguém.\n\n" +
+"7. ITENS DA TORRE (referência rápida)\n" +
+"Chave dourada (dentro da Gosma de Açúcar, Sala 1) — abre o baú do Quarto da Bruxa.\n" +
+"Adaga Ruína dos Dragões (baú, Sala 9) — d6 de dano, 3 Dados de Dom, ignora Armadura de dragões, fere o ovo de dragão.\n" +
+"Pingente Rouba-Alma (construto, Sala 9) — objetivo principal; relíquia da bruxa.\n" +
+"O Grimório Proibido (Sala 6) — ensina Medo, Drenar e Afligir a um custo sério.\n" +
+"O Chapéu da Bruxa (Sala 5) — concede 1 Dado de Dom; eco mágico dramático.\n" +
+"Amuleto de sorte em forma de joaninha (Torreão, Sala 8) — pertence a uma das crianças roubadas.\n" +
+"Joias, medalhão, vestidos (baú, Sala 9) — 400 pp / 25 pp / 60 pp.",
+    },
+  ];
+
+  const existingTitles = new Set(state.notes.map((n) => n.titulo));
+  fullNotes.forEach((n) => {
+    if (!existingTitles.has(n.titulo)) {
+      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto });
+    }
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
+seedItems();
+seedFullAdventureText();
 saveState();
 
 // ---------- Tabs ----------
@@ -515,20 +909,23 @@ function deleteNpc(id) {
   renderNpcs();
 }
 
-function renderNpcs() {
-  const list = document.getElementById("npc-list");
-  const query = document.getElementById("npc-search").value.trim().toLowerCase();
-  const filtered = state.npcs.filter((n) => {
-    if (!query) return true;
-    return n.nome.toLowerCase().includes(query) || n.tags.some((t) => t.toLowerCase().includes(query));
-  });
-  if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhum NPC ou monstro cadastrado ainda.</div>`;
-    return;
-  }
-  list.innerHTML = filtered
-    .map(
-      (n) => `
+function npcCardHtml(n) {
+  const isMonster = n.tipo === "Monstro";
+  const statBlock = isMonster
+    ? `
+      <div class="stat-box"><span>Coração</span><b>${n.coracao}</b></div>
+      <div class="stat-box"><span>Salvamento</span><b>${n.salvamento}</b></div>
+      <div class="stat-box"><span>Armadura</span><b>${n.armadura}</b></div>
+    `
+    : `
+      <div class="stat-box"><span>Determinação</span><b>${n.determinacao}</b></div>
+      <div class="stat-box"><span>Graça</span><b>${n.graca}</b></div>
+      <div class="stat-box"><span>Astúcia</span><b>${n.astucia}</b></div>
+      <div class="stat-box"><span>Coração</span><b>${n.coracao}</b></div>
+      <div class="stat-box"><span>Salvamento</span><b>${n.salvamento}</b></div>
+      <div class="stat-box"><span>Armadura</span><b>${n.armadura}</b></div>
+    `;
+  return `
     <div class="npc-card">
       <div class="card-header-row">
         ${n.foto ? `<img class="avatar" src="${n.foto}" alt="${escapeHtml(n.nome)}">` : ""}
@@ -537,34 +934,139 @@ function renderNpcs() {
           <span class="npc-type-badge">${escapeHtml(n.tipo)}</span>
         </div>
       </div>
-      <div class="npc-attrs">
-        <span>DET <b>${n.determinacao}</b></span>
-        <span>GRA <b>${n.graca}</b></span>
-        <span>AST <b>${n.astucia}</b></span>
-        <span>Coração <b>${n.coracao}</b></span>
-        <span>Salv. <b>${n.salvamento}</b></span>
-        <span>Armadura <b>${n.armadura}</b></span>
-      </div>
+      <div class="npc-stat-grid ${isMonster ? "monster" : ""}">${statBlock}</div>
       ${n.tags.length ? `<div class="npc-tags">${n.tags.map((t) => `<span class="npc-tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
-      ${n.notas ? `<div class="npc-notes">${escapeHtml(n.notas)}</div>` : ""}
+      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${escapeHtml(n.notas)}</div>` : ""}
       <div class="npc-card-actions">
-        <button class="btn btn-ghost" data-edit-npc="${n.id}">✏️ Editar</button>
-        <button class="btn btn-danger" data-delete-npc="${n.id}">🗑️ Excluir</button>
+        <button class="btn btn-ghost" data-edit-npc="${n.id}">Editar</button>
+        <button class="btn btn-danger" data-delete-npc="${n.id}">Excluir</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderNpcs() {
+  const npcListEl = document.getElementById("npc-list");
+  const monsterListEl = document.getElementById("monster-list");
+  const query = document.getElementById("npc-search").value.trim().toLowerCase();
+  const matches = (n) =>
+    !query || n.nome.toLowerCase().includes(query) || n.tags.some((t) => t.toLowerCase().includes(query));
+
+  const npcs = state.npcs.filter((n) => n.tipo !== "Monstro" && matches(n));
+  const monsters = state.npcs.filter((n) => n.tipo === "Monstro" && matches(n));
+
+  npcListEl.innerHTML = npcs.length
+    ? npcs.map(npcCardHtml).join("")
+    : `<div class="empty-state">Nenhum NPC ou aliado encontrado.</div>`;
+  monsterListEl.innerHTML = monsters.length
+    ? monsters.map(npcCardHtml).join("")
+    : `<div class="empty-state">Nenhum monstro encontrado.</div>`;
+
+  [npcListEl, monsterListEl].forEach((list) => {
+    list.querySelectorAll("[data-edit-npc]").forEach((btn) =>
+      btn.addEventListener("click", () => openNpcModal(state.npcs.find((n) => n.id === btn.dataset.editNpc)))
+    );
+    list.querySelectorAll("[data-delete-npc]").forEach((btn) =>
+      btn.addEventListener("click", () => deleteNpc(btn.dataset.deleteNpc))
+    );
+  });
+}
+
+document.getElementById("npc-search").addEventListener("input", renderNpcs);
+
+// ==================== Itens ====================
+const itemModal = document.getElementById("modal-item");
+const formItem = document.getElementById("form-item");
+
+function openItemModal(item) {
+  document.getElementById("item-modal-title").textContent = item ? "Editar item" : "Novo item";
+  document.getElementById("item-id").value = item ? item.id : "";
+  document.getElementById("item-nome").value = item ? item.nome : "";
+  document.getElementById("item-custo").value = item ? item.custo : "";
+  document.getElementById("item-origem").value = item ? item.origem : "";
+  document.getElementById("item-descricao").value = item ? item.descricao : "";
+  document.getElementById("item-tags").value = item ? item.tags.join(", ") : "";
+  itemModal.classList.remove("hidden");
+}
+
+function closeItemModal() { itemModal.classList.add("hidden"); formItem.reset(); }
+
+document.getElementById("btn-add-item").addEventListener("click", () => openItemModal(null));
+document.getElementById("btn-cancel-item").addEventListener("click", closeItemModal);
+
+formItem.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("item-id").value;
+  const data = {
+    id: id || uid(),
+    nome: document.getElementById("item-nome").value.trim(),
+    custo: document.getElementById("item-custo").value.trim(),
+    origem: document.getElementById("item-origem").value.trim(),
+    descricao: document.getElementById("item-descricao").value.trim(),
+    tags: parseTags(document.getElementById("item-tags").value),
+  };
+  if (id) {
+    const idx = state.items.findIndex((i) => i.id === id);
+    state.items[idx] = data;
+  } else {
+    state.items.push(data);
+  }
+  saveState();
+  closeItemModal();
+  renderItems();
+});
+
+function deleteItem(id) {
+  if (!confirm("Excluir este item?")) return;
+  state.items = state.items.filter((i) => i.id !== id);
+  saveState();
+  renderItems();
+}
+
+function renderItems() {
+  const list = document.getElementById("item-list");
+  const query = document.getElementById("item-search").value.trim().toLowerCase();
+  const filtered = state.items.filter((i) => {
+    if (!query) return true;
+    return (
+      i.nome.toLowerCase().includes(query) ||
+      i.descricao.toLowerCase().includes(query) ||
+      i.tags.some((t) => t.toLowerCase().includes(query))
+    );
+  });
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">Nenhum item encontrado.</div>`;
+    return;
+  }
+  list.innerHTML = filtered
+    .map(
+      (i) => `
+    <div class="npc-card">
+      <div class="npc-card-header">
+        <h3>${escapeHtml(i.nome)}</h3>
+        ${i.custo ? `<span class="npc-type-badge">${escapeHtml(i.custo)}</span>` : ""}
+      </div>
+      ${i.origem ? `<div class="npc-notes"><b>Origem:</b> ${escapeHtml(i.origem)}</div>` : ""}
+      <div class="npc-notes">${escapeHtml(i.descricao)}</div>
+      ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<span class="npc-tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+      <div class="npc-card-actions">
+        <button class="btn btn-ghost" data-edit-item="${i.id}">Editar</button>
+        <button class="btn btn-danger" data-delete-item="${i.id}">Excluir</button>
       </div>
     </div>
   `
     )
     .join("");
 
-  list.querySelectorAll("[data-edit-npc]").forEach((btn) =>
-    btn.addEventListener("click", () => openNpcModal(state.npcs.find((n) => n.id === btn.dataset.editNpc)))
+  list.querySelectorAll("[data-edit-item]").forEach((btn) =>
+    btn.addEventListener("click", () => openItemModal(state.items.find((i) => i.id === btn.dataset.editItem)))
   );
-  list.querySelectorAll("[data-delete-npc]").forEach((btn) =>
-    btn.addEventListener("click", () => deleteNpc(btn.dataset.deleteNpc))
+  list.querySelectorAll("[data-delete-item]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteItem(btn.dataset.deleteItem))
   );
 }
 
-document.getElementById("npc-search").addEventListener("input", renderNpcs);
+document.getElementById("item-search").addEventListener("input", renderItems);
 
 // ==================== PCs (Princesas) ====================
 const pcModal = document.getElementById("modal-pc");
@@ -703,7 +1205,7 @@ function renderPcs() {
           ${p.jogadora ? `<p class="pc-player">Jogadora: ${escapeHtml(p.jogadora)}</p>` : ""}
         </div>
       </div>
-      ${p.domNome ? `<div class="pc-dom">✨ ${escapeHtml(p.domNome)}</div>` : ""}
+      ${p.domNome ? `<div class="pc-dom">${escapeHtml(p.domNome)}</div>` : ""}
       ${p.domDescricao ? `<p class="pc-dom-desc">${escapeHtml(p.domDescricao)}</p>` : ""}
       <div class="pc-stats">
         <span>DET <b>${p.determinacao}</b></span>
@@ -713,9 +1215,9 @@ function renderPcs() {
         <span>Dinheiro <b>${p.dinheiro} pp</b></span>
       </div>
       <div class="hp-control">
-        <button class="icon-btn" data-pc-hp-down="${p.id}">➖</button>
+        <button class="icon-btn" data-pc-hp-down="${p.id}"></button>
         <span>Coração: ${p.coracaoAtual} / ${p.coracaoMax}</span>
-        <button class="icon-btn" data-pc-hp-up="${p.id}">➕</button>
+        <button class="icon-btn" data-pc-hp-up="${p.id}"></button>
       </div>
       <div class="pc-misc">Dados de Coração: ${dieTrack(p.dadoCoracaoTotal, p.dadoCoracaoUsados, "pc-dice-coracao", p.id)}</div>
       <div class="pc-misc">Dados de Dom: ${dieTrack(p.dadoDomTotal, p.dadoDomUsados, "pc-dice-dom", p.id)}</div>
@@ -729,8 +1231,8 @@ function renderPcs() {
       ${p.inventario.length ? `<div class="pc-misc"><b>Minhas coisas:</b> ${p.inventario.map(escapeHtml).join(", ")}</div>` : ""}
       ${p.trauma ? `<div class="pc-misc"><b>Trauma:</b> ${escapeHtml(p.trauma)}</div>` : ""}
       <div class="pc-card-actions">
-        <button class="btn btn-ghost" data-edit-pc="${p.id}">✏️ Editar</button>
-        <button class="btn btn-danger" data-delete-pc="${p.id}">🗑️ Excluir</button>
+        <button class="btn btn-ghost" data-edit-pc="${p.id}">Editar</button>
+        <button class="btn btn-danger" data-delete-pc="${p.id}">Excluir</button>
       </div>
     </div>
   `
@@ -953,9 +1455,9 @@ function renderCombat() {
         <div class="combatant-init">${c.iniciativa}</div>
         <div class="combatant-name">${isCurrent ? "▶ " : ""}${escapeHtml(c.nome)}</div>
         <div class="hp-control">
-          <button class="icon-btn" data-hp-down="${c.id}">➖</button>
+          <button class="icon-btn" data-hp-down="${c.id}"></button>
           <span>${c.coracaoAtual} / ${c.coracaoMax}</span>
-          <button class="icon-btn" data-hp-up="${c.id}">➕</button>
+          <button class="icon-btn" data-hp-up="${c.id}"></button>
           <div class="hp-bar-wrap"><div class="hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
         </div>
         <div class="affliction-toggles">
@@ -964,7 +1466,7 @@ function renderCombat() {
           <button class="affliction-btn ${c.aflicoes.confusa ? "active confusa" : ""}" data-c-affliction="${c.id}" data-key="confusa">Confusa</button>
         </div>
         <div class="combatant-actions">
-          <button class="icon-btn" data-remove-combatant="${c.id}" title="Remover">🗑️</button>
+          <button class="icon-btn" data-remove-combatant="${c.id}" title="Remover"></button>
         </div>
       </div>
     `;
@@ -1201,7 +1703,7 @@ function renderObjectives() {
     <div class="objective-row ${o.feito ? "done" : ""}">
       <input type="checkbox" data-objective-check="${o.id}" ${o.feito ? "checked" : ""}>
       <span>${escapeHtml(o.texto)}</span>
-      <button class="icon-btn" data-objective-delete="${o.id}" title="Remover">🗑️</button>
+      <button class="icon-btn" data-objective-delete="${o.id}" title="Remover"></button>
     </div>
   `
     )
@@ -1268,25 +1770,38 @@ function deleteNote(id) {
 
 function renderNotes() {
   const list = document.getElementById("note-list");
-  if (state.notes.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhuma nota cadastrada.</div>`;
+  const query = document.getElementById("note-search").value.trim().toLowerCase();
+  const filtered = state.notes.filter(
+    (n) => !query || n.titulo.toLowerCase().includes(query) || n.texto.toLowerCase().includes(query)
+  );
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">Nenhuma nota encontrada.</div>`;
     return;
   }
-  list.innerHTML = state.notes
-    .map(
-      (n) => `
+  list.innerHTML = filtered
+    .map((n) => {
+      const isLong = n.texto.length > 500;
+      return `
     <div class="session-card">
       <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
-      <p class="session-text">${escapeHtml(n.texto)}</p>
+      <p class="session-text ${isLong ? "note-collapsed" : ""}">${escapeHtml(n.texto)}</p>
       <div class="session-card-actions">
-        <button class="btn btn-ghost" data-edit-note="${n.id}">✏️ Editar</button>
-        <button class="btn btn-danger" data-delete-note="${n.id}">🗑️ Excluir</button>
+        ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
+        <button class="btn btn-ghost" data-edit-note="${n.id}">Editar</button>
+        <button class="btn btn-danger" data-delete-note="${n.id}">Excluir</button>
       </div>
     </div>
-  `
-    )
+  `;
+    })
     .join("");
 
+  list.querySelectorAll("[data-toggle-note]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const p = btn.closest(".session-card").querySelector(".session-text");
+      const collapsed = p.classList.toggle("note-collapsed");
+      btn.textContent = collapsed ? "Ler mais" : "Ler menos";
+    })
+  );
   list.querySelectorAll("[data-edit-note]").forEach((btn) =>
     btn.addEventListener("click", () => openNoteModal(state.notes.find((n) => n.id === btn.dataset.editNote)))
   );
@@ -1294,6 +1809,8 @@ function renderNotes() {
     btn.addEventListener("click", () => deleteNote(btn.dataset.deleteNote))
   );
 }
+
+document.getElementById("note-search").addEventListener("input", renderNotes);
 
 // ==================== Sessions ====================
 const sessionModal = document.getElementById("modal-session");
@@ -1360,8 +1877,8 @@ function renderSessions() {
       ${s.resumo ? `<div class="session-section-label">Resumo</div><p class="session-text">${escapeHtml(s.resumo)}</p>` : ""}
       ${s.ganchos ? `<div class="session-section-label">Ganchos / próximos passos</div><p class="session-text">${escapeHtml(s.ganchos)}</p>` : ""}
       <div class="session-card-actions">
-        <button class="btn btn-ghost" data-edit-session="${s.id}">✏️ Editar</button>
-        <button class="btn btn-danger" data-delete-session="${s.id}">🗑️ Excluir</button>
+        <button class="btn btn-ghost" data-edit-session="${s.id}">Editar</button>
+        <button class="btn btn-danger" data-delete-session="${s.id}">Excluir</button>
       </div>
     </div>
   `
@@ -1380,6 +1897,7 @@ function renderAll() {
   renderCombat();
   renderPcs();
   renderNpcs();
+  renderItems();
   renderMap();
   renderObjectives();
   renderNotes();
