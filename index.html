@@ -304,13 +304,14 @@
         <input type="text" id="c-nome" required>
       </label>
       <div class="attr-grid">
-        <label>Iniciativa
-          <input type="number" id="c-iniciativa" value="10">
+        <label><span class="icon attr-icon">visibility</span>Astúcia
+          <input type="number" id="c-astucia" min="1" max="20" value="10">
         </label>
         <label><span class="icon attr-icon">favorite</span>Coração máx.
           <input type="number" id="c-coracao-max" min="0" value="10">
         </label>
       </div>
+      <p class="field-hint">A Astúcia é usada para calcular a iniciativa: quem rolar igual ou menos que a Astúcia (e não tirar 20) age antes; quem passar, age depois. Você preenche o resultado do d20 de cada combatente direto no card do combate.</p>
       <label>
         <input type="checkbox" id="c-is-pc">
         É uma Princesa (PC)
@@ -327,7 +328,12 @@
 <div id="modal-from-npc" class="modal-overlay hidden">
   <div class="modal">
     <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
-    <h2>Adicionar do banco de NPCs</h2>
+    <h2 id="from-npc-title">Adicionar do banco</h2>
+    <div class="location-picker" id="from-npc-type-picker">
+      <button type="button" class="location-btn active" data-from-npc-type="NPC">NPCs</button>
+      <button type="button" class="location-btn" data-from-npc-type="Monstro">Monstros</button>
+    </div>
+    <input id="from-npc-search" class="input" type="text" placeholder="Buscar por nome ou tag..." style="max-width:100%; margin-bottom:12px;">
     <div id="from-npc-list" class="from-npc-list"></div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" id="btn-cancel-from-npc">Fechar</button>
@@ -400,6 +406,18 @@
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- MODAL GLOSSARY -->
+<div id="modal-glossary" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="glossary-title">Poder</h2>
+    <p id="glossary-body" class="field-hint" style="font-size:1rem; color: var(--text);"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost js-close-modal">Fechar</button>
+    </div>
   </div>
 </div>
 

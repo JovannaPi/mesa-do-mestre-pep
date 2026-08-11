@@ -970,6 +970,73 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ==================== Glossário de magias, habilidades e traços ====================
+const GLOSSARY = {
+  "Puf!": "Alcance [DADOS]. Teleporte-se em uma nuvem de fumaça para um lugar que você consiga ver. Pode ser lançada como uma Reação.",
+  "Jato de Purpurina": "Alcance Por Perto, Salvamento Astúcia. Dispara uma chuva de purpurina mágica colorida; até [SOMA] criaturas ficam atordoadas por [DADOS] rodadas.",
+  "Animar": "[DADOS] objetos Por Perto ganham vida e obedecem a seus comandos da melhor forma possível por [SOMA] minutos.",
+  "Enredar": "Alcance [DADOS], Salvamento Astúcia. Segura magicamente [DADOS] criaturas ou objetos no lugar por até [SOMA] minutos.",
+  "Escorregadia": "Alcance [DADOS], Salvamento Graça. Uma área fica coberta por uma graxa extremamente escorregadia por [SOMA] rodadas.",
+  "É Meu!": "Alcance [DADOS], Salvamento Determinação. Até [DADOS] objetos que você consiga ver movem-se instantaneamente para sua mão.",
+  "Abrir/Trancar": "Alcance Por Perto. [DADOS] portas abrem-se com uma batida alta, ou [DADOS] portas fecham-se e são seladas magicamente por [SOMA] horas.",
+  "Luz/Trevas": "Alcance Por Perto. Um objeto tocado emite uma esfera de luz ou de trevas, afetando tudo Por Perto, por [DADOS] horas.",
+  "Disfarce": "Alcance À Mão, Salvamento Astúcia. Altera a aparência de [DADOS] criaturas por [SOMA] x 10 minutos para outra forma humanoide.",
+  "Flutuar": "Alcance Pessoal. Flutue e voe em qualquer direção tão rápido quanto conseguir correr, por [SOMA] rodadas, depois cai suave e seguramente.",
+  "De Volta para a Cama": "Alcance Por Perto. [DADOS] criaturas mortas-vivas, despertadas ou animadas devem fazer um Salvamento ou retornam ao seu estado dormente.",
+  "Treco Mágico": "Alcance À Mão. [DADOS] desenhos de objetos simples que você faz se tornam reais por [SOMA] minutos.",
+  "Mão Amiga": "Alcance [DADOS]. Invoca uma mão etérea que ajuda por [DADOS] minutos. Não pode lutar ou carregar mais que um item leve.",
+  "Bolha": "Uma bolha mágica de proteção envolve uma criatura e aumenta seu valor de Armadura em [DADOS] por [SOMA] rodadas. Pode ser lançada como Reação.",
+  "Emaranhado": "Alcance A Uma Pedrada, Salvamento Determinação. Vinhas pegajosas prendem as criaturas dentro da área por [SOMA] rodadas.",
+  "Aceleração": "Alcance A Uma Pedrada. Uma criatura dobra de velocidade por [SOMA] rodadas, ganhando uma Ação e uma Reação extra por rodada. Fica Cansada quando o efeito termina.",
+  "Bola de Fogo": "Alcance A Uma Pedrada, Salvamento Graça. Bola de fogo que causa [SOMA] de dano em área, ou metade com um Salvamento bem-sucedido.",
+  "Névoa": "Versão elemental de Dulcineia: nuvem sufocante de pó de canela que preenche uma área, mecanicamente como uma magia de nevoeiro/ocultação.",
+  "Restauração": "Cura ferimentos e Aflições — geralmente restaura Pontos Coração ou remove uma Aflição/Maldição menor de quem recebe o efeito.",
+  "Hipnotizar": "Deixa uma criatura sujeita a sugestões simples enquanto durar o efeito; geralmente pede um Salvamento para resistir.",
+  "Amarrar": "Prende magicamente uma criatura ou objeto no lugar, similar a Enredar.",
+  "Medo": "Alcance Por Perto, Salvamento Astúcia. [SOMA] alvos têm visões de seus medos mais profundos e fogem de quem lançou, a menos que passem no Salvamento.",
+  "Drenar": "Alcance À Mão, Salvamento Determinação. Drena a vida de uma criatura e cura [SOMA] PC de quem lançou, a menos que o alvo passe no Salvamento.",
+  "Afligir": "Alcance Por Perto, Salvamento Determinação. [DADOS] alvos sofrem dores e devem passar no Salvamento ou largam o que seguram e ficam Atordoadas por [SOMA] rodadas.",
+  "Dardo Mágico": "Um projétil de energia mágica que acerta automaticamente, causando dano direto ao alvo.",
+  "Rugido": "Você solta um rugido bestial. [SOMA] criaturas que possam ouvi-la devem fazer um Salvamento ou ficam aterrorizadas por [DADOS] rodadas.",
+  "Farejar": "Sente até o mais fraco traço de cheiro Por Perto; reconhece indivíduos e há quanto tempo estiveram no local.",
+  "Forma Selvagem": "Transforma-se num animal já visto por até [DADOS] x 10 minutos, com [SOMA] PC nessa forma.",
+  "Maldição Doce": "Maldição em 4 estágios que transforma gradualmente a vítima em confeitaria; só é curada quebrando a maldição por completo. Veja a nota 'Maldição Doce — tabela completa' na Campanha.",
+  "Suscetível a derretimento": "Ataques baseados em calor ou água ignoram a Armadura dessa criatura, e exposição a calor extremo pode derretê-la (perde d4 de PC máximo).",
+};
+
+const GLOSSARY_KEYS_SORTED = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
+
+function linkifyAbilities(rawText) {
+  const text = rawText ?? "";
+  if (!text) return "";
+  let result = "";
+  let i = 0;
+  outer: while (i < text.length) {
+    for (const term of GLOSSARY_KEYS_SORTED) {
+      if (text.startsWith(term, i)) {
+        result += `<span class="ability-link" data-ability="${escapeHtml(term)}">${escapeHtml(term)}</span>`;
+        i += term.length;
+        continue outer;
+      }
+    }
+    result += escapeHtml(text[i]);
+    i++;
+  }
+  return result;
+}
+
+function openGlossaryModal(term) {
+  const desc = GLOSSARY[term];
+  document.getElementById("glossary-title").textContent = term;
+  document.getElementById("glossary-body").textContent = desc || "Sem descrição cadastrada ainda.";
+  document.getElementById("modal-glossary").classList.remove("hidden");
+}
+
+document.addEventListener("click", (e) => {
+  const link = e.target.closest(".ability-link");
+  if (link) openGlossaryModal(link.dataset.ability);
+});
+
 function formatDate(iso) {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
@@ -1132,7 +1199,7 @@ function npcCardHtml(n) {
       </div>
       <div class="npc-stat-grid ${isMonster ? "monster" : ""}">${statBlock}</div>
       ${n.tags.length ? `<div class="npc-tags">${n.tags.map((t) => `<span class="npc-tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
-      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${escapeHtml(n.notas)}</div>` : ""}
+      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyAbilities(n.notas)}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-edit-npc="${n.id}">Editar</button>
         <button class="btn btn-danger" data-delete-npc="${n.id}">Excluir</button>
@@ -1227,7 +1294,7 @@ function itemCardHtml(i) {
         ${i.custo ? `<span class="npc-type-badge">${escapeHtml(i.custo)}</span>` : ""}
       </div>
       ${i.origem ? `<div class="npc-notes"><b>Origem:</b> ${escapeHtml(i.origem)}</div>` : ""}
-      <div class="npc-notes">${escapeHtml(i.descricao)}</div>
+      <div class="npc-notes">${linkifyAbilities(i.descricao)}</div>
       ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<span class="npc-tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-edit-item="${i.id}">Editar</button>
@@ -1486,9 +1553,9 @@ function renderPcs() {
         <span>Dinheiro <b>${p.dinheiro} pp</b></span>
       </div>
       <div class="hp-control">
-        <button class="icon-btn" data-pc-hp-down="${p.id}"></button>
+        <button class="icon-btn" data-pc-hp-down="${p.id}"><span class="icon">remove</span></button>
         <span>Coração: ${p.coracaoAtual} / ${p.coracaoMax}</span>
-        <button class="icon-btn" data-pc-hp-up="${p.id}"></button>
+        <button class="icon-btn" data-pc-hp-up="${p.id}"><span class="icon">add</span></button>
       </div>
       <div class="pc-misc">Dados de Coração: ${dieTrack(p.dadoCoracaoTotal, p.dadoCoracaoUsados, "pc-dice-coracao", p.id)}</div>
       <div class="pc-misc">Dados de Dom: ${dieTrack(p.dadoDomTotal, p.dadoDomUsados, "pc-dice-dom", p.id)}</div>
@@ -1559,18 +1626,52 @@ function newAfflictions() {
   return { cansada: false, atordoada: false, confusa: false };
 }
 
+function newCombatant(overrides) {
+  return Object.assign(
+    {
+      id: uid(),
+      nome: "",
+      astucia: 10,
+      d20: null,
+      coracaoMax: 10,
+      coracaoAtual: 10,
+      isPc: false,
+      aflicoes: newAfflictions(),
+      determinacao: null,
+      graca: null,
+      salvamento: null,
+      armadura: 0,
+      notas: "",
+      tipo: "",
+    },
+    overrides
+  );
+}
+
+// sucesso === null quando ainda não rolou; true/false depois de preencher o d20
+function computeIniciativa(c) {
+  if (c.d20 === null || c.d20 === undefined || c.d20 === "") {
+    c.sucesso = null;
+    c.critico = false;
+    return;
+  }
+  const roll = Number(c.d20);
+  c.critico = roll === 1;
+  c.sucesso = roll === 1 ? true : roll === 20 ? false : roll <= c.astucia;
+}
+
 formCombatant.addEventListener("submit", (e) => {
   e.preventDefault();
   const coracaoMax = Number(document.getElementById("c-coracao-max").value) || 0;
-  state.combat.combatants.push({
-    id: uid(),
+  const c = newCombatant({
     nome: document.getElementById("c-nome").value.trim(),
-    iniciativa: Number(document.getElementById("c-iniciativa").value) || 0,
+    astucia: Number(document.getElementById("c-astucia").value) || 10,
     coracaoMax,
     coracaoAtual: coracaoMax,
     isPc: document.getElementById("c-is-pc").checked,
-    aflicoes: newAfflictions(),
   });
+  computeIniciativa(c);
+  state.combat.combatants.push(c);
   saveState();
   combatantModal.classList.add("hidden");
   formCombatant.reset();
@@ -1578,40 +1679,70 @@ formCombatant.addEventListener("submit", (e) => {
 });
 
 const fromNpcModal = document.getElementById("modal-from-npc");
-document.getElementById("btn-add-from-npc").addEventListener("click", () => {
+let fromNpcType = "NPC";
+
+function renderFromNpcList() {
   const list = document.getElementById("from-npc-list");
-  if (state.npcs.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhum NPC cadastrado. Crie um na aba "NPCs &amp; Monstros" primeiro.</div>`;
-  } else {
-    list.innerHTML = state.npcs
-      .map(
-        (n) => `
+  const query = document.getElementById("from-npc-search").value.trim().toLowerCase();
+  const pool = state.npcs.filter((n) => (fromNpcType === "Monstro" ? n.tipo === "Monstro" : n.tipo !== "Monstro"));
+  const filtered = pool.filter(
+    (n) => !query || n.nome.toLowerCase().includes(query) || n.tags.some((t) => t.toLowerCase().includes(query))
+  );
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">Nada encontrado. Crie no Compêndio primeiro.</div>`;
+    return;
+  }
+  list.innerHTML = filtered
+    .map(
+      (n) => `
       <div class="from-npc-item">
-        <span>${escapeHtml(n.nome)} <small style="color:var(--text-dim)">(${escapeHtml(n.tipo)}, Coração ${n.coracao})</small></span>
+        <span>${escapeHtml(n.nome)} <small style="color:var(--text-dim)">(Coração ${n.coracao}, Ast. ${n.astucia})</small></span>
         <button class="btn btn-secondary" data-add-from-npc="${n.id}">+ Adicionar</button>
       </div>
     `
-      )
-      .join("");
-    list.querySelectorAll("[data-add-from-npc]").forEach((btn) =>
-      btn.addEventListener("click", () => {
-        const n = state.npcs.find((x) => x.id === btn.dataset.addFromNpc);
-        state.combat.combatants.push({
-          id: uid(),
-          nome: n.nome,
-          iniciativa: n.astucia,
-          coracaoMax: n.coracao,
-          coracaoAtual: n.coracao,
-          isPc: false,
-          aflicoes: newAfflictions(),
-        });
-        saveState();
-        renderCombat();
-      })
-    );
-  }
+    )
+    .join("");
+  list.querySelectorAll("[data-add-from-npc]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const n = state.npcs.find((x) => x.id === btn.dataset.addFromNpc);
+      const c = newCombatant({
+        nome: n.nome,
+        astucia: n.astucia,
+        coracaoMax: n.coracao,
+        coracaoAtual: n.coracao,
+        isPc: false,
+        determinacao: n.determinacao,
+        graca: n.graca,
+        salvamento: n.salvamento,
+        armadura: n.armadura,
+        notas: n.notas,
+        tipo: n.tipo,
+      });
+      state.combat.combatants.push(c);
+      saveState();
+      renderCombat();
+    })
+  );
+}
+
+document.getElementById("btn-add-from-npc").addEventListener("click", () => {
+  fromNpcType = "NPC";
+  document.getElementById("from-npc-title").textContent = "Adicionar do banco de NPCs";
+  document.querySelectorAll("[data-from-npc-type]").forEach((b) => b.classList.toggle("active", b.dataset.fromNpcType === "NPC"));
+  document.getElementById("from-npc-search").value = "";
+  renderFromNpcList();
   fromNpcModal.classList.remove("hidden");
 });
+document.querySelectorAll("[data-from-npc-type]").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    fromNpcType = btn.dataset.fromNpcType;
+    document.querySelectorAll("[data-from-npc-type]").forEach((b) => b.classList.toggle("active", b === btn));
+    document.getElementById("from-npc-title").textContent =
+      fromNpcType === "Monstro" ? "Adicionar do banco de Monstros" : "Adicionar do banco de NPCs";
+    renderFromNpcList();
+  })
+);
+document.getElementById("from-npc-search").addEventListener("input", renderFromNpcList);
 document.getElementById("btn-cancel-from-npc").addEventListener("click", () => fromNpcModal.classList.add("hidden"));
 
 const fromPcModal = document.getElementById("modal-from-pc");
@@ -1624,7 +1755,7 @@ document.getElementById("btn-add-from-pc").addEventListener("click", () => {
       .map(
         (p) => `
       <div class="from-npc-item">
-        <span>${escapeHtml(p.nome)} <small style="color:var(--text-dim)">(Coração ${p.coracaoAtual}/${p.coracaoMax})</small></span>
+        <span>${escapeHtml(p.nome)} <small style="color:var(--text-dim)">(Coração ${p.coracaoAtual}/${p.coracaoMax}, Ast. ${p.astucia})</small></span>
         <button class="btn btn-secondary" data-add-from-pc="${p.id}">+ Adicionar</button>
       </div>
     `
@@ -1633,15 +1764,19 @@ document.getElementById("btn-add-from-pc").addEventListener("click", () => {
     list.querySelectorAll("[data-add-from-pc]").forEach((btn) =>
       btn.addEventListener("click", () => {
         const p = state.pcs.find((x) => x.id === btn.dataset.addFromPc);
-        state.combat.combatants.push({
-          id: uid(),
+        const c = newCombatant({
           nome: p.nome,
-          iniciativa: p.astucia,
+          astucia: p.astucia,
           coracaoMax: p.coracaoMax,
           coracaoAtual: p.coracaoAtual,
           isPc: true,
+          determinacao: p.determinacao,
+          graca: p.graca,
+          armadura: p.armadura,
+          notas: [p.domNome, p.domDescricao].filter(Boolean).join(" — "),
           aflicoes: Object.assign({}, p.aflicoes),
         });
+        state.combat.combatants.push(c);
         saveState();
         renderCombat();
       })
@@ -1654,12 +1789,23 @@ document.getElementById("btn-cancel-from-pc").addEventListener("click", () => fr
 document.getElementById("btn-roll-init").addEventListener("click", () => {
   if (state.combat.combatants.length === 0) return;
   state.combat.combatants.forEach((c) => {
-    c.iniciativa = 1 + Math.floor(Math.random() * 20);
+    if (c.isPc) return; // as jogadoras rolam na mesa; a Mestra digita o resultado
+    c.d20 = 1 + Math.floor(Math.random() * 20);
+    computeIniciativa(c);
   });
   sortCombatants();
   saveState();
   renderCombat();
 });
+
+function setCombatantD20(id, value) {
+  const c = state.combat.combatants.find((x) => x.id === id);
+  if (!c) return;
+  c.d20 = value === "" ? null : Math.max(1, Math.min(20, Number(value)));
+  computeIniciativa(c);
+  saveState();
+  renderCombat();
+}
 
 document.getElementById("btn-next-turn").addEventListener("click", () => {
   if (state.combat.combatants.length === 0) return;
@@ -1680,7 +1826,10 @@ document.getElementById("btn-clear-combat").addEventListener("click", () => {
 });
 
 function sortCombatants() {
-  state.combat.combatants.sort((a, b) => b.iniciativa - a.iniciativa);
+  // Regra oficial: quem teve sucesso no teste de Astúcia age antes; quem falhou, age depois.
+  // Quem ainda não rolou fica no meio (nem confirmado antes, nem depois).
+  const rank = (c) => (c.sucesso === true ? 0 : c.sucesso === null || c.sucesso === undefined ? 1 : 2);
+  state.combat.combatants.sort((a, b) => rank(a) - rank(b));
 }
 
 function updateHp(id, delta) {
@@ -1709,6 +1858,8 @@ function removeCombatant(id) {
   renderCombat();
 }
 
+let expandedCombatants = new Set();
+
 function renderCombat() {
   document.getElementById("round-number").textContent = state.combat.round;
   const list = document.getElementById("combat-list");
@@ -1721,29 +1872,69 @@ function renderCombat() {
       const hpPct = c.coracaoMax > 0 ? (c.coracaoAtual / c.coracaoMax) * 100 : 0;
       const hpClass = hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : "";
       const isCurrent = idx === state.combat.currentIndex;
+      const isExpanded = expandedCombatants.has(c.id);
+      let statusBadge = `<span class="init-status pending">aguardando d20</span>`;
+      if (c.sucesso === true) statusBadge = `<span class="init-status age-antes">Age antes${c.critico ? " — crítico! 2 ações no 1º turno" : ""}</span>`;
+      else if (c.sucesso === false) statusBadge = `<span class="init-status age-depois">Age depois</span>`;
+
+      const hasDetails = c.notas || c.determinacao !== null || c.graca !== null || c.salvamento !== null;
+
       return `
       <div class="combatant-card ${isCurrent ? "current-turn" : ""} ${c.isPc ? "is-pc" : "is-npc"}">
-        <div class="combatant-init">${c.iniciativa}</div>
-        <div class="combatant-name">${isCurrent ? "▶ " : ""}${escapeHtml(c.nome)}</div>
-        <div class="hp-control">
-          <button class="icon-btn" data-hp-down="${c.id}"></button>
-          <span>${c.coracaoAtual} / ${c.coracaoMax}</span>
-          <button class="icon-btn" data-hp-up="${c.id}"></button>
-          <div class="hp-bar-wrap"><div class="hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
+        <div class="combatant-top">
+          <div class="combatant-init-block">
+            <input type="number" min="1" max="20" class="combatant-d20-input" data-c-d20="${c.id}" placeholder="d20" value="${c.d20 ?? ""}">
+            ${statusBadge}
+          </div>
+          <div class="combatant-name" ${hasDetails ? `data-toggle-combatant="${c.id}"` : ""}>
+            ${isCurrent ? "▶ " : ""}${escapeHtml(c.nome)}${c.tipo ? ` <span class="npc-type-badge">${escapeHtml(c.tipo)}</span>` : ""}
+            ${hasDetails ? `<span class="icon expand-caret">${isExpanded ? "expand_less" : "expand_more"}</span>` : ""}
+          </div>
+          <div class="hp-control">
+            <button class="icon-btn" data-hp-down="${c.id}"><span class="icon">remove</span></button>
+            <span>${c.coracaoAtual} / ${c.coracaoMax}</span>
+            <button class="icon-btn" data-hp-up="${c.id}"><span class="icon">add</span></button>
+            <div class="hp-bar-wrap"><div class="hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
+          </div>
+          <div class="affliction-toggles">
+            <button class="affliction-btn ${c.aflicoes.cansada ? "active cansada" : ""}" data-c-affliction="${c.id}" data-key="cansada">Cansada</button>
+            <button class="affliction-btn ${c.aflicoes.atordoada ? "active atordoada" : ""}" data-c-affliction="${c.id}" data-key="atordoada">Atordoada</button>
+            <button class="affliction-btn ${c.aflicoes.confusa ? "active confusa" : ""}" data-c-affliction="${c.id}" data-key="confusa">Confusa</button>
+          </div>
+          <div class="combatant-actions">
+            <button class="icon-btn" data-remove-combatant="${c.id}" title="Remover"><span class="icon">delete</span></button>
+          </div>
         </div>
-        <div class="affliction-toggles">
-          <button class="affliction-btn ${c.aflicoes.cansada ? "active cansada" : ""}" data-c-affliction="${c.id}" data-key="cansada">Cansada</button>
-          <button class="affliction-btn ${c.aflicoes.atordoada ? "active atordoada" : ""}" data-c-affliction="${c.id}" data-key="atordoada">Atordoada</button>
-          <button class="affliction-btn ${c.aflicoes.confusa ? "active confusa" : ""}" data-c-affliction="${c.id}" data-key="confusa">Confusa</button>
-        </div>
-        <div class="combatant-actions">
-          <button class="icon-btn" data-remove-combatant="${c.id}" title="Remover"></button>
-        </div>
+        ${
+          hasDetails && isExpanded
+            ? `<div class="combatant-details">
+                <div class="npc-stat-grid">
+                  ${c.determinacao !== null ? `<div class="stat-box"><span>Determinação</span><b>${c.determinacao}</b></div>` : ""}
+                  ${c.graca !== null ? `<div class="stat-box"><span>Graça</span><b>${c.graca}</b></div>` : ""}
+                  <div class="stat-box"><span>Astúcia</span><b>${c.astucia}</b></div>
+                  ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span><b>${c.salvamento}</b></div>` : ""}
+                  <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
+                </div>
+                ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyAbilities(c.notas)}</div>` : ""}
+              </div>`
+            : ""
+        }
       </div>
     `;
     })
     .join("");
 
+  list.querySelectorAll("[data-c-d20]").forEach((input) =>
+    input.addEventListener("change", () => setCombatantD20(input.dataset.cD20, input.value))
+  );
+  list.querySelectorAll("[data-toggle-combatant]").forEach((el) =>
+    el.addEventListener("click", () => {
+      const id = el.dataset.toggleCombatant;
+      if (expandedCombatants.has(id)) expandedCombatants.delete(id);
+      else expandedCombatants.add(id);
+      renderCombat();
+    })
+  );
   list.querySelectorAll("[data-hp-down]").forEach((btn) => btn.addEventListener("click", () => updateHp(btn.dataset.hpDown, -1)));
   list.querySelectorAll("[data-hp-up]").forEach((btn) => btn.addEventListener("click", () => updateHp(btn.dataset.hpUp, 1)));
   list.querySelectorAll("[data-c-affliction]").forEach((btn) =>
@@ -2027,7 +2218,7 @@ function renderObjectives() {
     <div class="objective-row ${o.feito ? "done" : ""}">
       <input type="checkbox" data-objective-check="${o.id}" ${o.feito ? "checked" : ""}>
       <span>${escapeHtml(o.texto)}</span>
-      <button class="icon-btn" data-objective-delete="${o.id}" title="Remover"></button>
+      <button class="icon-btn" data-objective-delete="${o.id}" title="Remover"><span class="icon">delete</span></button>
     </div>
   `
     )
