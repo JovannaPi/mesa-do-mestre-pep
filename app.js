@@ -14,6 +14,7 @@ function defaultState() {
     objectives: [],
     combat: { round: 1, currentIndex: 0, combatants: [] },
     seeded: false,
+    seededV2: false,
   };
 }
 
@@ -195,10 +196,126 @@ function seedCampaignData() {
       "Toque Gélido (d8). Armas prateadas/encantadas ignoram Armadura. 4 Dados de Dom — Animar, Puf!, É Meu!, Medo, Drenar, Afligir. Fere com Maldição Doce (2º estágio, ou avança 1 se já afligido)."),
     npc("Dulcineia (Dragão de Canela)", "Monstro", 18, 10, 16, 25, 16, 3, ["torre da bruxa", "chefe final", "confronto final"],
       "Ataca 3x: Mordida (d12) + 2 Garras (d8). Rajada de fogo de canela: 20 de dano em área (10 com Graça bem-sucedida), recarrega ao Descansar. 3 Dados de Dom — Névoa, Emaranhado, Bola de Fogo. Ataques de água ignoram Armadura."),
+    npc("Rato Louco Amaldiçoado", "Monstro", 6, 6, 4, 4, 8, 0, ["vale das bagas", "ninho do rei rato", "enxame"],
+      "Mordida (d4). O Rei Rato é uma amálgama de 7 destes, com as caudas emaranhadas e fundidas. Atacando: d6 ratos conseguem atacar por rodada (role um número maior que a quantidade de ratos restantes = todos os que podem atacam). Cortando a cauda: após 3 ratos derrotados, pode tentar cortar a cauda direto, com desvantagem (a menos que os restantes estejam distraídos/incapacitados). Fere com Maldição Doce."),
   ];
 }
 
+// Segunda leva de conteúdo de referência (livro básico) — some sob uma flag própria
+// para não duplicar nem apagar dados de quem já usou uma versão anterior do site.
+function seedRulesReference() {
+  if (state.seededV2) return;
+  state.seededV2 = true;
+
+  const extraNotes = [
+    {
+      titulo: "Regras rápidas — Testes & dados",
+      texto:
+        "TESTE DE VIRTUDE: role 1d20 — tirar igual ou menos que o atributo (Determinação/Graça/Astúcia) é sucesso. 1 é sempre sucesso; 20 é sempre falha.\n" +
+        "Vantagem: role 2d20, use o menor. Desvantagem: role 2d20, use o maior.\n\n" +
+        "DADOS DE DOM (DD): 1d6 por nível, gastos para usar habilidades de Dom/magia. Ao rolar, escolha quantos DD usar. Resultado 1-3: o dado volta. Resultado 4-6: é gasto até Descansar. Tirar duplas = sofre um Acidente (efeito colateral do Dom).\n" +
+        "DADOS CORAÇÃO (DC): 1d4 por nível. Gaste durante um Piquenique para recuperar PC (Coração), ou gaste para somar ao teste falho de uma amiga (+ o valor rolado).\n\n" +
+        "[DADOS] = quantos DD você rolou. [SOMA] = o total desses DD. Alcance por [DADOS]: 1 = Por Perto, 2 = A Uma Pedrada, 3+ = Lá Longe.",
+    },
+    {
+      titulo: "Regras rápidas — Combate",
+      texto:
+        "INICIATIVA: teste ASTÚCIA. Sucesso = age antes do inimigo; falha = age depois. Mantém a mesma ordem toda rodada. Tirar 1 é crítico: pode agir duas vezes no primeiro turno.\n\n" +
+        "NO SEU TURNO: mover-se Por Perto + uma Ação. Pode Reagir 1x por rodada no turno de qualquer pessoa (ex: usar Dom, gastar Dado Coração).\n\n" +
+        "ATACANDO: teste Determinação (corpo a corpo) ou Graça (à distância). Sucesso → role o dano. Tirar 1 é crítico: role 2 dados de dano e some.\n" +
+        "DEFENDENDO: teste Graça para evitar o ataque; subtraia a Armadura do dano recebido. O inimigo tirar 20 é crítico: ignora sua Armadura.\n" +
+        "MANOBRAS (agarrar, derrubar, empurrar etc.): Teste de Virtude de Determinação, Graça ou Astúcia, conforme a manobra.\n\n" +
+        "FERIMENTOS: chegar a 0 Coração = não pode Agir/Mover-se até ser estabilizada. Role d8 na Tabela de Ferimentos (efeitos de curto/médio prazo, algumas permanentes). Dano maior que o dobro do Coração máximo = 1 ponto de Trauma imediato.",
+    },
+    {
+      titulo: "Regras rápidas — Recuperação, Aflições & Trauma",
+      texto:
+        "PIQUENIQUE: pequena pausa (Gastar Tempo + 1 refeição). Gaste Dados Coração à vontade, role e recupere PC igual à soma.\n" +
+        "DESCANSO: 1x a cada 24h. 8h de sono com comida, água e abrigo/fogueira → restaura todo o Coração e todos os Dados de Dom/Coração gastos. Consome 1 refeição.\n\n" +
+        "AFLIÇÕES (dão Desvantagem numa Virtude específica):\n" +
+        "• Cansada → Desvantagem em Determinação\n" +
+        "• Atordoada → Desvantagem em Graça\n" +
+        "• Confusa → Desvantagem em Astúcia\n" +
+        "Um Descanso ou Piquenique geralmente encerra uma Aflição, salvo indicação contrária.\n\n" +
+        "TRAUMA (ao acumular, role/consulte a Mestra): 1) não pode usar DD por 24h; 2) idem + fica apavorada pela causa até superar o medo; 3) fim de jogo para a personagem (aposentadoria, sono mágico, captura, morte trágica — decidido à mesa).\n\n" +
+        "SOBRECARGA: carrega até seu valor de Determinação sem penalidade; fica Cansada acima disso; não pode carregar mais que o dobro da Determinação. Itens Volumosos contam como 2 espaços; consumíveis (flechas, comida, tochas) se amontoam num único espaço.",
+    },
+    {
+      titulo: "Maldições (tabela oficial, d12)",
+      texto:
+        "1. Condenação — Ferida automaticamente dá 1 Trauma; cura enfrentando a Morte num jogo de sorte/habilidade.\n" +
+        "2. Melancolia — não pode usar/se beneficiar de Dados Coração nem efeitos de moral; cura ajudando um grupo de crianças.\n" +
+        "3. Veneno — desvantagem em todos os Testes de Virtude; passa em 3 dias (+1 Trauma) ou com antídoto/ervas.\n" +
+        "4. Boca Pútrida — tudo tem gosto horrível; teste Determinação para comer sem vomitar; cura jejuando 3 dias.\n" +
+        "5. Enraizado — vira planta aos poucos, pode ficar presa ao chão; cura passando um dia na escuridão total.\n" +
+        "6. Verdade Imposta — mentir causa d4 de dano e incha uma parte do corpo; cura contando um segredo a uma bruxa.\n" +
+        "7. Mão de Alface — desvantagem para seguer objetos; cura mergulhando as mãos em algo pegajoso por um dia.\n" +
+        "8. Soluços — não pode ser furtiva; desvantagem em testes com a voz; cura encontrando algo verdadeiramente aterrorizante.\n" +
+        "9. Popularidade — cercada de fãs, difícil resolver negócios; cura espalhando um boato depreciativo sobre si.\n" +
+        "10. Ronco — amigas dormindo por perto precisam testar Determinação para Descansar direito; cura comendo uma raiz-forte e ficando em silêncio um dia.\n" +
+        "11. Paranoia — nunca é pega de surpresa/age primeiro em combate; precisa testar Astúcia para dormir; cura com um amuleto de cristal no bolso esquerdo.\n" +
+        "12. Paladar Infantil — deseja doces constantemente, precisa de açúcar para se beneficiar de Piquenique/Descanso; cura caçando um animal e comendo seu fígado.\n\n" +
+        "A Maldição Doce de Dulcineia (Doce Vingança) é uma maldição especial em estágios, específica da campanha — avança conforme o alvo é ferido por criaturas amaldiçoadas ou falha em testes ligados a ela.",
+    },
+    {
+      titulo: "Os 8 Dons das Fadas Madrinhas",
+      texto:
+        "1. Coração Selvagem — chama criaturas da floresta. Talentos: Caça, Pesca, Orientação.\n" +
+        "2. Voz Encantadora — arrebata quem a ouve. Talentos: Música, Atuação, Poesia.\n" +
+        "3. Agilidade Feérica — ligeira, acrobática, discreta. Talentos: Atlética, Dançarina, Equitação.\n" +
+        "4. Conexão Elemental — um elemento (Fogo, Terra, Ar, Água ou outro) é seu aliado. Talentos: Alquimia, Astronomia.\n" +
+        "5. Magia da Cozinha — flora mágica e guloseimas que são mais do que parecem. Talentos: Cozinhar, Assar, Coletar Alimentos.\n" +
+        "6. Toque Curativo — restaura com as mãos, cabelos e lágrimas; nunca adoece. Talentos: Cura, Costura, Herbologia.\n" +
+        "7. Amizade Poderosa — vínculo com um companheiro animal devotado.\n" +
+        "8. Intelecto Sábio — fonte de conhecimento histórico e folclore. Talentos: Caligrafia, Linguística, História, Folclore.\n\n" +
+        "Cada Dom cresce em poder por nível (novas Habilidades Especiais, mais Dados de Dom). Veja a aba Personagens para cadastrar o Dom de cada Princesa.",
+    },
+    {
+      titulo: "Doce Vingança — ganchos & informações da aventura",
+      texto:
+        "Aventura para 2 a 4 Princesas, do nível 1 ao 4. Combina exploração de masmorra, encontros sociais e resolução de problemas — a ordem fica a critério do grupo.\n\n" +
+        "Ganchos alternativos (escolha um ou crie o seu):\n" +
+        "• O grito na floresta (o que já está na aba Notas): uma Princesa tem uma amiga mensageira desaparecida.\n" +
+        "• Doces Sonhos: a Fada Madrinha de uma Princesa nunca deixa de indicar boas ações através de sonhos enigmáticos. O sonho mais recente trazia cheiro de pão de mel e a voz sussurrando: \"Nada, minha querida, é tão doce quanto ajudar quem precisa.\"\n\n" +
+        "Sempre descreva a premissa às jogadoras antes de começar, para que possam criar Princesas que se encaixem na história.",
+    },
+    {
+      titulo: "Ferramentas de segurança à mesa",
+      texto:
+        "Doce Vingança toca em temas de horror corporal, sequestro, violência fantasiosa e situações assustadoras, mesmo num cenário de conto de fadas. Ferramentas recomendadas:\n\n" +
+        "LINHAS E VÉUS: Linhas são coisas que não devem aparecer no jogo de forma alguma. Véus são coisas que podem acontecer, mas fora de cena, sem serem interpretadas em detalhe.\n\n" +
+        "CARTA-X: um marcador (ex: cartão com um X) que qualquer pessoa pode usar para pedir que o jogo pare, por qualquer motivo, sem precisar explicar.\n\n" +
+        "POLÍTICA DE PORTAS ABERTAS: deixe claro que qualquer pessoa pode sair da mesa a qualquer momento, por qualquer razão — o jogo nunca é mais importante que o bem-estar de alguém.",
+    },
+  ];
+
+  const existingTitles = new Set(state.notes.map((n) => n.titulo));
+  extraNotes.forEach((n) => {
+    if (!existingTitles.has(n.titulo)) {
+      state.notes.push({ id: uid(), titulo: n.titulo, texto: n.texto });
+    }
+  });
+
+  if (!state.npcs.some((n) => n.nome === "Rato Louco Amaldiçoado")) {
+    state.npcs.push({
+      id: uid(),
+      nome: "Rato Louco Amaldiçoado",
+      tipo: "Monstro",
+      determinacao: 6,
+      graca: 6,
+      astucia: 4,
+      coracao: 4,
+      salvamento: 8,
+      armadura: 0,
+      tags: ["vale das bagas", "ninho do rei rato", "enxame"],
+      notas:
+        "Mordida (d4). O Rei Rato é uma amálgama de 7 destes, com as caudas emaranhadas e fundidas. Atacando: d6 ratos conseguem atacar por rodada. Cortando a cauda: após 3 ratos derrotados, pode tentar cortar a cauda direto, com desvantagem. Fere com Maldição Doce.",
+    });
+  }
+}
+
 seedCampaignData();
+seedRulesReference();
 saveState();
 
 // ---------- Tabs ----------
@@ -392,6 +509,23 @@ document.getElementById("npc-search").addEventListener("input", renderNpcs);
 const pcModal = document.getElementById("modal-pc");
 const formPc = document.getElementById("form-pc");
 
+const DOM_DESCRICOES = {
+  "Coração Selvagem": "Por causa de sua natureza animalística, você pode chamar as criaturas da floresta e invocá-las em seu auxílio. Talentos iniciais: Caça, Pesca, Orientação.",
+  "Voz Encantadora": "Você arrebata quem pode ouvi-la, atraindo, acalmando ou inspirando com sua voz. Talentos iniciais: Música, Atuação, Poesia.",
+  "Agilidade Feérica": "Você é ligeira, acrobática, e se move com agilidade e discrição. Talentos iniciais: Atlética, Dançarina, Equitação.",
+  "Conexão Elemental": "Um elemento (Fogo, Terra, Ar, Água ou algo mais caprichoso) é seu amigo e se dobra à sua imaginação. Talentos iniciais: Alquimia, Astronomia.",
+  "Magia da Cozinha": "Conhecimento íntimo de flora mágica e misturas herbais; suas guloseimas são mais do que parecem. Talentos iniciais: Cozinhar, Assar, Coletar Alimentos.",
+  "Toque Curativo": "Você restaura os outros com as mãos, cabelos e lágrimas; nunca fica doente. Talentos iniciais: Cura, Costura, Herbologia.",
+  "Amizade Poderosa": "Uma amizade poderosa com um companheiro animal devotado, que oferece ajuda, conselhos e companhia.",
+  "Intelecto Sábio": "Fonte de conhecimento histórico, folclore antigo e saber prático. Talentos iniciais: Caligrafia, Linguística, História, Folclore.",
+};
+
+document.getElementById("pc-dom-nome").addEventListener("change", (e) => {
+  const desc = DOM_DESCRICOES[e.target.value];
+  const field = document.getElementById("pc-dom-descricao");
+  if (desc && !field.value.trim()) field.value = desc;
+});
+
 function openPcModal(pc) {
   document.getElementById("pc-modal-title").textContent = pc ? "Editar Princesa" : "Nova Princesa";
   document.getElementById("pc-id").value = pc ? pc.id : "";
@@ -402,11 +536,11 @@ function openPcModal(pc) {
   document.getElementById("pc-determinacao").value = pc ? pc.determinacao : 10;
   document.getElementById("pc-graca").value = pc ? pc.graca : 10;
   document.getElementById("pc-astucia").value = pc ? pc.astucia : 10;
-  document.getElementById("pc-coracao-max").value = pc ? pc.coracaoMax : 10;
+  document.getElementById("pc-coracao-max").value = pc ? pc.coracaoMax : 7;
   document.getElementById("pc-armadura").value = pc ? pc.armadura : 0;
   document.getElementById("pc-dinheiro").value = pc ? pc.dinheiro : 0;
-  document.getElementById("pc-dado-coracao-total").value = pc ? pc.dadoCoracaoTotal : 4;
-  document.getElementById("pc-dado-dom-total").value = pc ? pc.dadoDomTotal : 4;
+  document.getElementById("pc-dado-coracao-total").value = pc ? pc.dadoCoracaoTotal : 1;
+  document.getElementById("pc-dado-dom-total").value = pc ? pc.dadoDomTotal : 1;
   document.getElementById("pc-arma").value = pc ? pc.arma : "";
   document.getElementById("pc-talentos").value = pc ? pc.talentos.join(", ") : "";
   document.getElementById("pc-inventario").value = pc ? pc.inventario.join(", ") : "";
@@ -447,7 +581,7 @@ formPc.addEventListener("submit", (e) => {
     talentos: parseTags(document.getElementById("pc-talentos").value),
     inventario: parseTags(document.getElementById("pc-inventario").value),
     trauma: document.getElementById("pc-trauma").value.trim(),
-    aflicoes: existing ? existing.aflicoes : { cansada: false, ferida: false, confusa: false },
+    aflicoes: existing ? existing.aflicoes : { cansada: false, atordoada: false, confusa: false },
   };
   if (id) {
     const idx = state.pcs.findIndex((p) => p.id === id);
@@ -515,7 +649,7 @@ function renderPcs() {
       <div class="pc-misc">Dados de Dom: ${dieTrack(p.dadoDomTotal, p.dadoDomUsados, "pc-dice-dom", p.id)}</div>
       <div class="affliction-toggles">
         <button class="affliction-btn ${p.aflicoes.cansada ? "active cansada" : ""}" data-pc-affliction="${p.id}" data-key="cansada">Cansada</button>
-        <button class="affliction-btn ${p.aflicoes.ferida ? "active ferida" : ""}" data-pc-affliction="${p.id}" data-key="ferida">Ferida</button>
+        <button class="affliction-btn ${p.aflicoes.atordoada ? "active atordoada" : ""}" data-pc-affliction="${p.id}" data-key="atordoada">Atordoada</button>
         <button class="affliction-btn ${p.aflicoes.confusa ? "active confusa" : ""}" data-pc-affliction="${p.id}" data-key="confusa">Confusa</button>
       </div>
       ${p.arma ? `<div class="pc-misc"><b>Arma:</b> ${escapeHtml(p.arma)}</div>` : ""}
@@ -577,7 +711,7 @@ document.getElementById("btn-cancel-combatant").addEventListener("click", () => 
 });
 
 function newAfflictions() {
-  return { cansada: false, ferida: false, confusa: false };
+  return { cansada: false, atordoada: false, confusa: false };
 }
 
 formCombatant.addEventListener("submit", (e) => {
@@ -754,7 +888,7 @@ function renderCombat() {
         </div>
         <div class="affliction-toggles">
           <button class="affliction-btn ${c.aflicoes.cansada ? "active cansada" : ""}" data-c-affliction="${c.id}" data-key="cansada">Cansada</button>
-          <button class="affliction-btn ${c.aflicoes.ferida ? "active ferida" : ""}" data-c-affliction="${c.id}" data-key="ferida">Ferida</button>
+          <button class="affliction-btn ${c.aflicoes.atordoada ? "active atordoada" : ""}" data-c-affliction="${c.id}" data-key="atordoada">Atordoada</button>
           <button class="affliction-btn ${c.aflicoes.confusa ? "active confusa" : ""}" data-c-affliction="${c.id}" data-key="confusa">Confusa</button>
         </div>
         <div class="combatant-actions">

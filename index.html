@@ -4,13 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mesa do Mestre — Perigos & Princesas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="page-vignette"></div>
 <header class="app-header">
+  <div class="header-flourish" aria-hidden="true">❦ ❧ ❦ ❧ ❦ ❧ ❦ ❧ ❦ ❧ ❦ ❧ ❦ ❧ ❦</div>
   <div class="header-inner">
     <div class="brand">
-      <span class="brand-icon">🗡️</span>
+      <span class="brand-icon">🍭</span>
       <div>
         <h1 id="campaign-name">Minha Campanha</h1>
         <p class="subtitle">Perigos &amp; Princesas — mesa do mestre</p>
@@ -157,12 +162,24 @@
       <label>Jogadora
         <input type="text" id="pc-jogadora">
       </label>
-      <label>Dom (nome)
-        <input type="text" id="pc-dom-nome" placeholder="ex: Coração Selvagem">
+      <label>Dom (Fada Madrinha)
+        <select id="pc-dom-nome">
+          <option value="">— escolher —</option>
+          <option>Coração Selvagem</option>
+          <option>Voz Encantadora</option>
+          <option>Agilidade Feérica</option>
+          <option>Conexão Elemental</option>
+          <option>Magia da Cozinha</option>
+          <option>Toque Curativo</option>
+          <option>Amizade Poderosa</option>
+          <option>Intelecto Sábio</option>
+          <option>Outro</option>
+        </select>
       </label>
       <label>Descrição do Dom
-        <textarea id="pc-dom-descricao" rows="2"></textarea>
+        <textarea id="pc-dom-descricao" rows="2" placeholder="Preenchido automaticamente ao escolher o Dom — edite à vontade"></textarea>
       </label>
+      <p class="field-hint">Atributos: role 4d4 para cada Virtude (pode reordenar/rerrolar uma). Teste de Virtude = role d20 e tire igual ou menos que o atributo. 1 é sempre sucesso, 20 é sempre falha.</p>
       <div class="attr-grid">
         <label>Determinação
           <input type="number" id="pc-determinacao" min="1" max="20" value="10">
@@ -175,8 +192,8 @@
         </label>
       </div>
       <div class="attr-grid">
-        <label>Coração máx.
-          <input type="number" id="pc-coracao-max" min="0" value="10">
+        <label>Coração máx. <small>(d4+4 inicial)</small>
+          <input type="number" id="pc-coracao-max" min="0" value="7">
         </label>
         <label>Armadura
           <input type="number" id="pc-armadura" min="0" value="0">
@@ -186,11 +203,11 @@
         </label>
       </div>
       <div class="attr-grid">
-        <label>Dados de Coração (total)
-          <input type="number" id="pc-dado-coracao-total" min="0" max="8" value="4">
+        <label>Dados de Coração <small>(1/nível)</small>
+          <input type="number" id="pc-dado-coracao-total" min="0" max="8" value="1">
         </label>
-        <label>Dados de Dom (total)
-          <input type="number" id="pc-dado-dom-total" min="0" max="8" value="4">
+        <label>Dados de Dom <small>(1/nível)</small>
+          <input type="number" id="pc-dado-dom-total" min="0" max="8" value="1">
         </label>
       </div>
       <label>Arma
