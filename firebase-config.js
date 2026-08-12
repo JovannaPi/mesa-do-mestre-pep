@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  onSnapshot,
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -38,4 +39,19 @@ export async function saveCloudState(state) {
     console.warn("Não foi possível salvar no Firestore (dados continuam salvos localmente):", err);
     return false;
   }
+}
+
+// Assinatura em tempo real — usada pela página dos jogadores (e pelo polling leve do mapa
+// no lado da Mestra) para refletir mudanças sem precisar recarregar a página.
+export function subscribeToState(onChange, onError) {
+  return onSnapshot(
+    campaignDocRef,
+    (snap) => {
+      if (snap.exists()) onChange(snap.data());
+    },
+    (err) => {
+      console.warn("Assinatura do Firestore perdida:", err);
+      if (onError) onError(err);
+    }
+  );
 }

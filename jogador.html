@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mesa — Visão da Jogadora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  body { padding-bottom: 20px; }
+  .player-header {
+    text-align: center;
+    padding: 18px 16px 10px;
+  }
+  .player-header h1 { margin: 0; color: var(--accent); font-size: 1.6rem; }
+  .player-status { font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; }
+  .player-main { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; }
+  .handout-box {
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .handout-box img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 3px solid var(--accent-strong);
+  }
+  .handout-caption { margin-top: 8px; font-family: "Fredoka", sans-serif; color: var(--accent-deep); font-size: 1.1rem; }
+  #player-map-canvas { height: 65vh; min-height: 380px; }
+</style>
+</head>
+<body>
+<div class="page-vignette"></div>
+
+<div class="player-header">
+  <h1 id="player-campaign-name">Mesa do Mestre</h1>
+  <p class="player-status" id="player-status">Conectando...</p>
+</div>
+
+<main class="player-main">
+  <div id="handout-box" class="handout-box" style="display:none;">
+    <img id="handout-img" alt="Imagem da Mestra">
+    <p class="handout-caption" id="handout-caption"></p>
+  </div>
+
+  <p class="field-hint" style="text-align:center;">Arraste os marcadores para mover seu personagem pelo mapa.</p>
+  <div id="player-map-canvas" class="map-canvas">
+    <div class="empty-state">Aguardando a Mestra escolher um mapa...</div>
+  </div>
+</main>
+
+<script src="jogador.js"></script>
+</body>
+</html>

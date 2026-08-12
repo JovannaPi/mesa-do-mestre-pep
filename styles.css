@@ -596,6 +596,27 @@ h1, h2, h3 {
 .card-header-row .pc-card-title { flex: 1; }
 
 /* Map */
+.player-link-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--bg-card);
+  border: 2px dashed var(--border-soft);
+  border-radius: 14px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  font-size: 0.92rem;
+}
+.player-link-box code {
+  background: var(--bg-deep);
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--accent-deep);
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
 .map-canvas {
   position: relative;
   width: 100%;

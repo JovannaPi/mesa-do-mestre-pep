@@ -30,6 +30,8 @@ function defaultState() {
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
     activeMapId: null,
+    imagens: [],
+    handoutAtivoId: null,
     seeded: false,
     seededV2: false,
     seededItems: false,
@@ -943,12 +945,39 @@ seedExtraLoot();
 saveState();
 
 // ---------- Tabs ----------
+let mapPollTimer = null;
+
+function startMapPolling() {
+  stopMapPolling();
+  mapPollTimer = setInterval(async () => {
+    const mod = await getCloudModule();
+    if (!mod) return;
+    const cloud = await mod.loadCloudState();
+    if (!cloud) return;
+    // Só traz mapas/tokens/handout do servidor — não mexe no resto do que a Mestra
+    // possa estar editando em outras abas.
+    state.maps = cloud.maps || state.maps;
+    state.activeMapId = cloud.activeMapId ?? state.activeMapId;
+    state.imagens = cloud.imagens || state.imagens;
+    state.handoutAtivoId = cloud.handoutAtivoId ?? state.handoutAtivoId;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderMap();
+  }, 4000);
+}
+
+function stopMapPolling() {
+  clearInterval(mapPollTimer);
+  mapPollTimer = null;
+}
+
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "mapa") startMapPolling();
+    else stopMapPolling();
   });
 });
 
@@ -1379,6 +1408,63 @@ function renderItems() {
 }
 
 document.getElementById("item-search").addEventListener("input", renderItems);
+
+// ==================== Imagens (handouts para jogadores) ====================
+document.getElementById("handout-upload").addEventListener("change", async () => {
+  const input = document.getElementById("handout-upload");
+  const file = input.files[0];
+  if (!file) return;
+  const nome = prompt("Nome da imagem:", file.name.replace(/\.[^.]+$/, "")) || "Imagem";
+  const dataUrl = await fileToResizedDataUrl(file, 1400);
+  state.imagens.push({ id: uid(), nome, imagem: dataUrl });
+  saveState();
+  renderHandouts();
+  input.value = "";
+});
+
+function toggleHandoutVisible(id) {
+  state.handoutAtivoId = state.handoutAtivoId === id ? null : id;
+  saveState();
+  renderHandouts();
+}
+
+function deleteHandout(id) {
+  if (!confirm("Excluir esta imagem?")) return;
+  state.imagens = state.imagens.filter((h) => h.id !== id);
+  if (state.handoutAtivoId === id) state.handoutAtivoId = null;
+  saveState();
+  renderHandouts();
+}
+
+function renderHandouts() {
+  const list = document.getElementById("handout-list");
+  if (state.imagens.length === 0) {
+    list.innerHTML = `<div class="empty-state">Nenhuma imagem enviada ainda.</div>`;
+    return;
+  }
+  list.innerHTML = state.imagens
+    .map((h) => {
+      const isShowing = state.handoutAtivoId === h.id;
+      return `
+    <div class="npc-card">
+      <img src="${h.imagem}" alt="${escapeHtml(h.nome)}" style="width:100%; border-radius:12px; object-fit:cover; max-height:220px;">
+      <h3 style="margin:6px 0 0; color:var(--accent-deep); font-size:1.05rem;">${escapeHtml(h.nome)}</h3>
+      ${isShowing ? `<span class="npc-type-badge" style="background:var(--success); color:#0d3a26; border-color:var(--success);">Mostrando aos jogadores</span>` : ""}
+      <div class="npc-card-actions">
+        <button class="btn ${isShowing ? "btn-danger" : "btn-primary"}" data-toggle-handout="${h.id}">${isShowing ? "Esconder" : "Mostrar aos jogadores"}</button>
+        <button class="btn btn-ghost" data-delete-handout="${h.id}">Excluir</button>
+      </div>
+    </div>
+  `;
+    })
+    .join("");
+  list.querySelectorAll("[data-toggle-handout]").forEach((btn) =>
+    btn.addEventListener("click", () => toggleHandoutVisible(btn.dataset.toggleHandout))
+  );
+  list.querySelectorAll("[data-delete-handout]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteHandout(btn.dataset.deleteHandout))
+  );
+}
 
 // ==================== Locais (visão cruzada por local) ====================
 const LOCATIONS = [
@@ -1997,6 +2083,20 @@ function renderCombat() {
 }
 
 // ==================== Mapa ====================
+const playerLink = new URL("jogador.html", window.location.href).href;
+document.getElementById("player-link-text").textContent = playerLink;
+document.getElementById("btn-copy-player-link").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(playerLink);
+    const btn = document.getElementById("btn-copy-player-link");
+    const original = btn.textContent;
+    btn.textContent = "Copiado!";
+    setTimeout(() => (btn.textContent = original), 1500);
+  } catch (err) {
+    prompt("Copie o link manualmente:", playerLink);
+  }
+});
+
 const mapCanvas = document.getElementById("map-canvas");
 const mapSelect = document.getElementById("map-select");
 const mapUpload = document.getElementById("map-upload");
@@ -2491,6 +2591,7 @@ function renderAll() {
   renderPcs();
   renderNpcs();
   renderItems();
+  renderHandouts();
   renderLocationPicker();
   renderMap();
   renderObjectives();

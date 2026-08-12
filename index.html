@@ -70,6 +70,7 @@
       <button class="subtab-btn" data-subtab="monstros">Monstros</button>
       <button class="subtab-btn" data-subtab="itens">Itens</button>
       <button class="subtab-btn" data-subtab="locais">Por Local</button>
+      <button class="subtab-btn" data-subtab="imagens">Imagens</button>
     </nav>
 
     <div id="subtab-npcs" class="subtab-panel active">
@@ -99,10 +100,27 @@
       <div id="location-picker" class="location-picker"></div>
       <div id="location-content"></div>
     </div>
+
+    <div id="subtab-imagens" class="subtab-panel">
+      <div class="panel-toolbar">
+        <label class="btn btn-primary">
+          <span class="icon">add_photo_alternate</span> Nova imagem
+          <input type="file" id="handout-upload" accept="image/*" hidden>
+        </label>
+      </div>
+      <p class="field-hint">Envie artes, retratos ou cenas aqui. Clique em "Mostrar aos jogadores" para exibir na tela deles (celular/tablet); "Esconder" tira a imagem de lá.</p>
+      <div id="handout-list" class="card-grid"></div>
+    </div>
   </section>
 
   <!-- MAPA -->
   <section id="tab-mapa" class="tab-panel">
+    <div class="player-link-box">
+      <span class="icon">smartphone</span>
+      <span>Link pra suas jogadoras (mapa + imagens, sem spoilers):</span>
+      <code id="player-link-text"></code>
+      <button id="btn-copy-player-link" class="btn btn-secondary">Copiar link</button>
+    </div>
     <div class="panel-toolbar">
       <select id="map-select" class="input"></select>
       <label class="btn btn-primary">
