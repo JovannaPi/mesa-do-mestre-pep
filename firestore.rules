@@ -4,5 +4,8 @@ service cloud.firestore {
     match /campaign/main {
       allow read, write: if true;
     }
+    match /campaign/live {
+      allow read, write: if true;
+    }
   }
 }
