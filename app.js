@@ -1,5 +1,19 @@
 const STORAGE_KEY = "mestre-pep-data-v2";
 
+// Carregado sob demanda (import dinâmico) para que uma falha de rede ao buscar o
+// Firebase nunca impeça o resto do app (que funciona 100% offline) de rodar.
+let cloudModule = null;
+async function getCloudModule() {
+  if (cloudModule !== null) return cloudModule;
+  try {
+    cloudModule = await import("./firebase-config.js");
+  } catch (err) {
+    console.warn("Firebase indisponível, seguindo apenas com dados locais:", err);
+    cloudModule = false;
+  }
+  return cloudModule;
+}
+
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -37,8 +51,45 @@ function loadState() {
 
 let state = loadState();
 
+let cloudSyncTimer = null;
+function setSyncStatus(text) {
+  const el = document.getElementById("sync-status");
+  if (el) el.textContent = text;
+}
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(async () => {
+    const mod = await getCloudModule();
+    if (!mod) {
+      setSyncStatus("Salvo só localmente (sem nuvem)");
+      return;
+    }
+    setSyncStatus("Salvando na nuvem...");
+    const ok = await mod.saveCloudState(state);
+    setSyncStatus(ok ? "Sincronizado" : "Salvo só localmente (sem nuvem)");
+  }, 900);
+}
+
+async function bootstrapCloudSync() {
+  setSyncStatus("Conectando à nuvem...");
+  const mod = await getCloudModule();
+  if (!mod) {
+    setSyncStatus("Salvo só localmente (sem nuvem)");
+    return;
+  }
+  const cloud = await mod.loadCloudState();
+  if (cloud) {
+    state = Object.assign(defaultState(), cloud);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderAll();
+    setSyncStatus("Sincronizado");
+  } else {
+    setSyncStatus("Salvando na nuvem...");
+    const ok = await mod.saveCloudState(state);
+    setSyncStatus(ok ? "Sincronizado" : "Salvo só localmente (sem nuvem)");
+  }
 }
 
 // ==================== SEED DATA (Cervovale) ====================
@@ -2449,3 +2500,4 @@ function renderAll() {
 }
 
 renderAll();
+bootstrapCloudSync();
