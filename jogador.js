@@ -75,23 +75,59 @@ async function persistTokenMove() {
   }
 }
 
+function sizeCanvasToRatio(ratioW, ratioH) {
+  const parent = mapCanvas.parentElement;
+  const availWidth = parent ? parent.clientWidth : mapCanvas.clientWidth;
+  const maxHeight = window.innerHeight * 0.7;
+  let w = availWidth;
+  let h = (w * ratioH) / ratioW;
+  if (h > maxHeight) {
+    h = maxHeight;
+    w = (h * ratioW) / ratioH;
+  }
+  mapCanvas.style.width = Math.round(w) + "px";
+  mapCanvas.style.height = Math.round(h) + "px";
+}
+
+let lastMapRatio = null;
+
 function applyMapAspectRatio(map) {
   if (map.largura && map.altura) {
-    mapCanvas.style.aspectRatio = `${map.largura} / ${map.altura}`;
+    lastMapRatio = { w: map.largura, h: map.altura };
+    sizeCanvasToRatio(map.largura, map.altura);
     return;
   }
   const img = new Image();
   img.onload = () => {
-    mapCanvas.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+    lastMapRatio = { w: img.naturalWidth, h: img.naturalHeight };
+    sizeCanvasToRatio(img.naturalWidth, img.naturalHeight);
   };
   img.src = map.imagem;
 }
 
+let mapResizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(mapResizeTimer);
+  mapResizeTimer = setTimeout(() => {
+    if (lastMapRatio) sizeCanvasToRatio(lastMapRatio.w, lastMapRatio.h);
+  }, 150);
+});
+
 function renderMap(state) {
   const map = activeMapFromState(state);
+  if (state.mapaVisivelJogadores === false) {
+    mapCanvas.style.backgroundImage = "";
+    mapCanvas.style.width = "";
+    mapCanvas.style.height = "";
+    lastMapRatio = null;
+    mapCanvas.innerHTML = `<div class="empty-state">A Mestra escondeu o mapa por enquanto...</div>`;
+    return;
+  }
   if (!map) {
     mapCanvas.style.backgroundImage = "";
-    mapCanvas.style.aspectRatio = "";
+    mapCanvas.style.width = "";
+    mapCanvas.style.height = "";
+    lastMapRatio = null;
     mapCanvas.innerHTML = `<div class="empty-state">Aguardando a Mestra escolher um mapa...</div>`;
     return;
   }

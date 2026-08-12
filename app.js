@@ -32,6 +32,7 @@ function defaultState() {
     activeMapId: null,
     imagens: [],
     handoutAtivoId: null,
+    mapaVisivelJogadores: true,
     seeded: false,
     seededV2: false,
     seededItems: false,
@@ -968,6 +969,7 @@ async function startMapLive() {
     state.activeMapId = cloud.activeMapId ?? state.activeMapId;
     state.imagens = cloud.imagens || state.imagens;
     state.handoutAtivoId = cloud.handoutAtivoId ?? state.handoutAtivoId;
+    state.mapaVisivelJogadores = cloud.mapaVisivelJogadores ?? state.mapaVisivelJogadores;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     renderMap();
     applyingRemoteMapUpdate = false;
@@ -985,8 +987,11 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
-    if (btn.dataset.tab === "mapa") startMapLive();
-    else stopMapLive();
+    if (btn.dataset.tab === "mapa") {
+      startMapLive();
+      const map = state.maps.find((m) => m.id === state.activeMapId);
+      if (map && map.largura && map.altura) sizeCanvasToRatio(mapCanvas, map.largura, map.altura, 0.7);
+    } else stopMapLive();
   });
 });
 
@@ -2179,6 +2184,21 @@ document.getElementById("btn-copy-player-link").addEventListener("click", async 
   }
 });
 
+function renderMapVisibilityToggle() {
+  const btn = document.getElementById("btn-toggle-map-visible");
+  const visivel = state.mapaVisivelJogadores !== false;
+  btn.innerHTML = visivel
+    ? `<span class="icon">visibility_off</span> Esconder mapa das jogadoras`
+    : `<span class="icon">visibility</span> Mostrar mapa às jogadoras`;
+  btn.classList.toggle("btn-ghost", visivel);
+  btn.classList.toggle("btn-secondary", !visivel);
+}
+document.getElementById("btn-toggle-map-visible").addEventListener("click", () => {
+  state.mapaVisivelJogadores = state.mapaVisivelJogadores === false;
+  saveState(true);
+  renderMapVisibilityToggle();
+});
+
 const mapCanvas = document.getElementById("map-canvas");
 const mapSelect = document.getElementById("map-select");
 const mapUpload = document.getElementById("map-upload");
@@ -2193,22 +2213,47 @@ function activeMap() {
 
 // Faz o quadro do mapa sempre ter a mesma proporção da imagem, para que a posição
 // dos marcadores (em %) bata em qualquer tela (computador, tablet, celular).
-// Mapas salvos antes desse recurso não têm largura/altura ainda — mede uma vez e guarda.
+// Usa largura/altura em pixels (não CSS aspect-ratio) porque aspect-ratio junto
+// com max-height quebra a proporção quando o limite de altura entra em ação —
+// e isso é o que deixava o mapa esticado/deformado.
+function sizeCanvasToRatio(canvasEl, ratioW, ratioH, maxHeightVh) {
+  const parent = canvasEl.parentElement;
+  const availWidth = parent ? parent.clientWidth : canvasEl.clientWidth;
+  const maxHeight = window.innerHeight * maxHeightVh;
+  let w = availWidth;
+  let h = (w * ratioH) / ratioW;
+  if (h > maxHeight) {
+    h = maxHeight;
+    w = (h * ratioW) / ratioH;
+  }
+  canvasEl.style.width = Math.round(w) + "px";
+  canvasEl.style.height = Math.round(h) + "px";
+}
+
 function applyMapAspectRatio(canvasEl, map, onMeasured) {
   if (map.largura && map.altura) {
-    canvasEl.style.aspectRatio = `${map.largura} / ${map.altura}`;
+    sizeCanvasToRatio(canvasEl, map.largura, map.altura, 0.7);
     return;
   }
   const img = new Image();
   img.onload = () => {
     map.largura = img.naturalWidth;
     map.altura = img.naturalHeight;
-    canvasEl.style.aspectRatio = `${map.largura} / ${map.altura}`;
+    sizeCanvasToRatio(canvasEl, map.largura, map.altura, 0.7);
     saveState();
     if (onMeasured) onMeasured();
   };
   img.src = map.imagem;
 }
+
+let mapResizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(mapResizeTimer);
+  mapResizeTimer = setTimeout(() => {
+    const map = state.maps.find((m) => m.id === state.activeMapId);
+    if (map && map.largura && map.altura) sizeCanvasToRatio(mapCanvas, map.largura, map.altura, 0.7);
+  }, 150);
+});
 
 mapUpload.addEventListener("change", async () => {
   const file = mapUpload.files[0];
@@ -2423,11 +2468,13 @@ function renderMap() {
     ? state.maps.map((m) => `<option value="${m.id}" ${m.id === state.activeMapId ? "selected" : ""}>${escapeHtml(m.nome)}</option>`).join("")
     : `<option value="">Nenhum mapa</option>`;
 
+  renderMapVisibilityToggle();
   const map = activeMap();
   mapCanvas.removeEventListener("click", onMapCanvasClick);
   if (!map) {
     mapCanvas.style.backgroundImage = "";
-    mapCanvas.style.aspectRatio = "";
+    mapCanvas.style.width = "";
+    mapCanvas.style.height = "";
     mapCanvas.innerHTML = `<div class="empty-state">Nenhum mapa ainda. Clique em "+ Novo mapa" para enviar uma imagem.</div>`;
     return;
   }
