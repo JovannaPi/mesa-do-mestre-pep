@@ -59,19 +59,27 @@ function setSyncStatus(text) {
   if (el) el.textContent = text;
 }
 
-function saveState() {
+async function pushToCloud() {
+  const mod = await getCloudModule();
+  if (!mod) {
+    setSyncStatus("Salvo só localmente (sem nuvem)");
+    return;
+  }
+  setSyncStatus("Salvando na nuvem...");
+  const ok = await mod.saveCloudState(state);
+  setSyncStatus(ok ? "Sincronizado" : "Salvo só localmente (sem nuvem)");
+}
+
+// immediate=true pula o debounce — usado para ações únicas e sensíveis a tempo,
+// como soltar um marcador no mapa, para o outro lado ver o movimento na hora.
+function saveState(immediate) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   clearTimeout(cloudSyncTimer);
-  cloudSyncTimer = setTimeout(async () => {
-    const mod = await getCloudModule();
-    if (!mod) {
-      setSyncStatus("Salvo só localmente (sem nuvem)");
-      return;
-    }
-    setSyncStatus("Salvando na nuvem...");
-    const ok = await mod.saveCloudState(state);
-    setSyncStatus(ok ? "Sincronizado" : "Salvo só localmente (sem nuvem)");
-  }, 900);
+  if (immediate) {
+    pushToCloud();
+  } else {
+    cloudSyncTimer = setTimeout(pushToCloud, 250);
+  }
 }
 
 async function bootstrapCloudSync() {
@@ -945,15 +953,15 @@ seedExtraLoot();
 saveState();
 
 // ---------- Tabs ----------
-let mapPollTimer = null;
+let mapUnsubscribe = null;
+let applyingRemoteMapUpdate = false;
 
-function startMapPolling() {
-  stopMapPolling();
-  mapPollTimer = setInterval(async () => {
-    const mod = await getCloudModule();
-    if (!mod) return;
-    const cloud = await mod.loadCloudState();
-    if (!cloud) return;
+async function startMapLive() {
+  stopMapLive();
+  const mod = await getCloudModule();
+  if (!mod) return;
+  mapUnsubscribe = mod.subscribeToState((cloud) => {
+    applyingRemoteMapUpdate = true;
     // Só traz mapas/tokens/handout do servidor — não mexe no resto do que a Mestra
     // possa estar editando em outras abas.
     state.maps = cloud.maps || state.maps;
@@ -962,12 +970,13 @@ function startMapPolling() {
     state.handoutAtivoId = cloud.handoutAtivoId ?? state.handoutAtivoId;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     renderMap();
-  }, 4000);
+    applyingRemoteMapUpdate = false;
+  });
 }
 
-function stopMapPolling() {
-  clearInterval(mapPollTimer);
-  mapPollTimer = null;
+function stopMapLive() {
+  if (mapUnsubscribe) mapUnsubscribe();
+  mapUnsubscribe = null;
 }
 
 document.querySelectorAll(".tab-btn").forEach((btn) => {
@@ -976,8 +985,8 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
-    if (btn.dataset.tab === "mapa") startMapPolling();
-    else stopMapPolling();
+    if (btn.dataset.tab === "mapa") startMapLive();
+    else stopMapLive();
   });
 });
 
@@ -1145,6 +1154,35 @@ function fileToResizedDataUrl(file, maxDim) {
         canvas.height = height;
         canvas.getContext("2d").drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Igual a fileToResizedDataUrl, mas também devolve a proporção real da imagem —
+// usado no mapa para o quadro sempre respeitar a forma da imagem (e não da tela),
+// garantindo que a posição dos marcadores bata entre o computador e o celular.
+function fileToResizedImageWithSize(file, maxDim) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve({ dataUrl: canvas.toDataURL("image/jpeg", 0.82), width, height });
       };
       img.src = reader.result;
     };
@@ -1588,7 +1626,24 @@ function openPcModal(pc) {
   document.getElementById("pc-talentos").value = pc ? pc.talentos.join(", ") : "";
   document.getElementById("pc-inventario").value = pc ? pc.inventario.join(", ") : "";
   document.getElementById("pc-trauma").value = pc ? pc.trauma : "";
+  document.getElementById("pc-maldicao-tipo").value = pc ? pc.maldicaoTipo || "" : "";
+  renderMaldicaoPicker(pc ? pc.maldicaoEstagio || 0 : 0);
   pcModal.classList.remove("hidden");
+}
+
+function renderMaldicaoPicker(selected) {
+  const wrap = document.getElementById("pc-maldicao-picker");
+  const labels = ["0 (sem)", "1", "2", "3", "4 (transformada)"];
+  wrap.innerHTML = labels
+    .map(
+      (label, i) =>
+        `<button type="button" class="location-btn ${i === selected ? "active" : ""}" data-maldicao-stage="${i}" style="padding:8px 12px; font-size:0.85rem;">${label}</button>`
+    )
+    .join("");
+  document.getElementById("pc-maldicao-estagio").value = selected;
+  wrap.querySelectorAll("[data-maldicao-stage]").forEach((btn) =>
+    btn.addEventListener("click", () => renderMaldicaoPicker(Number(btn.dataset.maldicaoStage)))
+  );
 }
 
 function closePcModal() { pcModal.classList.add("hidden"); formPc.reset(); }
@@ -1624,6 +1679,8 @@ formPc.addEventListener("submit", (e) => {
     talentos: parseTags(document.getElementById("pc-talentos").value),
     inventario: parseTags(document.getElementById("pc-inventario").value),
     trauma: document.getElementById("pc-trauma").value.trim(),
+    maldicaoTipo: document.getElementById("pc-maldicao-tipo").value,
+    maldicaoEstagio: Number(document.getElementById("pc-maldicao-estagio").value) || 0,
     aflicoes: existing ? existing.aflicoes : { cansada: false, atordoada: false, confusa: false },
     foto: currentPcFoto,
   };
@@ -1701,6 +1758,22 @@ function renderPcs() {
         <button class="affliction-btn ${p.aflicoes.atordoada ? "active atordoada" : ""}" data-pc-affliction="${p.id}" data-key="atordoada">Atordoada</button>
         <button class="affliction-btn ${p.aflicoes.confusa ? "active confusa" : ""}" data-pc-affliction="${p.id}" data-key="confusa">Confusa</button>
       </div>
+      ${
+        p.maldicaoTipo
+          ? `<div class="maldicao-box">
+              <div class="npc-section-label">Maldição Doce — <span class="ability-link" data-ability="${escapeHtml(p.maldicaoTipo)}">${escapeHtml(p.maldicaoTipo)}</span></div>
+              <div class="maldicao-stage-track">
+                ${[1, 2, 3, 4]
+                  .map(
+                    (n) =>
+                      `<button class="maldicao-pip ${p.maldicaoEstagio >= n ? "filled" : ""}" data-pc-maldicao="${p.id}" data-stage="${n}">${n}</button>`
+                  )
+                  .join("")}
+                ${p.maldicaoEstagio >= 4 ? `<span class="init-status age-depois">Transformada!</span>` : ""}
+              </div>
+            </div>`
+          : ""
+      }
       ${p.arma ? `<div class="pc-misc"><b>Arma:</b> ${escapeHtml(p.arma)}</div>` : ""}
       ${p.talentos.length ? `<div class="pc-misc"><b>Talentos:</b> ${p.talentos.map(escapeHtml).join(", ")}</div>` : ""}
       ${p.inventario.length ? `<div class="pc-misc"><b>Minhas coisas:</b> ${p.inventario.map(escapeHtml).join(", ")}</div>` : ""}
@@ -1744,6 +1817,15 @@ function renderPcs() {
   );
   list.querySelectorAll("[data-pc-dice-dom]").forEach((pip) =>
     pip.addEventListener("click", () => togglePcDicePip(pip.dataset.pcDiceDom, "dom", Number(pip.dataset.index)))
+  );
+  list.querySelectorAll("[data-pc-maldicao]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const pc = state.pcs.find((p) => p.id === btn.dataset.pcMaldicao);
+      const stage = Number(btn.dataset.stage);
+      pc.maldicaoEstagio = pc.maldicaoEstagio === stage ? stage - 1 : stage;
+      saveState();
+      renderPcs();
+    })
   );
 }
 
@@ -2109,12 +2191,31 @@ function activeMap() {
   return state.maps.find((m) => m.id === state.activeMapId) || null;
 }
 
+// Faz o quadro do mapa sempre ter a mesma proporção da imagem, para que a posição
+// dos marcadores (em %) bata em qualquer tela (computador, tablet, celular).
+// Mapas salvos antes desse recurso não têm largura/altura ainda — mede uma vez e guarda.
+function applyMapAspectRatio(canvasEl, map, onMeasured) {
+  if (map.largura && map.altura) {
+    canvasEl.style.aspectRatio = `${map.largura} / ${map.altura}`;
+    return;
+  }
+  const img = new Image();
+  img.onload = () => {
+    map.largura = img.naturalWidth;
+    map.altura = img.naturalHeight;
+    canvasEl.style.aspectRatio = `${map.largura} / ${map.altura}`;
+    saveState();
+    if (onMeasured) onMeasured();
+  };
+  img.src = map.imagem;
+}
+
 mapUpload.addEventListener("change", async () => {
   const file = mapUpload.files[0];
   if (!file) return;
   const nome = prompt("Nome do mapa:", file.name.replace(/\.[^.]+$/, "")) || "Mapa sem nome";
-  const dataUrl = await fileToResizedDataUrl(file, 1600);
-  const map = { id: uid(), nome, imagem: dataUrl, tokens: [] };
+  const { dataUrl, width, height } = await fileToResizedImageWithSize(file, 1600);
+  const map = { id: uid(), nome, imagem: dataUrl, largura: width, altura: height, tokens: [] };
   state.maps.push(map);
   state.activeMapId = map.id;
   saveState();
@@ -2310,7 +2411,7 @@ function attachTokenDrag(el, token) {
       let y = ((e.clientY - rect.top) / rect.height) * 100;
       token.x = Math.max(0, Math.min(100, x));
       token.y = Math.max(0, Math.min(100, y));
-      saveState();
+      saveState(true);
     } else {
       openTokenModal(token, false);
     }
@@ -2326,9 +2427,11 @@ function renderMap() {
   mapCanvas.removeEventListener("click", onMapCanvasClick);
   if (!map) {
     mapCanvas.style.backgroundImage = "";
+    mapCanvas.style.aspectRatio = "";
     mapCanvas.innerHTML = `<div class="empty-state">Nenhum mapa ainda. Clique em "+ Novo mapa" para enviar uma imagem.</div>`;
     return;
   }
+  applyMapAspectRatio(mapCanvas, map, renderMap);
   mapCanvas.style.backgroundImage = `url(${map.imagem})`;
   mapCanvas.innerHTML = map.tokens
     .map(
@@ -2602,3 +2705,83 @@ function renderAll() {
 
 renderAll();
 bootstrapCloudSync();
+
+// ==================== Ferramentas de mesa: dados + cronômetro ====================
+const toolsPanel = document.getElementById("tools-panel");
+document.getElementById("btn-toggle-tools").addEventListener("click", () => toolsPanel.classList.toggle("hidden"));
+document.getElementById("btn-close-tools").addEventListener("click", () => toolsPanel.classList.add("hidden"));
+
+let diceHistory = [];
+
+function showDiceResult(total, detail) {
+  document.getElementById("dice-result").textContent = total;
+  diceHistory.unshift(`${detail} = ${total}`);
+  diceHistory = diceHistory.slice(0, 6);
+  document.getElementById("dice-history").innerHTML = diceHistory.map(escapeHtml).join("<br>");
+}
+
+document.querySelectorAll("[data-roll-die]").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    const sides = Number(btn.dataset.rollDie);
+    const roll = 1 + Math.floor(Math.random() * sides);
+    showDiceResult(roll, `d${sides}`);
+  })
+);
+
+document.getElementById("btn-roll-formula").addEventListener("click", () => {
+  const raw = document.getElementById("dice-formula").value.trim().toLowerCase();
+  const match = raw.match(/^(\d*)d(\d+)\s*([+-]\s*\d+)?$/);
+  if (!match) {
+    showDiceResult("?", `fórmula inválida (use ex: 2d6+3)`);
+    return;
+  }
+  const count = Math.min(20, Number(match[1] || 1));
+  const sides = Number(match[2]);
+  const mod = match[3] ? Number(match[3].replace(/\s/g, "")) : 0;
+  const rolls = Array.from({ length: count }, () => 1 + Math.floor(Math.random() * sides));
+  const total = rolls.reduce((a, b) => a + b, 0) + mod;
+  showDiceResult(total, `${count}d${sides}${mod ? (mod > 0 ? "+" + mod : mod) : ""} (${rolls.join(", ")})`);
+});
+
+let timerInterval = null;
+let timerSecondsLeft = 0;
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSecondsLeft / 60).toString().padStart(2, "0");
+  const s = (timerSecondsLeft % 60).toString().padStart(2, "0");
+  const display = document.getElementById("timer-display");
+  display.textContent = `${m}:${s}`;
+  display.classList.toggle("timer-done", timerSecondsLeft === 0 && timerInterval === null && document.getElementById("timer-minutes").dataset.started === "1");
+}
+
+document.getElementById("btn-timer-start").addEventListener("click", () => {
+  if (timerInterval) return;
+  const minutesInput = document.getElementById("timer-minutes");
+  if (timerSecondsLeft <= 0) {
+    timerSecondsLeft = Math.max(1, Number(minutesInput.value) || 1) * 60;
+    minutesInput.dataset.started = "1";
+  }
+  timerInterval = setInterval(() => {
+    timerSecondsLeft = Math.max(0, timerSecondsLeft - 1);
+    updateTimerDisplay();
+    if (timerSecondsLeft === 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }, 1000);
+  updateTimerDisplay();
+});
+
+document.getElementById("btn-timer-pause").addEventListener("click", () => {
+  clearInterval(timerInterval);
+  timerInterval = null;
+});
+
+document.getElementById("btn-timer-reset").addEventListener("click", () => {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timerSecondsLeft = 0;
+  document.getElementById("timer-minutes").dataset.started = "0";
+  document.getElementById("timer-display").classList.remove("timer-done");
+  document.getElementById("timer-display").textContent = "00:00";
+});

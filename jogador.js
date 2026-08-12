@@ -75,13 +75,27 @@ async function persistTokenMove() {
   }
 }
 
+function applyMapAspectRatio(map) {
+  if (map.largura && map.altura) {
+    mapCanvas.style.aspectRatio = `${map.largura} / ${map.altura}`;
+    return;
+  }
+  const img = new Image();
+  img.onload = () => {
+    mapCanvas.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+  };
+  img.src = map.imagem;
+}
+
 function renderMap(state) {
   const map = activeMapFromState(state);
   if (!map) {
     mapCanvas.style.backgroundImage = "";
+    mapCanvas.style.aspectRatio = "";
     mapCanvas.innerHTML = `<div class="empty-state">Aguardando a Mestra escolher um mapa...</div>`;
     return;
   }
+  applyMapAspectRatio(map);
   mapCanvas.style.backgroundImage = `url(${map.imagem})`;
   mapCanvas.innerHTML = map.tokens
     .map(

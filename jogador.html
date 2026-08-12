@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Mesa — Visão da Jogadora</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +29,7 @@
     border: 3px solid var(--accent-strong);
   }
   .handout-caption { margin-top: 8px; font-family: "Fredoka", sans-serif; color: var(--accent-deep); font-size: 1.1rem; }
-  #player-map-canvas { height: 65vh; min-height: 380px; }
+  #player-map-canvas { height: auto; min-height: 300px; max-height: 75vh; }
 </style>
 </head>
 <body>
@@ -46,7 +46,7 @@
     <p class="handout-caption" id="handout-caption"></p>
   </div>
 
-  <p class="field-hint" style="text-align:center;">Arraste os marcadores para mover seu personagem pelo mapa.</p>
+  <p class="field-hint" style="text-align:center;">Arraste os marcadores para mover seu personagem. Belisque com dois dedos pra dar zoom no mapa.</p>
   <div id="player-map-canvas" class="map-canvas">
     <div class="empty-state">Aguardando a Mestra escolher um mapa...</div>
   </div>

@@ -29,14 +29,16 @@
       </label>
     </div>
   </div>
-  <nav class="tabs">
-    <button class="tab-btn active" data-tab="combate"><span class="icon">shield</span> Combate</button>
-    <button class="tab-btn" data-tab="pcs"><span class="icon">face_3</span> Personagens</button>
-    <button class="tab-btn" data-tab="compendio"><span class="icon">groups</span> Compêndio</button>
-    <button class="tab-btn" data-tab="mapa"><span class="icon">map</span> Mapa</button>
-    <button class="tab-btn" data-tab="campanha"><span class="icon">menu_book</span> Campanha</button>
-    <button class="tab-btn" data-tab="sessoes"><span class="icon">history_edu</span> Sessões</button>
-  </nav>
+  <div class="tabs-wrap">
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="combate"><span class="icon">shield</span> Combate</button>
+      <button class="tab-btn" data-tab="pcs"><span class="icon">face_3</span> Personagens</button>
+      <button class="tab-btn" data-tab="compendio"><span class="icon">groups</span> Compêndio</button>
+      <button class="tab-btn" data-tab="mapa"><span class="icon">map</span> Mapa</button>
+      <button class="tab-btn" data-tab="campanha"><span class="icon">menu_book</span> Campanha</button>
+      <button class="tab-btn" data-tab="sessoes"><span class="icon">history_edu</span> Sessões</button>
+    </nav>
+  </div>
 </header>
 
 <main class="app-main">
@@ -304,6 +306,22 @@
       <label>Trauma
         <input type="text" id="pc-trauma">
       </label>
+      <label>Maldição Doce (tipo)
+        <select id="pc-maldicao-tipo">
+          <option value="">— sem maldição —</option>
+          <option>Bolo de Mel</option>
+          <option>Pé de Moleque</option>
+          <option>Sonho de Creme</option>
+          <option>Puxa-Puxa</option>
+          <option>Sorvete</option>
+          <option>Marshmallow</option>
+        </select>
+      </label>
+      <div class="field-label-block">
+        <span class="field-label-text">Estágio da Maldição Doce (0 a 4)</span>
+        <div id="pc-maldicao-picker" class="color-picker"></div>
+        <input type="hidden" id="pc-maldicao-estagio" value="0">
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-pc">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
@@ -424,6 +442,47 @@
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- FERRAMENTAS DE MESA (dados + cronômetro) -->
+<button id="btn-toggle-tools" class="tools-fab" title="Dados e cronômetro">
+  <span class="icon">casino</span>
+</button>
+<div id="tools-panel" class="tools-panel hidden">
+  <div class="tools-panel-header">
+    <span>Ferramentas de mesa</span>
+    <button type="button" id="btn-close-tools" class="btn-close-modal" aria-label="Fechar" style="position:static;">&times;</button>
+  </div>
+
+  <div class="tools-section">
+    <div class="tools-section-title">Dados</div>
+    <div class="dice-buttons">
+      <button class="btn btn-secondary" data-roll-die="4">d4</button>
+      <button class="btn btn-secondary" data-roll-die="6">d6</button>
+      <button class="btn btn-secondary" data-roll-die="8">d8</button>
+      <button class="btn btn-secondary" data-roll-die="10">d10</button>
+      <button class="btn btn-secondary" data-roll-die="12">d12</button>
+      <button class="btn btn-secondary" data-roll-die="20">d20</button>
+    </div>
+    <div class="dice-custom-row">
+      <input type="text" id="dice-formula" class="input" placeholder="ex: 2d6+3" style="max-width:120px;">
+      <button class="btn btn-primary" id="btn-roll-formula">Rolar</button>
+    </div>
+    <div id="dice-result" class="dice-result"></div>
+    <div id="dice-history" class="dice-history"></div>
+  </div>
+
+  <div class="tools-section">
+    <div class="tools-section-title">Cronômetro</div>
+    <div class="timer-display" id="timer-display">00:00</div>
+    <div class="timer-controls">
+      <input type="number" id="timer-minutes" class="input" min="1" max="60" value="3" style="max-width:70px;">
+      <span style="color:var(--text-dim); font-size:0.85rem;">min</span>
+      <button class="btn btn-secondary" id="btn-timer-start">Iniciar</button>
+      <button class="btn btn-secondary" id="btn-timer-pause">Pausar</button>
+      <button class="btn btn-ghost" id="btn-timer-reset">Zerar</button>
+    </div>
   </div>
 </div>
 
