@@ -485,6 +485,28 @@
       <button class="btn btn-ghost" id="btn-timer-reset">Zerar</button>
     </div>
   </div>
+
+  <div class="tools-section">
+    <div class="tools-section-title">Trilha Sonora</div>
+    <p class="field-hint" style="margin:0 0 8px;">As músicas ficam salvas só neste navegador (não vão pra nuvem).</p>
+    <div id="playlist-picker" class="subtabs" style="margin-bottom:10px;"></div>
+    <label class="btn btn-secondary" style="width:100%; justify-content:center; margin-bottom:8px;">
+      <span class="icon">upload_file</span> Adicionar música(s)
+      <input type="file" id="music-upload" accept="audio/*" multiple hidden>
+    </label>
+    <div id="music-track-list" class="music-track-list"></div>
+    <div class="music-player-bar">
+      <button type="button" id="btn-music-prev" class="btn-icon-round" title="Anterior"><span class="icon">skip_previous</span></button>
+      <button type="button" id="btn-music-playpause" class="btn-icon-round" title="Tocar/Pausar"><span class="icon">play_arrow</span></button>
+      <button type="button" id="btn-music-next" class="btn-icon-round" title="Próxima"><span class="icon">skip_next</span></button>
+      <span id="music-now-playing" class="music-now-playing">Nada tocando</span>
+    </div>
+    <div class="music-volume-row">
+      <span class="icon" style="font-size:1.1rem;">volume_up</span>
+      <input type="range" id="music-volume" min="0" max="100" value="70">
+    </div>
+    <audio id="music-audio-el" hidden></audio>
+  </div>
 </div>
 
 <!-- MODAL GLOSSARY -->

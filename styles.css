@@ -781,6 +781,27 @@ h1, h2, h3 {
 .timer-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .timer-controls .btn { padding: 7px 12px; font-size: 0.85rem; }
 
+.music-track-list { max-height: 160px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+.music-track-row {
+  display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 10px;
+  background: var(--bg-deep); font-size: 0.85rem; cursor: pointer;
+}
+.music-track-row.playing { background: linear-gradient(135deg, var(--accent-strong), var(--accent)); color: #fff; }
+.music-track-row .music-track-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.music-track-row .music-track-remove { color: inherit; opacity: 0.6; }
+.music-track-row .music-track-remove:hover { opacity: 1; }
+.music-empty-hint { font-size: 0.82rem; color: var(--text-dim); text-align: center; padding: 10px 0; }
+.music-player-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.btn-icon-round {
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.btn-icon-round .icon { font-size: 1.2rem; }
+.music-now-playing { font-size: 0.82rem; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.music-volume-row { display: flex; align-items: center; gap: 8px; }
+.music-volume-row input[type="range"] { flex: 1; }
+
 @media (max-width: 560px) {
   .attr-grid { grid-template-columns: 1fr 1fr; }
   .header-inner { flex-direction: column; align-items: flex-start; }

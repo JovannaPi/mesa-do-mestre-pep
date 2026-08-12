@@ -33,6 +33,7 @@ function defaultState() {
     imagens: [],
     handoutAtivoId: null,
     mapaVisivelJogadores: true,
+    playlists: { combate: [], casual: [], chefe: [] },
     seeded: false,
     seededV2: false,
     seededItems: false,
@@ -2832,3 +2833,198 @@ document.getElementById("btn-timer-reset").addEventListener("click", () => {
   document.getElementById("timer-display").classList.remove("timer-done");
   document.getElementById("timer-display").textContent = "00:00";
 });
+
+// ==================== Trilha Sonora ====================
+// Os arquivos de áudio ficam num IndexedDB local (não entram no JSON salvo/sincronizado,
+// porque música é pesada demais pro localStorage ou pro documento do Firestore).
+// Só o nome/playlist de cada faixa fica guardado no estado normal, pra lista sobreviver
+// a um F5 mesmo antes do IndexedDB responder.
+const MUSIC_DB_NAME = "mestre-pep-musicas";
+const MUSIC_STORE = "faixas";
+let musicDbPromise = null;
+
+function openMusicDb() {
+  if (musicDbPromise) return musicDbPromise;
+  musicDbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(MUSIC_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(MUSIC_STORE, { keyPath: "id" });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return musicDbPromise;
+}
+
+async function musicDbPut(record) {
+  const db = await openMusicDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(MUSIC_STORE, "readwrite");
+    tx.objectStore(MUSIC_STORE).put(record);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function musicDbGet(id) {
+  const db = await openMusicDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(MUSIC_STORE, "readonly");
+    const req = tx.objectStore(MUSIC_STORE).get(id);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function musicDbDelete(id) {
+  const db = await openMusicDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(MUSIC_STORE, "readwrite");
+    tx.objectStore(MUSIC_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+const PLAYLISTS = [
+  { key: "combate", label: "Combate" },
+  { key: "casual", label: "Casual" },
+  { key: "chefe", label: "Chefe" },
+];
+
+if (!state.playlists) {
+  state.playlists = { combate: [], casual: [], chefe: [] };
+}
+
+let activePlaylist = "combate";
+let currentTrackId = null;
+let currentObjectUrl = null;
+const musicAudioEl = document.getElementById("music-audio-el");
+const musicVolumeEl = document.getElementById("music-volume");
+musicAudioEl.volume = Number(musicVolumeEl.value) / 100;
+
+function renderPlaylistPicker() {
+  const wrap = document.getElementById("playlist-picker");
+  wrap.innerHTML = PLAYLISTS.map(
+    (p) => `<button type="button" class="subtab-btn ${p.key === activePlaylist ? "active" : ""}" data-playlist="${p.key}" style="padding:6px 12px; font-size:0.82rem;">${p.label}</button>`
+  ).join("");
+  wrap.querySelectorAll("[data-playlist]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      activePlaylist = btn.dataset.playlist;
+      renderPlaylistPicker();
+      renderMusicTrackList();
+    })
+  );
+}
+
+function renderMusicTrackList() {
+  const list = document.getElementById("music-track-list");
+  const tracks = state.playlists[activePlaylist] || [];
+  if (!tracks.length) {
+    list.innerHTML = `<div class="music-empty-hint">Nenhuma música nessa playlist ainda.</div>`;
+    return;
+  }
+  list.innerHTML = tracks
+    .map(
+      (t) => `
+    <div class="music-track-row ${t.id === currentTrackId ? "playing" : ""}" data-track-id="${t.id}">
+      <span class="icon" style="font-size:1rem;">music_note</span>
+      <span class="music-track-name">${escapeHtml(t.nome)}</span>
+      <span class="icon music-track-remove" data-remove-track="${t.id}">close</span>
+    </div>
+  `
+    )
+    .join("");
+  list.querySelectorAll(".music-track-row").forEach((row) =>
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("[data-remove-track]")) return;
+      playTrack(row.dataset.trackId);
+    })
+  );
+  list.querySelectorAll("[data-remove-track]").forEach((btn) =>
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.removeTrack;
+      if (id === currentTrackId) stopMusic();
+      state.playlists[activePlaylist] = state.playlists[activePlaylist].filter((t) => t.id !== id);
+      saveState();
+      renderMusicTrackList();
+      await musicDbDelete(id);
+    })
+  );
+}
+
+async function playTrack(id) {
+  const tracks = state.playlists[activePlaylist] || [];
+  const track = tracks.find((t) => t.id === id);
+  if (!track) return;
+  const record = await musicDbGet(id);
+  if (!record) {
+    alert("Essa música não foi encontrada neste navegador (pode ter sido enviada de outro computador). Envie ela de novo.");
+    return;
+  }
+  if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+  currentObjectUrl = URL.createObjectURL(record.blob);
+  musicAudioEl.src = currentObjectUrl;
+  musicAudioEl.play();
+  currentTrackId = id;
+  document.getElementById("music-now-playing").textContent = track.nome;
+  document.getElementById("btn-music-playpause").innerHTML = `<span class="icon">pause</span>`;
+  renderMusicTrackList();
+}
+
+function stopMusic() {
+  musicAudioEl.pause();
+  musicAudioEl.removeAttribute("src");
+  if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+  currentObjectUrl = null;
+  currentTrackId = null;
+  document.getElementById("music-now-playing").textContent = "Nada tocando";
+  document.getElementById("btn-music-playpause").innerHTML = `<span class="icon">play_arrow</span>`;
+  renderMusicTrackList();
+}
+
+function playAdjacentTrack(direction) {
+  const tracks = state.playlists[activePlaylist] || [];
+  if (!tracks.length) return;
+  const idx = tracks.findIndex((t) => t.id === currentTrackId);
+  const nextIdx = idx === -1 ? 0 : (idx + direction + tracks.length) % tracks.length;
+  playTrack(tracks[nextIdx].id);
+}
+
+document.getElementById("music-upload").addEventListener("change", async () => {
+  const files = Array.from(document.getElementById("music-upload").files || []);
+  for (const file of files) {
+    const id = uid();
+    await musicDbPut({ id, blob: file });
+    state.playlists[activePlaylist].push({ id, nome: file.name.replace(/\.[^.]+$/, "") });
+  }
+  saveState();
+  renderMusicTrackList();
+  document.getElementById("music-upload").value = "";
+});
+
+document.getElementById("btn-music-playpause").addEventListener("click", () => {
+  if (!currentTrackId) {
+    const tracks = state.playlists[activePlaylist] || [];
+    if (tracks.length) playTrack(tracks[0].id);
+    return;
+  }
+  if (musicAudioEl.paused) {
+    musicAudioEl.play();
+    document.getElementById("btn-music-playpause").innerHTML = `<span class="icon">pause</span>`;
+  } else {
+    musicAudioEl.pause();
+    document.getElementById("btn-music-playpause").innerHTML = `<span class="icon">play_arrow</span>`;
+  }
+});
+
+document.getElementById("btn-music-next").addEventListener("click", () => playAdjacentTrack(1));
+document.getElementById("btn-music-prev").addEventListener("click", () => playAdjacentTrack(-1));
+musicAudioEl.addEventListener("ended", () => playAdjacentTrack(1));
+musicVolumeEl.addEventListener("input", () => {
+  musicAudioEl.volume = Number(musicVolumeEl.value) / 100;
+});
+
+renderPlaylistPicker();
+renderMusicTrackList();
