@@ -189,10 +189,27 @@ function renderMap(state) {
   });
 }
 
+function renderSharedText(state) {
+  const box = document.getElementById("shared-text-box");
+  const tipo = state.textoCompartilhadoTipo;
+  const id = state.textoCompartilhadoId;
+  let entry = null;
+  if (tipo === "item") entry = (state.items || []).find((i) => i.id === id);
+  else if (tipo === "nota") entry = (state.notes || []).find((n) => n.id === id);
+  if (!entry) {
+    box.style.display = "none";
+    return;
+  }
+  document.getElementById("shared-text-title").textContent = entry.nome || entry.titulo || "";
+  document.getElementById("shared-text-body").textContent = entry.descricao || entry.texto || "";
+  box.style.display = "";
+}
+
 function renderAll(state) {
   latestState = state;
   document.getElementById("player-campaign-name").textContent = state.campaignName || "Mesa do Mestre";
   renderHandout(state);
+  renderSharedText(state);
   renderMap(state);
 }
 

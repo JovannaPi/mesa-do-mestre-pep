@@ -30,6 +30,17 @@
   }
   .handout-caption { margin-top: 8px; font-family: "Fredoka", sans-serif; color: var(--accent-deep); font-size: 1.1rem; }
   #player-map-canvas { height: auto; min-height: 300px; max-height: 75vh; }
+  .shared-text-box {
+    margin-bottom: 18px;
+    background: var(--parchment);
+    color: var(--parchment-text);
+    border: 3px solid var(--royal-gold);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .shared-text-box h2 { margin: 0 0 10px; font-family: "Fredoka", sans-serif; color: var(--parchment-text); }
+  .shared-text-box p { white-space: pre-wrap; margin: 0; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -44,6 +55,11 @@
   <div id="handout-box" class="handout-box" style="display:none;">
     <img id="handout-img" alt="Imagem da Mestra">
     <p class="handout-caption" id="handout-caption"></p>
+  </div>
+
+  <div id="shared-text-box" class="shared-text-box" style="display:none;">
+    <h2 id="shared-text-title"></h2>
+    <p id="shared-text-body"></p>
   </div>
 
   <p class="field-hint" style="text-align:center;">Arraste os marcadores para mover seu personagem.</p>

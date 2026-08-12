@@ -450,12 +450,23 @@ h1, h2, h3 {
 }
 .stat-box span { font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.02em; }
 .stat-box b { font-size: 1.05rem; color: var(--accent-deep); font-family: "Fredoka", sans-serif; }
+.roll-attr {
+  font-size: 1.05rem; color: var(--accent-deep); font-family: "Fredoka", sans-serif;
+  background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.roll-attr:hover { color: var(--accent); }
+.pc-stats .roll-attr { font-size: inherit; font-family: inherit; }
+.dice-check-success { color: var(--success); }
+.dice-check-fail { color: var(--danger); }
 
 .npc-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .npc-tag {
   font-size: 0.78rem; background: #fdeaf5; border: 1px solid var(--border-soft);
   padding: 3px 10px; border-radius: 999px; color: var(--accent-deep); font-weight: 600;
+  cursor: pointer; font-family: inherit;
 }
+.npc-tag:hover { background: var(--accent-strong); color: #fff; border-color: var(--accent-strong); }
 
 .npc-section-label {
   color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;
@@ -594,6 +605,7 @@ h1, h2, h3 {
 .pc-dom-desc { font-size: 0.9rem; color: var(--text); margin: 0; line-height: 1.45; }
 .pc-stats { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.9rem; color: var(--text-dim); }
 .pc-stats b { color: var(--accent-deep); }
+.pc-stats .roll-attr { color: var(--accent-deep); }
 .dice-track { display: inline-flex; gap: 4px; align-items: center; font-size: 0.85rem; color: var(--text-dim); vertical-align: middle; }
 .dice-pip {
   width: 18px; height: 18px; border-radius: 6px; border: 2px solid var(--border-soft); background: var(--bg-deep);
@@ -667,6 +679,17 @@ h1, h2, h3 {
   word-break: break-all;
 }
 
+.map-canvas.grid-on::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.28) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 1px, transparent 1px);
+  background-size: var(--grid-cell, 40px) var(--grid-cell, 40px);
+}
 .map-canvas {
   position: relative;
   width: 100%;
@@ -706,6 +729,7 @@ h1, h2, h3 {
   cursor: grab;
   user-select: none;
   touch-action: none;
+  z-index: 6;
 }
 .map-token:active { cursor: grabbing; }
 .map-token-dot {

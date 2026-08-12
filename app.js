@@ -34,6 +34,9 @@ function defaultState() {
     handoutAtivoId: null,
     mapaVisivelJogadores: true,
     playlists: { combate: [], casual: [], chefe: [] },
+    textoCompartilhadoTipo: null,
+    textoCompartilhadoId: null,
+    rascunho: "",
     seeded: false,
     seededV2: false,
     seededItems: false,
@@ -1346,20 +1349,24 @@ function deleteNpc(id) {
   renderNpcs();
 }
 
+function rollAttrBtn(entityName, label, value) {
+  return `<button type="button" class="roll-attr" data-roll-name="${escapeHtml(entityName)}" data-roll-label="${escapeHtml(label)}" data-roll-value="${value}">${value}</button>`;
+}
+
 function npcCardHtml(n) {
   const isMonster = n.tipo === "Monstro";
   const statBlock = isMonster
     ? `
       <div class="stat-box"><span>Coração</span><b>${n.coracao}</b></div>
-      <div class="stat-box"><span>Salvamento</span><b>${n.salvamento}</b></div>
+      <div class="stat-box"><span>Salvamento</span>${rollAttrBtn(n.nome, "Salvamento", n.salvamento)}</div>
       <div class="stat-box"><span>Armadura</span><b>${n.armadura}</b></div>
     `
     : `
-      <div class="stat-box"><span>Determinação</span><b>${n.determinacao}</b></div>
-      <div class="stat-box"><span>Graça</span><b>${n.graca}</b></div>
-      <div class="stat-box"><span>Astúcia</span><b>${n.astucia}</b></div>
+      <div class="stat-box"><span>Determinação</span>${rollAttrBtn(n.nome, "Determinação", n.determinacao)}</div>
+      <div class="stat-box"><span>Graça</span>${rollAttrBtn(n.nome, "Graça", n.graca)}</div>
+      <div class="stat-box"><span>Astúcia</span>${rollAttrBtn(n.nome, "Astúcia", n.astucia)}</div>
       <div class="stat-box"><span>Coração</span><b>${n.coracao}</b></div>
-      <div class="stat-box"><span>Salvamento</span><b>${n.salvamento}</b></div>
+      <div class="stat-box"><span>Salvamento</span>${rollAttrBtn(n.nome, "Salvamento", n.salvamento)}</div>
       <div class="stat-box"><span>Armadura</span><b>${n.armadura}</b></div>
     `;
   return `
@@ -1372,7 +1379,7 @@ function npcCardHtml(n) {
         </div>
       </div>
       <div class="npc-stat-grid ${isMonster ? "monster" : ""}">${statBlock}</div>
-      ${n.tags.length ? `<div class="npc-tags">${n.tags.map((t) => `<span class="npc-tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+      ${n.tags.length ? `<div class="npc-tags">${n.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
       ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyAbilities(n.notas)}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-edit-npc="${n.id}">Editar</button>
@@ -1469,8 +1476,9 @@ function itemCardHtml(i) {
       </div>
       ${i.origem ? `<div class="npc-notes"><b>Origem:</b> ${escapeHtml(i.origem)}</div>` : ""}
       <div class="npc-notes">${linkifyAbilities(i.descricao)}</div>
-      ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<span class="npc-tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+      ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
       <div class="npc-card-actions">
+        <button class="btn btn-ghost" data-share-text="item" data-share-id="${i.id}">${isTextShared("item", i.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
         <button class="btn btn-ghost" data-edit-item="${i.id}">Editar</button>
         <button class="btn btn-danger" data-delete-item="${i.id}">Excluir</button>
       </div>
@@ -1637,6 +1645,51 @@ function renderLocationView() {
   );
 }
 
+// ==================== Mostrar texto (itens/notas) e tags clicáveis ====================
+function isTextShared(tipo, id) {
+  return state.textoCompartilhadoTipo === tipo && state.textoCompartilhadoId === id;
+}
+
+function toggleSharedText(tipo, id) {
+  if (isTextShared(tipo, id)) {
+    state.textoCompartilhadoTipo = null;
+    state.textoCompartilhadoId = null;
+  } else {
+    state.textoCompartilhadoTipo = tipo;
+    state.textoCompartilhadoId = id;
+  }
+  saveState(true);
+  renderItems();
+  renderNotes();
+}
+
+function goToTagFilter(tag) {
+  document.querySelector('[data-tab="compendio"]').click();
+  const isKnownLocation = LOCATIONS.some((l) => l.tag === tag);
+  if (isKnownLocation) {
+    document.querySelector('[data-subtab="locais"]').click();
+    activeLocation = tag;
+    renderLocationPicker();
+    renderLocationView();
+  } else {
+    document.querySelector('[data-subtab="npcs"]').click();
+    document.getElementById("npc-search").value = tag;
+    renderNpcs();
+  }
+}
+
+document.addEventListener("click", (e) => {
+  const tagBtn = e.target.closest("[data-tag-filter]");
+  if (tagBtn) {
+    goToTagFilter(tagBtn.dataset.tagFilter);
+    return;
+  }
+  const shareBtn = e.target.closest("[data-share-text]");
+  if (shareBtn) {
+    toggleSharedText(shareBtn.dataset.shareText, shareBtn.dataset.shareId);
+  }
+});
+
 // ==================== PCs (Princesas) ====================
 const pcModal = document.getElementById("modal-pc");
 const formPc = document.getElementById("form-pc");
@@ -1796,9 +1849,9 @@ function renderPcs() {
       ${p.domNome ? `<div class="pc-dom">${escapeHtml(p.domNome)}</div>` : ""}
       ${p.domDescricao ? `<p class="pc-dom-desc">${escapeHtml(p.domDescricao)}</p>` : ""}
       <div class="pc-stats">
-        <span>DET <b>${p.determinacao}</b></span>
-        <span>GRA <b>${p.graca}</b></span>
-        <span>AST <b>${p.astucia}</b></span>
+        <span>DET ${rollAttrBtn(p.nome, "Determinação", p.determinacao)}</span>
+        <span>GRA ${rollAttrBtn(p.nome, "Graça", p.graca)}</span>
+        <span>AST ${rollAttrBtn(p.nome, "Astúcia", p.astucia)}</span>
         <span>Armadura <b>${p.armadura}</b></span>
         <span>Dinheiro <b>${p.dinheiro} pp</b></span>
       </div>
@@ -2184,10 +2237,10 @@ function renderCombat() {
           hasDetails && isExpanded
             ? `<div class="combatant-details">
                 <div class="npc-stat-grid">
-                  ${c.determinacao !== null ? `<div class="stat-box"><span>Determinação</span><b>${c.determinacao}</b></div>` : ""}
-                  ${c.graca !== null ? `<div class="stat-box"><span>Graça</span><b>${c.graca}</b></div>` : ""}
-                  <div class="stat-box"><span>Astúcia</span><b>${c.astucia}</b></div>
-                  ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span><b>${c.salvamento}</b></div>` : ""}
+                  ${c.determinacao !== null ? `<div class="stat-box"><span>Determinação</span>${rollAttrBtn(c.nome, "Determinação", c.determinacao)}</div>` : ""}
+                  ${c.graca !== null ? `<div class="stat-box"><span>Graça</span>${rollAttrBtn(c.nome, "Graça", c.graca)}</div>` : ""}
+                  <div class="stat-box"><span>Astúcia</span>${rollAttrBtn(c.nome, "Astúcia", c.astucia)}</div>
+                  ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span>${rollAttrBtn(c.nome, "Salvamento", c.salvamento)}</div>` : ""}
                   <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
                 </div>
                 ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyAbilities(c.notas)}</div>` : ""}
@@ -2303,7 +2356,66 @@ window.addEventListener("resize", () => {
   mapResizeTimer = setTimeout(() => {
     const map = state.maps.find((m) => m.id === state.activeMapId);
     if (map && map.largura && map.altura) sizeCanvasToRatio(mapCanvas, map.largura, map.altura, 0.7);
+    updateGridCell();
   }, 150);
+});
+
+// ---------- Grid e régua (só do lado da Mestra, não sincroniza com as jogadoras) ----------
+let gridOn = false;
+let gridSize = 20;
+let rulerMode = false;
+let rulerPoints = [];
+
+function updateGridCell() {
+  if (!mapCanvas.clientWidth) return;
+  mapCanvas.style.setProperty("--grid-cell", mapCanvas.clientWidth / gridSize + "px");
+}
+
+document.getElementById("btn-toggle-grid").addEventListener("click", () => {
+  gridOn = !gridOn;
+  mapCanvas.classList.toggle("grid-on", gridOn);
+  document.getElementById("btn-toggle-grid").classList.toggle("btn-secondary", gridOn);
+  updateGridCell();
+});
+
+document.getElementById("grid-size-input").addEventListener("input", (e) => {
+  gridSize = Math.max(4, Number(e.target.value) || 20);
+  updateGridCell();
+});
+
+function clearRulerLine() {
+  const svg = document.getElementById("ruler-svg");
+  if (svg) svg.remove();
+}
+
+function drawRulerLine(p1, p2) {
+  clearRulerLine();
+  const w = mapCanvas.clientWidth;
+  const h = mapCanvas.clientHeight;
+  const x1 = (p1.x / 100) * w, y1 = (p1.y / 100) * h;
+  const x2 = (p2.x / 100) * w, y2 = (p2.y / 100) * h;
+  const distPx = Math.hypot(x2 - x1, y2 - y1);
+  const cellPx = w / gridSize;
+  const squares = (distPx / cellPx).toFixed(1);
+  const metros = (distPx / cellPx * 1.5).toFixed(1);
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.id = "ruler-svg";
+  svg.setAttribute("style", "position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:7;");
+  svg.innerHTML = `
+    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d4af37" stroke-width="3" stroke-dasharray="6,4"/>
+    <circle cx="${x1}" cy="${y1}" r="5" fill="#d4af37"/>
+    <circle cx="${x2}" cy="${y2}" r="5" fill="#d4af37"/>
+    <text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 10}" fill="#5a2f4a" font-size="14" font-weight="700" text-anchor="middle" style="paint-order:stroke; stroke:#fff; stroke-width:4px;">${squares} quadros (~${metros}m)</text>
+  `;
+  mapCanvas.appendChild(svg);
+}
+
+document.getElementById("btn-toggle-ruler").addEventListener("click", () => {
+  rulerMode = !rulerMode;
+  rulerPoints = [];
+  clearRulerLine();
+  document.getElementById("btn-toggle-ruler").classList.toggle("btn-secondary", rulerMode);
+  mapCanvas.style.cursor = rulerMode ? "crosshair" : "";
 });
 
 mapUpload.addEventListener("change", async () => {
@@ -2468,11 +2580,21 @@ document.getElementById("btn-map-add-generic").addEventListener("click", () => {
 
 function onMapCanvasClick(e) {
   if (e.target !== mapCanvas) return;
-  const map = activeMap();
-  if (!map) return;
   const rect = mapCanvas.getBoundingClientRect();
   const x = ((e.clientX - rect.left) / rect.width) * 100;
   const y = ((e.clientY - rect.top) / rect.height) * 100;
+  if (rulerMode) {
+    rulerPoints.push({ x, y });
+    if (rulerPoints.length === 2) {
+      drawRulerLine(rulerPoints[0], rulerPoints[1]);
+      rulerPoints = [];
+    } else {
+      clearRulerLine();
+    }
+    return;
+  }
+  const map = activeMap();
+  if (!map) return;
   const token = { id: uid(), nome: "Marcador", cor: TOKEN_COLORS[map.tokens.length % TOKEN_COLORS.length], x, y };
   map.tokens.push(token);
   saveState();
@@ -2533,6 +2655,7 @@ function renderMap() {
     return;
   }
   applyMapAspectRatio(mapCanvas, map, renderMap);
+  updateGridCell();
   mapCanvas.style.backgroundImage = `url(${map.imagem})`;
   mapCanvas.innerHTML = map.tokens
     .map(
@@ -2684,6 +2807,7 @@ function renderNotes() {
       <p class="session-text ${isLong ? "note-collapsed" : ""}">${escapeHtml(n.texto)}</p>
       <div class="session-card-actions">
         ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
+        <button class="btn btn-ghost" data-share-text="nota" data-share-id="${n.id}">${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
         <button class="btn btn-ghost" data-edit-note="${n.id}">Editar</button>
         <button class="btn btn-danger" data-delete-note="${n.id}">Excluir</button>
       </div>
@@ -2813,6 +2937,24 @@ document.getElementById("btn-toggle-tools").addEventListener("click", () => tool
 document.getElementById("btn-close-tools").addEventListener("click", () => toolsPanel.classList.add("hidden"));
 
 let diceHistory = [];
+
+function rollAttributeCheck(entityName, attrLabel, value) {
+  const roll = 1 + Math.floor(Math.random() * 20);
+  let outcome;
+  if (roll === 1) outcome = "sucesso crítico";
+  else if (roll === 20) outcome = "falha";
+  else outcome = roll <= value ? "sucesso" : "falha";
+  const cls = outcome.includes("sucesso") ? "dice-check-success" : "dice-check-fail";
+  document.getElementById("dice-result").innerHTML = `${roll} <span class="${cls}" style="font-size:1.1rem;">${outcome}</span>`;
+  diceHistory.unshift(`${entityName} — ${attrLabel} (${value}): d20=${roll} → ${outcome}`);
+  diceHistory = diceHistory.slice(0, 6);
+  document.getElementById("dice-history").innerHTML = diceHistory.map(escapeHtml).join("<br>");
+  document.getElementById("tools-panel").classList.remove("hidden");
+}
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".roll-attr");
+  if (btn) rollAttributeCheck(btn.dataset.rollName, btn.dataset.rollLabel, Number(btn.dataset.rollValue));
+});
 
 function showDiceResult(total, detail) {
   document.getElementById("dice-result").textContent = total;
@@ -3081,3 +3223,13 @@ musicVolumeEl.addEventListener("input", () => {
 
 renderPlaylistPicker();
 renderMusicTrackList();
+
+// ==================== Rascunho flutuante ====================
+const scratchpadEl = document.getElementById("scratchpad-text");
+scratchpadEl.value = state.rascunho || "";
+let scratchpadTimer = null;
+scratchpadEl.addEventListener("input", () => {
+  state.rascunho = scratchpadEl.value;
+  clearTimeout(scratchpadTimer);
+  scratchpadTimer = setTimeout(() => saveState(), 400);
+});

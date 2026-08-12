@@ -137,6 +137,11 @@
         <button id="btn-map-add-pc" class="btn btn-secondary" title="Princesa"><span class="icon">group_add</span></button>
         <button id="btn-map-add-generic" class="btn btn-secondary" title="Marcador livre"><span class="icon">add_location_alt</span></button>
       </div>
+      <div class="toolbar-group">
+        <button id="btn-toggle-grid" class="btn btn-ghost" title="Mostrar/esconder grid"><span class="icon">grid_on</span></button>
+        <input type="number" id="grid-size-input" class="input" min="4" max="60" value="20" style="width:56px;" title="Quadros na largura do mapa">
+        <button id="btn-toggle-ruler" class="btn btn-ghost" title="Régua de distância — clique em dois pontos do mapa"><span class="icon">straighten</span></button>
+      </div>
       <div class="toolbar-group" style="border-right:none;">
         <code id="player-link-text" style="display:none;"></code>
         <button id="btn-copy-player-link" class="btn btn-secondary" title="Copiar link pra suas jogadoras"><span class="icon">link</span> Link da mesa</button>
@@ -510,6 +515,11 @@
       <input type="range" id="music-volume" min="0" max="100" value="70">
     </div>
     <audio id="music-audio-el" hidden></audio>
+  </div>
+
+  <div class="tools-section">
+    <div class="tools-section-title">Rascunho</div>
+    <textarea id="scratchpad-text" class="input" rows="4" placeholder="Anote qualquer coisa rápida durante a sessão — nome de um NPC improvisado, uma pergunta pendente..." style="resize:vertical; font-family:inherit;"></textarea>
   </div>
 </div>
 
