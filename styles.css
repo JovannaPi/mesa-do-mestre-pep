@@ -215,6 +215,31 @@ h1, h2, h3 {
   align-items: center;
 }
 
+.toolbar-card {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--bg-card);
+  padding: 8px 12px;
+  border-radius: 16px;
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow);
+  margin-bottom: 18px;
+}
+.toolbar-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+  padding: 4px 12px;
+  border-right: 2px solid var(--border);
+}
+.toolbar-group:last-child { border-right: none; }
+@media (max-width: 700px) {
+  .toolbar-group { border-right: none; padding: 4px 0; }
+}
+
 .btn {
   border: 2px solid var(--border-soft);
   background: var(--bg-card);

@@ -955,7 +955,48 @@ seedExtraLoot();
 saveState();
 
 // ---------- Tabs ----------
+// Posição dos marcadores, mapa ativo e visibilidade pras jogadoras vivem num documento
+// separado e pequeno no Firestore (veja firebase-config.js). Arrastar um marcador só
+// escreve nesse documento pequeno — nunca reenvia a campanha inteira (NPCs, itens, texto
+// da aventura...), que é o que deixava o mapa lento/impraticável de usar ao vivo.
+function buildTokenPositions() {
+  const out = {};
+  state.maps.forEach((m) => {
+    out[m.id] = {};
+    m.tokens.forEach((t) => {
+      out[m.id][t.id] = { x: t.x, y: t.y };
+    });
+  });
+  return out;
+}
+
+function applyTokenPositions(tokenPositions) {
+  if (!tokenPositions) return;
+  state.maps.forEach((m) => {
+    const posForMap = tokenPositions[m.id];
+    if (!posForMap) return;
+    m.tokens.forEach((t) => {
+      const p = posForMap[t.id];
+      if (p) {
+        t.x = p.x;
+        t.y = p.y;
+      }
+    });
+  });
+}
+
+async function pushLiveOnly() {
+  const mod = await getCloudModule();
+  if (!mod) return;
+  await mod.saveLiveState({
+    tokenPositions: buildTokenPositions(),
+    activeMapId: state.activeMapId,
+    mapaVisivelJogadores: state.mapaVisivelJogadores,
+  });
+}
+
 let mapUnsubscribe = null;
+let liveUnsubscribe = null;
 let applyingRemoteMapUpdate = false;
 
 async function startMapLive() {
@@ -964,13 +1005,20 @@ async function startMapLive() {
   if (!mod) return;
   mapUnsubscribe = mod.subscribeToState((cloud) => {
     applyingRemoteMapUpdate = true;
-    // Só traz mapas/tokens/handout do servidor — não mexe no resto do que a Mestra
-    // possa estar editando em outras abas.
+    // Só traz mapas/imagens/handout do servidor — não mexe no resto do que a Mestra
+    // possa estar editando em outras abas. Posição dos marcadores vem do doc "live" abaixo.
     state.maps = cloud.maps || state.maps;
-    state.activeMapId = cloud.activeMapId ?? state.activeMapId;
     state.imagens = cloud.imagens || state.imagens;
     state.handoutAtivoId = cloud.handoutAtivoId ?? state.handoutAtivoId;
-    state.mapaVisivelJogadores = cloud.mapaVisivelJogadores ?? state.mapaVisivelJogadores;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderMap();
+    applyingRemoteMapUpdate = false;
+  });
+  liveUnsubscribe = mod.subscribeToLiveState((live) => {
+    applyingRemoteMapUpdate = true;
+    applyTokenPositions(live.tokenPositions);
+    state.activeMapId = live.activeMapId ?? state.activeMapId;
+    state.mapaVisivelJogadores = live.mapaVisivelJogadores ?? state.mapaVisivelJogadores;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     renderMap();
     applyingRemoteMapUpdate = false;
@@ -980,6 +1028,8 @@ async function startMapLive() {
 function stopMapLive() {
   if (mapUnsubscribe) mapUnsubscribe();
   mapUnsubscribe = null;
+  if (liveUnsubscribe) liveUnsubscribe();
+  liveUnsubscribe = null;
 }
 
 document.querySelectorAll(".tab-btn").forEach((btn) => {
@@ -2188,15 +2238,15 @@ document.getElementById("btn-copy-player-link").addEventListener("click", async 
 function renderMapVisibilityToggle() {
   const btn = document.getElementById("btn-toggle-map-visible");
   const visivel = state.mapaVisivelJogadores !== false;
-  btn.innerHTML = visivel
-    ? `<span class="icon">visibility_off</span> Esconder mapa das jogadoras`
-    : `<span class="icon">visibility</span> Mostrar mapa às jogadoras`;
+  btn.innerHTML = visivel ? `<span class="icon">visibility_off</span>` : `<span class="icon">visibility</span>`;
+  btn.title = visivel ? "Esconder mapa das jogadoras" : "Mostrar mapa às jogadoras";
   btn.classList.toggle("btn-ghost", visivel);
   btn.classList.toggle("btn-secondary", !visivel);
 }
 document.getElementById("btn-toggle-map-visible").addEventListener("click", () => {
   state.mapaVisivelJogadores = state.mapaVisivelJogadores === false;
-  saveState(true);
+  saveState();
+  pushLiveOnly();
   renderMapVisibilityToggle();
 });
 
@@ -2265,6 +2315,7 @@ mapUpload.addEventListener("change", async () => {
   state.maps.push(map);
   state.activeMapId = map.id;
   saveState();
+  pushLiveOnly();
   renderMap();
   mapUpload.value = "";
 });
@@ -2272,6 +2323,7 @@ mapUpload.addEventListener("change", async () => {
 mapSelect.addEventListener("change", () => {
   state.activeMapId = mapSelect.value || null;
   saveState();
+  pushLiveOnly();
   renderMap();
 });
 
@@ -2457,7 +2509,8 @@ function attachTokenDrag(el, token) {
       let y = ((e.clientY - rect.top) / rect.height) * 100;
       token.x = Math.max(0, Math.min(100, x));
       token.y = Math.max(0, Math.min(100, y));
-      saveState(true);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      pushLiveOnly();
     } else {
       openTokenModal(token, false);
     }

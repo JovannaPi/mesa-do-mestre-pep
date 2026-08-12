@@ -20,6 +20,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const campaignDocRef = doc(db, "campaign", "main");
+// Documento separado e pequeno, só com o que muda toda hora durante o jogo (posição dos
+// marcadores no mapa). Arrastar um marcador não deveria reenviar a campanha inteira
+// (NPCs, itens, texto da aventura...) pro Firestore — era isso que deixava o mapa lento.
+const liveDocRef = doc(db, "campaign", "live");
 
 export async function loadCloudState() {
   try {
@@ -51,6 +55,39 @@ export function subscribeToState(onChange, onError) {
     },
     (err) => {
       console.warn("Assinatura do Firestore perdida:", err);
+      if (onError) onError(err);
+    }
+  );
+}
+
+export async function loadLiveState() {
+  try {
+    const snap = await getDoc(liveDocRef);
+    return snap.exists() ? snap.data() : null;
+  } catch (err) {
+    console.warn("Não foi possível carregar a posição ao vivo do mapa:", err);
+    return null;
+  }
+}
+
+export async function saveLiveState(liveData) {
+  try {
+    await setDoc(liveDocRef, liveData);
+    return true;
+  } catch (err) {
+    console.warn("Não foi possível salvar a posição ao vivo do mapa:", err);
+    return false;
+  }
+}
+
+export function subscribeToLiveState(onChange, onError) {
+  return onSnapshot(
+    liveDocRef,
+    (snap) => {
+      if (snap.exists()) onChange(snap.data());
+    },
+    (err) => {
+      console.warn("Assinatura ao vivo do mapa perdida:", err);
       if (onError) onError(err);
     }
   );

@@ -9,8 +9,44 @@ function setStatus(text) {
 }
 
 let latestState = null;
+let latestLive = null;
 let unsubscribe = null;
+let liveUnsubscribe = null;
 const mapCanvas = document.getElementById("player-map-canvas");
+
+// Posição dos marcadores, mapa ativo e visibilidade vêm de um documento separado e
+// pequeno no Firestore (veja firebase-config.js) — assim mover um marcador nunca precisa
+// reenviar a campanha inteira, só essa parte pequena. Isso é o que fazia o mapa demorar
+// muito pra sincronizar entre o celular e o computador.
+function buildTokenPositionsFromState(state) {
+  const out = {};
+  (state.maps || []).forEach((m) => {
+    out[m.id] = {};
+    m.tokens.forEach((t) => {
+      out[m.id][t.id] = { x: t.x, y: t.y };
+    });
+  });
+  return out;
+}
+
+function applyLiveIntoState(live) {
+  if (!latestState || !live) return;
+  latestState.activeMapId = live.activeMapId ?? latestState.activeMapId;
+  latestState.mapaVisivelJogadores = live.mapaVisivelJogadores ?? latestState.mapaVisivelJogadores;
+  if (live.tokenPositions) {
+    (latestState.maps || []).forEach((m) => {
+      const pos = live.tokenPositions[m.id];
+      if (!pos) return;
+      m.tokens.forEach((t) => {
+        const p = pos[t.id];
+        if (p) {
+          t.x = p.x;
+          t.y = p.y;
+        }
+      });
+    });
+  }
+}
 
 function activeMapFromState(state) {
   if (!state || !state.maps) return null;
@@ -68,7 +104,11 @@ async function persistTokenMove() {
   setStatus("Salvando posição...");
   try {
     const mod = await import("./firebase-config.js");
-    const ok = await mod.saveCloudState(latestState);
+    const ok = await mod.saveLiveState({
+      tokenPositions: buildTokenPositionsFromState(latestState),
+      activeMapId: latestState.activeMapId,
+      mapaVisivelJogadores: latestState.mapaVisivelJogadores,
+    });
     setStatus(ok ? "Conectado" : "Sem conexão — a Mestra pode não ver seu movimento");
   } catch (err) {
     setStatus("Sem conexão — a Mestra pode não ver seu movimento");
@@ -165,19 +205,34 @@ async function start() {
     setStatus("Não foi possível conectar. Verifique sua internet e recarregue a página.");
     return;
   }
-  const initial = await mod.loadCloudState();
+  const [initial, initialLive] = await Promise.all([mod.loadCloudState(), mod.loadLiveState()]);
   if (initial) {
-    renderAll(initial);
+    latestState = initial;
+    latestLive = initialLive;
+    if (initialLive) applyLiveIntoState(initialLive);
+    renderAll(latestState);
     setStatus("Conectado");
   } else {
     setStatus("Aguardando a Mestra iniciar a campanha...");
   }
   unsubscribe = mod.subscribeToState(
     (state) => {
-      renderAll(state);
+      latestState = state;
+      if (latestLive) applyLiveIntoState(latestLive);
+      renderAll(latestState);
       setStatus("Conectado");
     },
     () => setStatus("Conexão perdida — tentando de novo...")
+  );
+  liveUnsubscribe = mod.subscribeToLiveState(
+    (live) => {
+      latestLive = live;
+      if (latestState) {
+        applyLiveIntoState(live);
+        renderAll(latestState);
+      }
+    },
+    () => {}
   );
 }
 
