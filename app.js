@@ -111,6 +111,16 @@ function saveState(immediate) {
   }
 }
 
+// Última posição/mapa ativo/visibilidade recebidos do documento "live" (pequeno,
+// atualizado a cada arraste de marcador — veja mais abaixo). Guardamos aqui pra
+// poder reaplicar por cima sempre que um snapshot do documento "main" (pesado,
+// com NPCs/itens/texto) chegar, senão ele traria de volta posições desatualizadas.
+let lastLiveSnapshot = null;
+
+function anyModalOpen() {
+  return !!document.querySelector(".modal-overlay:not(.hidden)");
+}
+
 async function bootstrapCloudSync() {
   setSyncStatus("Conectando à nuvem...");
   const mod = await getCloudModule();
@@ -129,6 +139,34 @@ async function bootstrapCloudSync() {
     const ok = await mod.saveCloudState(state);
     setSyncStatus(ok ? "Sincronizado" : "Salvo só localmente (sem nuvem)");
   }
+
+  // Assinatura contínua — assim, uma mudança feita no celular aparece sozinha no
+  // computador (e vice-versa) sem precisar recarregar a página. Só não aplica
+  // enquanto um modal estiver aberto, pra não perder uma edição em andamento.
+  mod.subscribeToState(
+    (cloud2) => {
+      if (anyModalOpen()) return;
+      state = Object.assign(defaultState(), cloud2);
+      if (lastLiveSnapshot) {
+        applyTokenPositions(lastLiveSnapshot.tokenPositions);
+        state.activeMapId = lastLiveSnapshot.activeMapId ?? state.activeMapId;
+        state.mapaVisivelJogadores = lastLiveSnapshot.mapaVisivelJogadores ?? state.mapaVisivelJogadores;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderAll();
+      setSyncStatus("Sincronizado");
+    },
+    () => setSyncStatus("Conexão com a nuvem perdida — tentando de novo...")
+  );
+
+  mod.subscribeToLiveState((live) => {
+    lastLiveSnapshot = live;
+    applyTokenPositions(live.tokenPositions);
+    state.activeMapId = live.activeMapId ?? state.activeMapId;
+    state.mapaVisivelJogadores = live.mapaVisivelJogadores ?? state.mapaVisivelJogadores;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (document.getElementById("tab-mapa").classList.contains("active")) renderMap();
+  });
 }
 
 // ==================== SEED DATA (Cervovale) ====================
@@ -1022,43 +1060,6 @@ async function pushLiveOnly() {
   });
 }
 
-let mapUnsubscribe = null;
-let liveUnsubscribe = null;
-let applyingRemoteMapUpdate = false;
-
-async function startMapLive() {
-  stopMapLive();
-  const mod = await getCloudModule();
-  if (!mod) return;
-  mapUnsubscribe = mod.subscribeToState((cloud) => {
-    applyingRemoteMapUpdate = true;
-    // Só traz mapas/imagens/handout do servidor — não mexe no resto do que a Mestra
-    // possa estar editando em outras abas. Posição dos marcadores vem do doc "live" abaixo.
-    state.maps = cloud.maps || state.maps;
-    state.imagens = cloud.imagens || state.imagens;
-    state.handoutAtivoId = cloud.handoutAtivoId ?? state.handoutAtivoId;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    renderMap();
-    applyingRemoteMapUpdate = false;
-  });
-  liveUnsubscribe = mod.subscribeToLiveState((live) => {
-    applyingRemoteMapUpdate = true;
-    applyTokenPositions(live.tokenPositions);
-    state.activeMapId = live.activeMapId ?? state.activeMapId;
-    state.mapaVisivelJogadores = live.mapaVisivelJogadores ?? state.mapaVisivelJogadores;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    renderMap();
-    applyingRemoteMapUpdate = false;
-  });
-}
-
-function stopMapLive() {
-  if (mapUnsubscribe) mapUnsubscribe();
-  mapUnsubscribe = null;
-  if (liveUnsubscribe) liveUnsubscribe();
-  liveUnsubscribe = null;
-}
-
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
@@ -1066,10 +1067,9 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab === "mapa") {
-      startMapLive();
       const map = state.maps.find((m) => m.id === state.activeMapId);
       if (map && map.largura && map.altura) sizeCanvasToRatio(mapCanvas, map.largura, map.altura, 0.7);
-    } else stopMapLive();
+    }
   });
 });
 
