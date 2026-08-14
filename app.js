@@ -22,7 +22,7 @@ function uid() {
 // em vez de ficarem como texto gigante dentro do documento da campanha no Firestore —
 // era isso que fazia o salvamento na nuvem falhar silenciosamente com muitas fotos.
 const CLOUDINARY_CLOUD_NAME = "m6ma2igg";
-const CLOUDINARY_UPLOAD_PRESET = "zF5EA6RNs1Fnnlc3sH2k7ObUkHU";
+const CLOUDINARY_UPLOAD_PRESET = "mesa-do-mestre";
 
 async function uploadToCloudinary(dataUrl) {
   try {
