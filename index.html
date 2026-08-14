@@ -159,17 +159,21 @@
   <section id="tab-campanha" class="tab-panel">
     <div class="campanha-layout">
       <div class="campaign-block campanha-col-objetivos">
-        <h2>Objetivos principais</h2>
+        <div class="campanha-col-header">
+          <h2>Objetivos principais</h2>
+        </div>
         <div id="objective-list" class="objective-list"></div>
         <button id="btn-add-objective" class="btn btn-ghost"><span class="icon">add</span> Novo objetivo</button>
       </div>
       <div class="campaign-block campanha-col-notas">
-        <div class="panel-toolbar">
-          <h2 style="margin:0">Notas &amp; Lore</h2>
-          <button id="btn-add-note" class="btn btn-primary"><span class="icon">add</span> Nova nota</button>
-          <input id="note-search" class="input" type="text" placeholder="Buscar regra, lore, NPC...">
+        <div class="campanha-col-header">
+          <div class="panel-toolbar" style="margin-bottom:10px;">
+            <h2 style="margin:0">Notas &amp; Lore</h2>
+            <button id="btn-add-note" class="btn btn-primary"><span class="icon">add</span> Nova nota</button>
+            <input id="note-search" class="input" type="text" placeholder="Buscar regra, lore, NPC...">
+          </div>
+          <div id="note-category-picker" class="location-picker"></div>
         </div>
-        <div id="note-category-picker" class="location-picker"></div>
         <div id="note-list" class="note-grid"></div>
       </div>
     </div>

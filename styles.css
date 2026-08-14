@@ -596,9 +596,20 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   align-items: start;
 }
 .campanha-col-objetivos { position: sticky; top: 100px; }
+/* Os dois cabeçalhos de coluna têm alturas diferentes (um é só título, o outro tem
+   busca + filtros por categoria) — trava uma altura mínima igual nos dois pra que as
+   listas comecem exatamente na mesma linha, em vez de ficarem desalinhadas. */
+.campanha-col-header {
+  min-height: 116px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.campanha-col-header h2 { margin: 0 0 14px; }
 @media (max-width: 900px) {
   .campanha-layout { grid-template-columns: 1fr; }
   .campanha-col-objetivos { position: static; }
+  .campanha-col-header { min-height: 0; }
 }
 
 .modal-reading { max-width: 720px; }
@@ -870,6 +881,9 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   box-shadow: 0 2px 8px rgba(90, 58, 86, 0.5);
   object-fit: cover;
   background: var(--bg-deep);
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .map-token-hpbar-wrap {
   width: 34px; height: 5px; border-radius: 999px; margin-top: 3px;

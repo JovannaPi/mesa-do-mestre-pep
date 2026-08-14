@@ -2710,7 +2710,7 @@ function tokenInnerHtml(t) {
   const hpPct = hasHp ? Math.max(0, Math.min(100, (visual.hpAtual / visual.hpMax) * 100)) : null;
   const avatar =
     visual && visual.foto
-      ? `<img class="map-token-avatar" src="${visual.foto}" alt="">`
+      ? `<img class="map-token-avatar" src="${visual.foto}" alt="" draggable="false">`
       : `<div class="map-token-dot" style="background:${t.cor}"></div>`;
   return `
     ${avatar}
