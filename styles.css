@@ -1110,3 +1110,86 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   from { opacity: 1; transform: translateY(0); }
   to { opacity: 0; transform: translateY(20px); }
 }
+/* =========================================================
+   JANELA FLUTUANTE DA AVENTURA (Draggable)
+========================================================= */
+.floating-window {
+  position: fixed;
+  top: 10vh;
+  right: 5vw;
+  width: 420px;
+  height: 65vh;
+  background: linear-gradient(160deg, var(--parchment) 0%, #fbeed8 100%);
+  border: 3px solid var(--royal-gold);
+  border-radius: 16px;
+  box-shadow: 0 16px 44px rgba(90, 58, 86, 0.4);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  resize: both; /* Permite a Mestra redimensionar a janela puxando o canto */
+  overflow: hidden;
+}
+.floating-window.hidden { display: none; }
+
+.floating-header {
+  background: rgba(255, 255, 255, 0.5);
+  padding: 10px 16px;
+  border-bottom: 2px solid #eeddb8;
+  cursor: grab;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.floating-header:active { cursor: grabbing; }
+.floating-header h2 { margin: 0; font-size: 1.15rem; color: var(--parchment-text); flex: 1; pointer-events: none; }
+
+.floating-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--parchment-text);
+  white-space: pre-wrap;
+}
+
+/* =========================================================
+   TOOLTIP FLUTUANTE (Poderes em cima da palavra)
+========================================================= */
+.tooltip-pop {
+  position: fixed;
+  background: var(--bg-card);
+  border: 2px solid var(--accent-strong);
+  color: var(--text);
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  max-width: 320px;
+  z-index: 9999;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  pointer-events: none; /* Mouse ignora a caixa para não travar a tela */
+  transform: translate(-50%, -100%);
+  margin-top: -10px;
+  animation: fade-in-up 0.2s ease;
+}
+.tooltip-pop h4 { margin: 0 0 6px; color: var(--accent); font-family: "Fredoka", sans-serif; font-size: 1.15rem; }
+.tooltip-pop::after {
+  content: ""; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+  border-width: 8px 8px 0; border-style: solid;
+  border-color: var(--accent-strong) transparent transparent transparent;
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translate(-50%, -90%); }
+  to { opacity: 1; transform: translate(-50%, -100%); }
+}
+
+/* Link dos Personagens na História */
+.npc-link {
+  color: #c0392b;
+  font-weight: 700;
+  cursor: pointer;
+  border-bottom: 2px dotted #e74c3c;
+  transition: color 0.2s;
+}
+.npc-link:hover { color: #e74c3c; background: rgba(231, 76, 60, 0.1); border-radius: 4px; padding: 0 2px; }
