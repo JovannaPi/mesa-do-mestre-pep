@@ -2213,7 +2213,21 @@ function removeCombatant(id) {
   renderCombat();
 }
 
-let expandedCombatants = new Set();
+function openCombatantQuickView(c) {
+  document.getElementById("combatant-view-title").textContent = c.nome;
+  const body = document.getElementById("combatant-view-body");
+  body.innerHTML = `
+    <div class="npc-stat-grid">
+      ${c.determinacao !== null ? `<div class="stat-box"><span>Determinação</span>${rollAttrBtn(c.nome, "Determinação", c.determinacao)}</div>` : ""}
+      ${c.graca !== null ? `<div class="stat-box"><span>Graça</span>${rollAttrBtn(c.nome, "Graça", c.graca)}</div>` : ""}
+      <div class="stat-box"><span>Astúcia</span>${rollAttrBtn(c.nome, "Astúcia", c.astucia)}</div>
+      ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span>${rollAttrBtn(c.nome, "Salvamento", c.salvamento)}</div>` : ""}
+      <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
+    </div>
+    ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyAbilities(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
+  `;
+  document.getElementById("modal-combatant-view").classList.remove("hidden");
+}
 
 function renderCombat() {
   document.getElementById("round-number").textContent = state.combat.round;
@@ -2227,7 +2241,6 @@ function renderCombat() {
       const hpPct = c.coracaoMax > 0 ? (c.coracaoAtual / c.coracaoMax) * 100 : 0;
       const hpClass = hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : "";
       const isCurrent = idx === state.combat.currentIndex;
-      const isExpanded = expandedCombatants.has(c.id);
       let statusBadge = `<span class="init-status pending">aguardando d20</span>`;
       if (c.sucesso === true) statusBadge = `<span class="init-status age-antes">Age antes${c.critico ? " — crítico! 2 ações no 1º turno" : ""}</span>`;
       else if (c.sucesso === false) statusBadge = `<span class="init-status age-depois">Age depois</span>`;
@@ -2243,7 +2256,7 @@ function renderCombat() {
           </div>
           <div class="combatant-name" ${hasDetails ? `data-toggle-combatant="${c.id}"` : ""}>
             ${isCurrent ? "▶ " : ""}${escapeHtml(c.nome)}${c.tipo ? ` <span class="npc-type-badge">${escapeHtml(c.tipo)}</span>` : ""}
-            ${hasDetails ? `<span class="icon expand-caret">${isExpanded ? "expand_less" : "expand_more"}</span>` : ""}
+            ${hasDetails ? `<span class="icon expand-caret">info</span>` : ""}
           </div>
           <div class="hp-control">
             <button class="icon-btn" data-hp-down="${c.id}"><span class="icon">remove</span></button>
@@ -2260,20 +2273,6 @@ function renderCombat() {
             <button class="icon-btn" data-remove-combatant="${c.id}" title="Remover"><span class="icon">delete</span></button>
           </div>
         </div>
-        ${
-          hasDetails && isExpanded
-            ? `<div class="combatant-details">
-                <div class="npc-stat-grid">
-                  ${c.determinacao !== null ? `<div class="stat-box"><span>Determinação</span>${rollAttrBtn(c.nome, "Determinação", c.determinacao)}</div>` : ""}
-                  ${c.graca !== null ? `<div class="stat-box"><span>Graça</span>${rollAttrBtn(c.nome, "Graça", c.graca)}</div>` : ""}
-                  <div class="stat-box"><span>Astúcia</span>${rollAttrBtn(c.nome, "Astúcia", c.astucia)}</div>
-                  ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span>${rollAttrBtn(c.nome, "Salvamento", c.salvamento)}</div>` : ""}
-                  <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
-                </div>
-                ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyAbilities(c.notas)}</div>` : ""}
-              </div>`
-            : ""
-        }
       </div>
     `;
     })
@@ -2284,10 +2283,8 @@ function renderCombat() {
   );
   list.querySelectorAll("[data-toggle-combatant]").forEach((el) =>
     el.addEventListener("click", () => {
-      const id = el.dataset.toggleCombatant;
-      if (expandedCombatants.has(id)) expandedCombatants.delete(id);
-      else expandedCombatants.add(id);
-      renderCombat();
+      const c = state.combat.combatants.find((cc) => cc.id === el.dataset.toggleCombatant);
+      if (c) openCombatantQuickView(c);
     })
   );
   list.querySelectorAll("[data-hp-down]").forEach((btn) => btn.addEventListener("click", () => updateHp(btn.dataset.hpDown, -1)));
@@ -2553,13 +2550,21 @@ formToken.addEventListener("submit", (e) => {
   renderMap();
 });
 
-function addTokenToMap(nome, cor, x, y) {
+function addTokenToMap(nome, cor, x, y, origemTipo, origemId) {
   const map = activeMap();
   if (!map) {
     alert("Crie ou selecione um mapa primeiro.");
     return null;
   }
-  const token = { id: uid(), nome, cor: cor || TOKEN_COLORS[map.tokens.length % TOKEN_COLORS.length], x, y };
+  const token = {
+    id: uid(),
+    nome,
+    cor: cor || TOKEN_COLORS[map.tokens.length % TOKEN_COLORS.length],
+    x,
+    y,
+    origemTipo: origemTipo || null,
+    origemId: origemId || null,
+  };
   map.tokens.push(token);
   saveState();
   renderMap();
@@ -2582,7 +2587,7 @@ function openMapPicker(title, entries) {
       const entry = entries.find((e) => e.id === btn.dataset.pick);
       btn.addEventListener("click", () => {
         const jitter = () => 40 + Math.random() * 20;
-        addTokenToMap(entry.nome, entry.cor, jitter(), jitter());
+        addTokenToMap(entry.nome, entry.cor, jitter(), jitter(), entry.tipo, entry.id);
       });
     });
   }
@@ -2590,15 +2595,15 @@ function openMapPicker(title, entries) {
 }
 
 document.getElementById("btn-map-add-npc").addEventListener("click", () => {
-  const entries = state.npcs.filter((n) => n.tipo !== "Monstro").map((n) => ({ id: n.id, nome: n.nome, cor: TOKEN_COLORS[1] }));
+  const entries = state.npcs.filter((n) => n.tipo !== "Monstro").map((n) => ({ id: n.id, nome: n.nome, cor: TOKEN_COLORS[1], tipo: "npc" }));
   openMapPicker("Adicionar NPC do banco", entries);
 });
 document.getElementById("btn-map-add-monster").addEventListener("click", () => {
-  const entries = state.npcs.filter((n) => n.tipo === "Monstro").map((n) => ({ id: n.id, nome: n.nome, cor: TOKEN_COLORS[2] }));
+  const entries = state.npcs.filter((n) => n.tipo === "Monstro").map((n) => ({ id: n.id, nome: n.nome, cor: TOKEN_COLORS[2], tipo: "npc" }));
   openMapPicker("Adicionar Monstro do banco", entries);
 });
 document.getElementById("btn-map-add-pc").addEventListener("click", () => {
-  const entries = state.pcs.map((p) => ({ id: p.id, nome: p.nome, cor: TOKEN_COLORS[3] }));
+  const entries = state.pcs.map((p) => ({ id: p.id, nome: p.nome, cor: TOKEN_COLORS[3], tipo: "pc" }));
   openMapPicker("Adicionar Princesa", entries);
 });
 document.getElementById("btn-map-add-generic").addEventListener("click", () => {
@@ -2667,6 +2672,44 @@ function attachTokenDrag(el, token) {
   });
 }
 
+// Um marcador criado a partir do banco de NPCs/Monstros/Princesas guarda de onde veio
+// (origemTipo/origemId), pra puxar a foto e a vida atual sem precisar copiar esses dados
+// — assim, se a foto ou a vida mudar na ficha, o marcador no mapa reflete sozinho.
+function getTokenVisual(token) {
+  if (!token.origemTipo || !token.origemId) return null;
+  if (token.origemTipo === "pc") {
+    const pc = state.pcs.find((p) => p.id === token.origemId);
+    if (!pc) return null;
+    return { foto: pc.foto || null, hpAtual: pc.coracaoAtual, hpMax: pc.coracaoMax };
+  }
+  if (token.origemTipo === "npc") {
+    const npc = state.npcs.find((n) => n.id === token.origemId);
+    if (!npc) return null;
+    const combatant = state.combat.combatants.find((c) => !c.isPc && c.nome === npc.nome);
+    return {
+      foto: npc.foto || null,
+      hpAtual: combatant ? combatant.coracaoAtual : null,
+      hpMax: combatant ? combatant.coracaoMax : null,
+    };
+  }
+  return null;
+}
+
+function tokenInnerHtml(t) {
+  const visual = getTokenVisual(t);
+  const hasHp = visual && typeof visual.hpMax === "number" && visual.hpMax > 0;
+  const hpPct = hasHp ? Math.max(0, Math.min(100, (visual.hpAtual / visual.hpMax) * 100)) : null;
+  const avatar =
+    visual && visual.foto
+      ? `<img class="map-token-avatar" src="${visual.foto}" alt="">`
+      : `<div class="map-token-dot" style="background:${t.cor}"></div>`;
+  return `
+    ${avatar}
+    ${hasHp ? `<div class="map-token-hpbar-wrap"><div class="map-token-hpbar ${hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : ""}" style="width:${hpPct}%"></div></div>` : ""}
+    <span class="map-token-label">${escapeHtml(t.nome)}</span>
+  `;
+}
+
 function renderMap() {
   mapSelect.innerHTML = state.maps.length
     ? state.maps.map((m) => `<option value="${m.id}" ${m.id === state.activeMapId ? "selected" : ""}>${escapeHtml(m.nome)}</option>`).join("")
@@ -2686,14 +2729,7 @@ function renderMap() {
   updateGridCell();
   mapCanvas.style.backgroundImage = `url(${map.imagem})`;
   mapCanvas.innerHTML = map.tokens
-    .map(
-      (t) => `
-    <div class="map-token" style="left:${t.x}%; top:${t.y}%" data-token-id="${t.id}">
-      <div class="map-token-dot" style="background:${t.cor}"></div>
-      <span class="map-token-label">${escapeHtml(t.nome)}</span>
-    </div>
-  `
-    )
+    .map((t) => `<div class="map-token" style="left:${t.x}%; top:${t.y}%" data-token-id="${t.id}">${tokenInnerHtml(t)}</div>`)
     .join("");
   mapCanvas.querySelectorAll(".map-token").forEach((el) => {
     const token = map.tokens.find((t) => t.id === el.dataset.tokenId);
@@ -3243,4 +3279,9 @@ scratchpadEl.addEventListener("input", () => {
   state.rascunho = scratchpadEl.value;
   clearTimeout(scratchpadTimer);
   scratchpadTimer = setTimeout(() => saveState(), 400);
+});
+
+// ==================== Modo Foco ====================
+document.getElementById("btn-toggle-foco").addEventListener("click", () => {
+  document.body.classList.toggle("foco-mode");
 });

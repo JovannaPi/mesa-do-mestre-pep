@@ -78,6 +78,31 @@ h1, h2, h3 {
   box-shadow: var(--shadow);
 }
 
+.btn-foco-toggle {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--border-soft);
+  background: var(--bg-card);
+  color: var(--accent-deep);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 11;
+}
+.btn-foco-toggle .icon { font-size: 1.15rem; }
+.btn-foco-toggle:hover { background: var(--accent-strong); color: #fff; }
+
+body.foco-mode .header-inner,
+body.foco-mode .header-flourish { display: none; }
+body.foco-mode .app-header { padding-top: 4px; }
+body.foco-mode .app-main { padding-top: 14px; }
+body.foco-mode .btn-foco-toggle { top: 6px; }
+
 /* Subtabs (Compendio) */
 .subtabs {
   display: flex;
@@ -737,6 +762,20 @@ h1, h2, h3 {
   border: 3px solid rgba(255, 255, 255, 0.95);
   box-shadow: 0 2px 8px rgba(90, 58, 86, 0.5);
 }
+.map-token-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(90, 58, 86, 0.5);
+  object-fit: cover;
+  background: var(--bg-deep);
+}
+.map-token-hpbar-wrap {
+  width: 34px; height: 5px; border-radius: 999px; margin-top: 3px;
+  background: rgba(90, 58, 86, 0.35); overflow: hidden;
+}
+.map-token-hpbar { height: 100%; background: var(--success); transition: width 0.2s ease; }
+.map-token-hpbar.low { background: var(--warning); }
+.map-token-hpbar.critical { background: var(--danger); }
 .map-token-label {
   margin-top: 3px;
   font-size: 0.75rem;
@@ -786,17 +825,17 @@ h1, h2, h3 {
 
 .tools-panel {
   position: fixed;
-  bottom: 88px;
-  right: 20px;
+  bottom: 20px;
+  right: 84px;
   width: 320px;
-  max-width: calc(100vw - 32px);
+  max-width: calc(100vw - 116px);
   max-height: 80vh;
   overflow-y: auto;
   background: #fffbfa;
   border: 2px solid var(--border);
   border-radius: 20px;
   box-shadow: 0 16px 44px rgba(156, 63, 131, 0.35);
-  z-index: 199;
+  z-index: 201;
   padding: 16px;
 }
 .tools-panel.hidden { display: none; }
@@ -863,6 +902,6 @@ h1, h2, h3 {
   .header-flourish { display: none; }
   .tools-fab-stack { bottom: 14px; right: 14px; }
   .tools-fab { width: 46px; height: 46px; }
-  .tools-panel { bottom: 78px; right: 12px; left: 12px; width: auto; }
+  .tools-panel { bottom: 236px; right: 12px; left: 12px; width: auto; max-width: none; }
   .app-main { padding-bottom: 90px; }
 }

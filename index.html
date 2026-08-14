@@ -39,6 +39,7 @@
       <button class="tab-btn" data-tab="sessoes"><span class="icon">history_edu</span> Sessões</button>
     </nav>
   </div>
+  <button id="btn-toggle-foco" class="btn-foco-toggle" title="Modo foco (esconde o topo)"><span class="icon">fullscreen</span></button>
 </header>
 
 <main class="app-main">
@@ -504,7 +505,6 @@
     <span>Trilha Sonora</span>
     <button type="button" class="btn-close-modal js-close-tool-panel" aria-label="Fechar" style="position:static;">&times;</button>
   </div>
-  <p class="field-hint" style="margin:0 0 8px;">As músicas ficam na nuvem — as mesmas playlists aparecem em qualquer aparelho.</p>
   <div id="playlist-picker" class="subtabs" style="margin-bottom:10px;"></div>
   <label class="btn btn-secondary" style="width:100%; justify-content:center; margin-bottom:8px;">
     <span class="icon">upload_file</span> Adicionar música(s)
@@ -538,6 +538,18 @@
     <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
     <h2 id="glossary-title">Poder</h2>
     <p id="glossary-body" class="field-hint" style="font-size:1rem; color: var(--text);"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost js-close-modal">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FICHA RÁPIDA DO COMBATENTE -->
+<div id="modal-combatant-view" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="combatant-view-title">Combatente</h2>
+    <div id="combatant-view-body"></div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost js-close-modal">Fechar</button>
     </div>

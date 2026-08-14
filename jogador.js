@@ -153,6 +153,41 @@ window.addEventListener("resize", () => {
   }, 150);
 });
 
+function getTokenVisual(state, token) {
+  if (!token.origemTipo || !token.origemId) return null;
+  if (token.origemTipo === "pc") {
+    const pc = (state.pcs || []).find((p) => p.id === token.origemId);
+    if (!pc) return null;
+    return { foto: pc.foto || null, hpAtual: pc.coracaoAtual, hpMax: pc.coracaoMax };
+  }
+  if (token.origemTipo === "npc") {
+    const npc = (state.npcs || []).find((n) => n.id === token.origemId);
+    if (!npc) return null;
+    const combatant = (state.combat ? state.combat.combatants : []).find((c) => !c.isPc && c.nome === npc.nome);
+    return {
+      foto: npc.foto || null,
+      hpAtual: combatant ? combatant.coracaoAtual : null,
+      hpMax: combatant ? combatant.coracaoMax : null,
+    };
+  }
+  return null;
+}
+
+function tokenInnerHtml(state, t) {
+  const visual = getTokenVisual(state, t);
+  const hasHp = visual && typeof visual.hpMax === "number" && visual.hpMax > 0;
+  const hpPct = hasHp ? Math.max(0, Math.min(100, (visual.hpAtual / visual.hpMax) * 100)) : null;
+  const avatar =
+    visual && visual.foto
+      ? `<img class="map-token-avatar" src="${visual.foto}" alt="">`
+      : `<div class="map-token-dot" style="background:${t.cor}"></div>`;
+  return `
+    ${avatar}
+    ${hasHp ? `<div class="map-token-hpbar-wrap"><div class="map-token-hpbar ${hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : ""}" style="width:${hpPct}%"></div></div>` : ""}
+    <span class="map-token-label">${escapeHtml(t.nome)}</span>
+  `;
+}
+
 function renderMap(state) {
   const map = activeMapFromState(state);
   if (state.mapaVisivelJogadores === false) {
@@ -174,14 +209,7 @@ function renderMap(state) {
   applyMapAspectRatio(map);
   mapCanvas.style.backgroundImage = `url(${map.imagem})`;
   mapCanvas.innerHTML = map.tokens
-    .map(
-      (t) => `
-    <div class="map-token" style="left:${t.x}%; top:${t.y}%" data-token-id="${t.id}">
-      <div class="map-token-dot" style="background:${t.cor}"></div>
-      <span class="map-token-label">${escapeHtml(t.nome)}</span>
-    </div>
-  `
-    )
+    .map((t) => `<div class="map-token" style="left:${t.x}%; top:${t.y}%" data-token-id="${t.id}">${tokenInnerHtml(state, t)}</div>`)
     .join("");
   mapCanvas.querySelectorAll(".map-token").forEach((el) => {
     const token = map.tokens.find((t) => t.id === el.dataset.tokenId);
