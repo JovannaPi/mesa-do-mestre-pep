@@ -1228,35 +1228,103 @@ const GLOSSARY = {
 
 const GLOSSARY_KEYS_SORTED = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 
-function linkifyAbilities(rawText) {
-  const text = rawText ?? "";
-  if (!text) return "";
+// ==================== O NOVO SUPER LINKIFIER (Poderes e NPCs) ====================
+function linkifyText(rawText) {
+  if (!rawText) return "";
   let result = "";
   let i = 0;
-  outer: while (i < text.length) {
+  // Ordena poderes e NPCs do maior nome pro menor, pra não bugar palavras compostas
+  const npcNames = state.npcs.map(n => n.nome).sort((a,b) => b.length - a.length);
+  
+  outer: while (i < rawText.length) {
+    // 1. Checa se é um poder/regra
     for (const term of GLOSSARY_KEYS_SORTED) {
-      if (text.startsWith(term, i)) {
+      if (rawText.startsWith(term, i)) {
         result += `<span class="ability-link" data-ability="${escapeHtml(term)}">${escapeHtml(term)}</span>`;
         i += term.length;
         continue outer;
       }
     }
-    result += escapeHtml(text[i]);
+    // 2. Checa se é o nome de um NPC ou Monstro
+    for (const name of npcNames) {
+      if (name.length > 2 && rawText.startsWith(name, i)) {
+        result += `<span class="npc-link" data-npc="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
+        i += name.length;
+        continue outer;
+      }
+    }
+    // 3. Letra normal
+    result += escapeHtml(rawText[i]);
     i++;
   }
   return result;
 }
 
-function openGlossaryModal(term) {
-  const desc = GLOSSARY[term];
-  document.getElementById("glossary-title").textContent = term;
-  document.getElementById("glossary-body").textContent = desc || "Sem descrição cadastrada ainda.";
-  document.getElementById("modal-glossary").classList.remove("hidden");
+// ==================== LÓGICA DA JANELA FLUTUANTE DA AVENTURA ====================
+const floatWin = document.getElementById("floating-note-read");
+const floatHeader = document.getElementById("floating-note-header");
+let isDragging = false, dragX, dragY;
+
+// Faz a janela ser arrastável pelo cabeçalho
+floatHeader.addEventListener("mousedown", e => {
+  if (e.target.tagName === 'BUTTON') return;
+  isDragging = true;
+  const rect = floatWin.getBoundingClientRect();
+  dragX = e.clientX - rect.left;
+  dragY = e.clientY - rect.top;
+});
+document.addEventListener("mousemove", e => {
+  if (!isDragging) return;
+  floatWin.style.left = (e.clientX - dragX) + "px";
+  floatWin.style.top = (e.clientY - dragY) + "px";
+  floatWin.style.right = "auto"; // Tira o ancoramento da direita
+});
+document.addEventListener("mouseup", () => isDragging = false);
+
+document.getElementById("btn-close-floating").addEventListener("click", () => floatWin.classList.add("hidden"));
+
+function openNoteReadModal(note) {
+  document.getElementById("note-read-title").textContent = note.titulo;
+  // Aplica os links de regras E de NPCs no texto todo!
+  document.getElementById("note-read-body").innerHTML = linkifyText(note.texto);
+  floatWin.classList.remove("hidden");
 }
 
-document.addEventListener("click", (e) => {
+// ==================== LÓGICA DO TOOLTIP E CLIQUE NOS NPCs ====================
+const tooltip = document.getElementById("tooltip-pop");
+
+// Hover (Passar o mouse) nas Regras/Poderes
+document.addEventListener("mouseover", (e) => {
   const link = e.target.closest(".ability-link");
-  if (link) openGlossaryModal(link.dataset.ability);
+  if (link) {
+    const term = link.dataset.ability;
+    tooltip.innerHTML = `<h4>${term}</h4>${GLOSSARY[term]}`;
+    const rect = link.getBoundingClientRect();
+    // Posiciona exatamente no meio e acima da palavra
+    tooltip.style.left = (rect.left + rect.width / 2) + "px";
+    tooltip.style.top = rect.top + "px";
+    tooltip.classList.remove("hidden");
+  }
+});
+document.addEventListener("mouseout", (e) => {
+  if (e.target.closest(".ability-link")) {
+    tooltip.classList.add("hidden");
+  }
+});
+
+// Clicar no nome de um Personagem para pular pra ficha dele
+document.addEventListener("click", (e) => {
+  const npcLink = e.target.closest(".npc-link");
+  if (npcLink) {
+    const name = npcLink.dataset.npc;
+    // Pula para a aba Compêndio
+    document.querySelector('[data-tab="compendio"]').click();
+    // Pula para a sub-aba de NPCs
+    document.querySelector('[data-subtab="npcs"]').click();
+    // Escreve o nome dele na busca e renderiza
+    document.getElementById("npc-search").value = name;
+    renderNpcs();
+  }
 });
 
 function formatDate(iso) {
