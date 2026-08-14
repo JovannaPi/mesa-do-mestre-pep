@@ -128,6 +128,14 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .subtab-panel { display: none; }
 .subtab-panel.active { display: block; animation: fade-in 0.2s ease; }
 
+.playlist-pill-wrap { position: relative; display: inline-flex; }
+.playlist-pill-remove {
+  position: absolute; top: -6px; right: -6px; width: 17px; height: 17px;
+  border-radius: 50%; background: var(--danger); color: #fff; font-size: 0.72rem !important;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  border: 2px solid #fff;
+}
+
 .header-flourish {
   text-align: center;
   color: var(--accent-strong);

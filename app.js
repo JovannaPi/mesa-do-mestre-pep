@@ -59,6 +59,11 @@ function defaultState() {
     handoutAtivoId: null,
     mapaVisivelJogadores: true,
     playlists: { combate: [], casual: [], chefe: [] },
+    playlistCategorias: [
+      { key: "combate", label: "Combate" },
+      { key: "casual", label: "Casual" },
+      { key: "chefe", label: "Chefe" },
+    ],
     textoCompartilhadoTipo: null,
     textoCompartilhadoId: null,
     rascunho: "",
@@ -3132,17 +3137,17 @@ document.getElementById("btn-timer-reset").addEventListener("click", () => {
 // As músicas vão pro Cloudinary (mesmo esquema das fotos) — só o link de cada faixa
 // fica salvo no estado da campanha, então as playlists agora aparecem iguais em
 // qualquer aparelho, não só no navegador onde a música foi enviada.
-const PLAYLISTS = [
-  { key: "combate", label: "Combate" },
-  { key: "casual", label: "Casual" },
-  { key: "chefe", label: "Chefe" },
-];
-
-if (!state.playlists) {
-  state.playlists = { combate: [], casual: [], chefe: [] };
+// As categorias de playlist são editáveis (não só Combate/Casual/Chefe fixas).
+if (!state.playlists) state.playlists = {};
+if (!state.playlistCategorias) {
+  state.playlistCategorias = [
+    { key: "combate", label: "Combate" },
+    { key: "casual", label: "Casual" },
+    { key: "chefe", label: "Chefe" },
+  ];
 }
 
-let activePlaylist = "combate";
+let activePlaylist = state.playlistCategorias[0] ? state.playlistCategorias[0].key : null;
 let currentTrackId = null;
 const musicAudioEl = document.getElementById("music-audio-el");
 const musicVolumeEl = document.getElementById("music-volume");
@@ -3150,9 +3155,18 @@ musicAudioEl.volume = Number(musicVolumeEl.value) / 100;
 
 function renderPlaylistPicker() {
   const wrap = document.getElementById("playlist-picker");
-  wrap.innerHTML = PLAYLISTS.map(
-    (p) => `<button type="button" class="subtab-btn ${p.key === activePlaylist ? "active" : ""}" data-playlist="${p.key}" style="padding:6px 12px; font-size:0.82rem;">${p.label}</button>`
-  ).join("");
+  wrap.innerHTML =
+    state.playlistCategorias
+      .map(
+        (p) => `
+      <span class="playlist-pill-wrap">
+        <button type="button" class="subtab-btn ${p.key === activePlaylist ? "active" : ""}" data-playlist="${p.key}" style="padding:6px 12px; font-size:0.82rem;">${escapeHtml(p.label)}</button>
+        <span class="icon playlist-pill-remove" data-remove-playlist="${p.key}" title="Excluir playlist">close</span>
+      </span>
+    `
+      )
+      .join("") +
+    `<button type="button" class="subtab-btn" id="btn-add-playlist" style="padding:6px 12px; font-size:0.82rem;"><span class="icon" style="font-size:0.9rem; vertical-align:-2px;">add</span> Nova</button>`;
   wrap.querySelectorAll("[data-playlist]").forEach((btn) =>
     btn.addEventListener("click", () => {
       activePlaylist = btn.dataset.playlist;
@@ -3160,6 +3174,34 @@ function renderPlaylistPicker() {
       renderMusicTrackList();
     })
   );
+  wrap.querySelectorAll("[data-remove-playlist]").forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const key = btn.dataset.removePlaylist;
+      const cat = state.playlistCategorias.find((c) => c.key === key);
+      if (!confirm(`Excluir a playlist "${cat.label}" e todas as músicas dela?`)) return;
+      state.playlistCategorias = state.playlistCategorias.filter((c) => c.key !== key);
+      delete state.playlists[key];
+      if (activePlaylist === key) {
+        activePlaylist = state.playlistCategorias[0] ? state.playlistCategorias[0].key : null;
+        if (currentTrackId && key === key) stopMusic();
+      }
+      saveState();
+      renderPlaylistPicker();
+      renderMusicTrackList();
+    })
+  );
+  document.getElementById("btn-add-playlist").addEventListener("click", () => {
+    const label = prompt("Nome da nova playlist (ex: Floresta, Taverna, Mistério):");
+    if (!label || !label.trim()) return;
+    const key = uid();
+    state.playlistCategorias.push({ key, label: label.trim() });
+    state.playlists[key] = [];
+    activePlaylist = key;
+    saveState();
+    renderPlaylistPicker();
+    renderMusicTrackList();
+  });
 }
 
 function renderMusicTrackList() {
@@ -3228,6 +3270,11 @@ function playAdjacentTrack(direction) {
 }
 
 document.getElementById("music-upload").addEventListener("change", async () => {
+  if (!activePlaylist) {
+    alert("Crie uma playlist primeiro (botão \"+ Nova\").");
+    document.getElementById("music-upload").value = "";
+    return;
+  }
   const files = Array.from(document.getElementById("music-upload").files || []);
   const nowPlayingEl = document.getElementById("music-now-playing");
   for (const file of files) {
@@ -3237,11 +3284,12 @@ document.getElementById("music-upload").addEventListener("change", async () => {
       alert(`Não foi possível enviar "${file.name}". Confira sua internet e tente de novo.`);
       continue;
     }
+    if (!state.playlists[activePlaylist]) state.playlists[activePlaylist] = [];
     state.playlists[activePlaylist].push({ id: uid(), nome: file.name.replace(/\.[^.]+$/, ""), url });
     saveState();
     renderMusicTrackList();
   }
-  const playing = state.playlists[activePlaylist].find((t) => t.id === currentTrackId);
+  const playing = (state.playlists[activePlaylist] || []).find((t) => t.id === currentTrackId);
   nowPlayingEl.textContent = playing ? playing.nome : "Nada tocando";
   document.getElementById("music-upload").value = "";
 });
