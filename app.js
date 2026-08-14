@@ -18,6 +18,30 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+// Fotos e imagens vão pro Cloudinary (upload não-assinado, sem senha exposta no código)
+// em vez de ficarem como texto gigante dentro do documento da campanha no Firestore —
+// era isso que fazia o salvamento na nuvem falhar silenciosamente com muitas fotos.
+const CLOUDINARY_CLOUD_NAME = "m6ma2igg";
+const CLOUDINARY_UPLOAD_PRESET = "zF5EA6RNs1Fnnlc3sH2k7ObUkHU";
+
+async function uploadToCloudinary(dataUrl) {
+  try {
+    const form = new FormData();
+    form.append("file", dataUrl);
+    form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) throw new Error("upload falhou: " + res.status);
+    const data = await res.json();
+    return data.secure_url;
+  } catch (err) {
+    console.warn("Não foi possível enviar a imagem pro Cloudinary, guardando só localmente por enquanto:", err);
+    return null;
+  }
+}
+
 function defaultState() {
   return {
     campaignName: "Cervovale",
@@ -1255,10 +1279,11 @@ function setupPhotoInput(inputId, previewId, onChange) {
   input.addEventListener("change", async () => {
     const file = input.files[0];
     if (!file) return;
-    const dataUrl = await fileToResizedDataUrl(file, 300);
-    preview.src = dataUrl;
+    const localDataUrl = await fileToResizedDataUrl(file, 300);
+    preview.src = localDataUrl;
     preview.classList.remove("hidden");
-    onChange(dataUrl);
+    const url = await uploadToCloudinary(localDataUrl);
+    onChange(url || localDataUrl);
   });
 }
 
@@ -1518,7 +1543,8 @@ document.getElementById("handout-upload").addEventListener("change", async () =>
   if (!file) return;
   const nome = prompt("Nome da imagem:", file.name.replace(/\.[^.]+$/, "")) || "Imagem";
   const dataUrl = await fileToResizedDataUrl(file, 1400);
-  state.imagens.push({ id: uid(), nome, imagem: dataUrl });
+  const url = await uploadToCloudinary(dataUrl);
+  state.imagens.push({ id: uid(), nome, imagem: url || dataUrl });
   saveState();
   renderHandouts();
   input.value = "";
@@ -2423,7 +2449,8 @@ mapUpload.addEventListener("change", async () => {
   if (!file) return;
   const nome = prompt("Nome do mapa:", file.name.replace(/\.[^.]+$/, "")) || "Mapa sem nome";
   const { dataUrl, width, height } = await fileToResizedImageWithSize(file, 1600);
-  const map = { id: uid(), nome, imagem: dataUrl, largura: width, altura: height, tokens: [] };
+  const url = await uploadToCloudinary(dataUrl);
+  const map = { id: uid(), nome, imagem: url || dataUrl, largura: width, altura: height, tokens: [] };
   state.maps.push(map);
   state.activeMapId = map.id;
   saveState();
