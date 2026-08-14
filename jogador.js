@@ -195,7 +195,7 @@ function renderMap(state) {
     mapCanvas.style.width = "";
     mapCanvas.style.height = "";
     lastMapRatio = null;
-    mapCanvas.innerHTML = `<div class="empty-state">A Mestra escondeu o mapa por enquanto...</div>`;
+    mapCanvas.innerHTML = `<div class="empty-state"><span class="icon empty-state-icon">visibility_off</span><span>A Mestra escondeu o mapa por enquanto...</span></div>`;
     return;
   }
   if (!map) {
@@ -203,7 +203,7 @@ function renderMap(state) {
     mapCanvas.style.width = "";
     mapCanvas.style.height = "";
     lastMapRatio = null;
-    mapCanvas.innerHTML = `<div class="empty-state">Aguardando a Mestra escolher um mapa...</div>`;
+    mapCanvas.innerHTML = `<div class="empty-state"><span class="icon empty-state-icon">map</span><span>Aguardando a Mestra escolher um mapa...</span></div>`;
     return;
   }
   applyMapAspectRatio(map);

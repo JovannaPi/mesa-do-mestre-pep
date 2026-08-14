@@ -151,25 +151,27 @@
     </div>
     <p class="field-hint">Escolha um botão acima para adicionar um marcador vindo do banco, ou clique direto no mapa para um marcador livre. Arraste um marcador para movê-lo. Clique num marcador para editar ou remover.</p>
     <div id="map-canvas" class="map-canvas">
-      <div class="empty-state">Nenhum mapa ainda. Clique em "+ Novo mapa" para enviar uma imagem.</div>
+      <div class="empty-state"><span class="icon empty-state-icon">add_photo_alternate</span><span>Nenhum mapa ainda. Clique em "+ Novo mapa" para enviar uma imagem.</span></div>
     </div>
   </section>
 
   <!-- CAMPANHA -->
   <section id="tab-campanha" class="tab-panel">
-    <div class="campaign-block">
-      <h2>Objetivos principais</h2>
-      <div id="objective-list" class="objective-list"></div>
-      <button id="btn-add-objective" class="btn btn-ghost"><span class="icon">add</span> Novo objetivo</button>
-    </div>
-    <div class="campaign-block">
-      <div class="panel-toolbar">
-        <h2 style="margin:0">Notas &amp; Lore</h2>
-        <button id="btn-add-note" class="btn btn-primary"><span class="icon">add</span> Nova nota</button>
-        <input id="note-search" class="input" type="text" placeholder="Buscar regra, lore, NPC...">
+    <div class="campanha-layout">
+      <div class="campaign-block campanha-col-objetivos">
+        <h2>Objetivos principais</h2>
+        <div id="objective-list" class="objective-list"></div>
+        <button id="btn-add-objective" class="btn btn-ghost"><span class="icon">add</span> Novo objetivo</button>
       </div>
-      <div id="note-category-picker" class="location-picker"></div>
-      <div id="note-list" class="session-list"></div>
+      <div class="campaign-block campanha-col-notas">
+        <div class="panel-toolbar">
+          <h2 style="margin:0">Notas &amp; Lore</h2>
+          <button id="btn-add-note" class="btn btn-primary"><span class="icon">add</span> Nova nota</button>
+          <input id="note-search" class="input" type="text" placeholder="Buscar regra, lore, NPC...">
+        </div>
+        <div id="note-category-picker" class="location-picker"></div>
+        <div id="note-list" class="note-grid"></div>
+      </div>
     </div>
   </section>
 
@@ -551,6 +553,19 @@
     <h2 id="combatant-view-title">Combatente</h2>
     <div id="combatant-view-body"></div>
     <div class="modal-actions">
+      <button type="button" class="btn btn-ghost js-close-modal">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LEITURA (Aventura completa) -->
+<div id="modal-note-read" class="modal-overlay hidden">
+  <div class="modal modal-reading">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="note-read-title">Título</h2>
+    <div id="note-read-body" class="note-read-body"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="btn-edit-from-read">Editar</button>
       <button type="button" class="btn btn-ghost js-close-modal">Fechar</button>
     </div>
   </div>

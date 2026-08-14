@@ -14,6 +14,10 @@ async function getCloudModule() {
   return cloudModule;
 }
 
+function emptyState(icon, text) {
+  return `<div class="empty-state"><span class="icon empty-state-icon">${icon}</span><span>${text}</span></div>`;
+}
+
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -1432,10 +1436,10 @@ function renderNpcs() {
 
   npcListEl.innerHTML = npcs.length
     ? npcs.map(npcCardHtml).join("")
-    : `<div class="empty-state">Nenhum NPC ou aliado encontrado.</div>`;
+    : emptyState("person_search", "Nenhum NPC ou aliado encontrado.");
   monsterListEl.innerHTML = monsters.length
     ? monsters.map(npcCardHtml).join("")
-    : `<div class="empty-state">Nenhum monstro encontrado.</div>`;
+    : emptyState("pest_control", "Nenhum monstro encontrado.");
 
   [npcListEl, monsterListEl].forEach((list) => {
     list.querySelectorAll("[data-edit-npc]").forEach((btn) =>
@@ -1530,7 +1534,7 @@ function renderItems() {
   });
   list.innerHTML = filtered.length
     ? filtered.map(itemCardHtml).join("")
-    : `<div class="empty-state">Nenhum item encontrado.</div>`;
+    : emptyState("backpack", "Nenhum item encontrado.");
 
   list.querySelectorAll("[data-edit-item]").forEach((btn) =>
     btn.addEventListener("click", () => openItemModal(state.items.find((i) => i.id === btn.dataset.editItem)))
@@ -1573,7 +1577,7 @@ function deleteHandout(id) {
 function renderHandouts() {
   const list = document.getElementById("handout-list");
   if (state.imagens.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhuma imagem enviada ainda.</div>`;
+    list.innerHTML = emptyState("photo_library", "Nenhuma imagem enviada ainda.");
     return;
   }
   list.innerHTML = state.imagens
@@ -1636,11 +1640,11 @@ function renderLocationView() {
 
   content.innerHTML = `
     <div class="location-section-title">NPCs &amp; Aliados</div>
-    <div class="card-grid">${npcs.length ? npcs.map(npcCardHtml).join("") : `<div class="empty-state">Nenhum NPC marcado com esse local ainda.</div>`}</div>
+    <div class="card-grid">${npcs.length ? npcs.map(npcCardHtml).join("") : emptyState("person_search", "Nenhum NPC marcado com esse local ainda.")}</div>
     <div class="location-section-title">Monstros</div>
-    <div class="card-grid">${monsters.length ? monsters.map(npcCardHtml).join("") : `<div class="empty-state">Nenhum monstro marcado com esse local ainda.</div>`}</div>
+    <div class="card-grid">${monsters.length ? monsters.map(npcCardHtml).join("") : emptyState("pest_control", "Nenhum monstro marcado com esse local ainda.")}</div>
     <div class="location-section-title">Itens</div>
-    <div class="card-grid">${items.length ? items.map(itemCardHtml).join("") : `<div class="empty-state">Nenhum item marcado com esse local ainda.</div>`}</div>
+    <div class="card-grid">${items.length ? items.map(itemCardHtml).join("") : emptyState("backpack", "Nenhum item marcado com esse local ainda.")}</div>
     <div class="location-section-title">Notas relacionadas</div>
     <div class="session-list">${
       notes.length
@@ -1656,7 +1660,7 @@ function renderLocationView() {
       </div>`
             )
             .join("")
-        : `<div class="empty-state">Nenhuma nota encontrada para esse local.</div>`
+        : emptyState("auto_stories", "Nenhuma nota encontrada para esse local.")
     }</div>
   `;
 
@@ -1864,7 +1868,7 @@ function togglePcDicePip(id, field, index) {
 function renderPcs() {
   const list = document.getElementById("pc-list");
   if (state.pcs.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhuma Princesa cadastrada ainda.</div>`;
+    list.innerHTML = emptyState("auto_awesome", "Nenhuma Princesa cadastrada ainda.");
     return;
   }
   list.innerHTML = state.pcs
@@ -2049,7 +2053,7 @@ function renderFromNpcList() {
     (n) => !query || n.nome.toLowerCase().includes(query) || n.tags.some((t) => t.toLowerCase().includes(query))
   );
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nada encontrado. Crie no Compêndio primeiro.</div>`;
+    list.innerHTML = emptyState("search_off", "Nada encontrado. Crie no Compêndio primeiro.");
     return;
   }
   list.innerHTML = filtered
@@ -2109,7 +2113,7 @@ const fromPcModal = document.getElementById("modal-from-pc");
 document.getElementById("btn-add-from-pc").addEventListener("click", () => {
   const list = document.getElementById("from-pc-list");
   if (state.pcs.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhuma Princesa cadastrada. Crie uma na aba "Personagens" primeiro.</div>`;
+    list.innerHTML = emptyState("face_3", "Nenhuma Princesa cadastrada. Crie uma na aba \"Personagens\" primeiro.");
   } else {
     list.innerHTML = state.pcs
       .map(
@@ -2238,7 +2242,7 @@ function renderCombat() {
   document.getElementById("round-number").textContent = state.combat.round;
   const list = document.getElementById("combat-list");
   if (state.combat.combatants.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhum combatente na mesa. Adicione manualmente ou importe do banco de NPCs/Princesas.</div>`;
+    list.innerHTML = emptyState("swords", "Nenhum combatente na mesa. Adicione manualmente ou importe do banco de NPCs/Princesas.");
     return;
   }
   list.innerHTML = state.combat.combatants
@@ -2583,7 +2587,7 @@ function openMapPicker(title, entries) {
   document.getElementById("map-picker-title").textContent = title;
   const list = document.getElementById("map-picker-list");
   if (entries.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nada cadastrado ainda.</div>`;
+    list.innerHTML = emptyState("inventory_2", "Nada cadastrado ainda.");
   } else {
     list.innerHTML = entries
       .map((e) => `<div class="from-npc-item"><span>${escapeHtml(e.nome)}</span><button class="btn btn-secondary" data-pick="${e.id}">+ Adicionar</button></div>`)
@@ -2727,7 +2731,7 @@ function renderMap() {
     mapCanvas.style.backgroundImage = "";
     mapCanvas.style.width = "";
     mapCanvas.style.height = "";
-    mapCanvas.innerHTML = `<div class="empty-state">Nenhum mapa ainda. Clique em "+ Novo mapa" para enviar uma imagem.</div>`;
+    mapCanvas.innerHTML = emptyState("add_photo_alternate", "Nenhum mapa ainda. Clique em \"+ Novo mapa\" para enviar uma imagem.");
     return;
   }
   applyMapAspectRatio(mapCanvas, map, renderMap);
@@ -2756,7 +2760,7 @@ document.getElementById("btn-add-objective").addEventListener("click", () => {
 function renderObjectives() {
   const list = document.getElementById("objective-list");
   if (state.objectives.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhum objetivo cadastrado.</div>`;
+    list.innerHTML = emptyState("flag", "Nenhum objetivo cadastrado.");
     return;
   }
   list.innerHTML = state.objectives
@@ -2855,6 +2859,16 @@ function renderNoteCategoryPicker() {
   );
 }
 
+function openNoteReadModal(note) {
+  document.getElementById("note-read-title").textContent = note.titulo;
+  document.getElementById("note-read-body").innerHTML = linkifyAbilities(note.texto);
+  document.getElementById("btn-edit-from-read").onclick = () => {
+    document.getElementById("modal-note-read").classList.add("hidden");
+    openNoteModal(note);
+  };
+  document.getElementById("modal-note-read").classList.remove("hidden");
+}
+
 function renderNotes() {
   const list = document.getElementById("note-list");
   const query = document.getElementById("note-search").value.trim().toLowerCase();
@@ -2864,18 +2878,21 @@ function renderNotes() {
     return matchesQuery && matchesCategory;
   });
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhuma nota encontrada.</div>`;
+    list.innerHTML = emptyState("auto_stories", "Nenhuma nota encontrada.");
     return;
   }
   list.innerHTML = filtered
     .map((n) => {
+      const categoria = n.categoria || "lore";
+      const isAventura = categoria === "aventura";
       const isLong = n.texto.length > 500;
+      const preview = isAventura && n.texto.length > 260 ? n.texto.slice(0, 260) + "…" : n.texto;
       return `
-    <div class="session-card">
+    <div class="note-card note-card-${categoria}" data-note-id="${n.id}">
       <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
-      <p class="session-text ${isLong ? "note-collapsed" : ""}">${escapeHtml(n.texto)}</p>
+      <p class="session-text ${!isAventura && isLong ? "note-collapsed" : ""}">${escapeHtml(preview)}</p>
       <div class="session-card-actions">
-        ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
+        ${isAventura ? `<button class="btn btn-ghost" data-read-note="${n.id}">Ler</button>` : isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
         <button class="btn btn-ghost" data-share-text="nota" data-share-id="${n.id}">${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
         <button class="btn btn-ghost" data-edit-note="${n.id}">Editar</button>
         <button class="btn btn-danger" data-delete-note="${n.id}">Excluir</button>
@@ -2887,10 +2904,13 @@ function renderNotes() {
 
   list.querySelectorAll("[data-toggle-note]").forEach((btn) =>
     btn.addEventListener("click", () => {
-      const p = btn.closest(".session-card").querySelector(".session-text");
+      const p = btn.closest(".note-card").querySelector(".session-text");
       const collapsed = p.classList.toggle("note-collapsed");
       btn.textContent = collapsed ? "Ler mais" : "Ler menos";
     })
+  );
+  list.querySelectorAll("[data-read-note]").forEach((btn) =>
+    btn.addEventListener("click", () => openNoteReadModal(state.notes.find((n) => n.id === btn.dataset.readNote)))
   );
   list.querySelectorAll("[data-edit-note]").forEach((btn) =>
     btn.addEventListener("click", () => openNoteModal(state.notes.find((n) => n.id === btn.dataset.editNote)))
@@ -2952,7 +2972,7 @@ function deleteSession(id) {
 function renderSessions() {
   const list = document.getElementById("session-list");
   if (state.sessions.length === 0) {
-    list.innerHTML = `<div class="empty-state">Nenhuma sessão registrada ainda.</div>`;
+    list.innerHTML = emptyState("history_edu", "Nenhuma sessão registrada ainda.");
     return;
   }
   const sorted = [...state.sessions].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
