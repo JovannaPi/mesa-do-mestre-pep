@@ -2951,34 +2951,6 @@ const NOTE_SHELVES = [
   { key: "achados", label: "Achados", icon: "diamond" },
 ];
 
-// ==================== LÓGICA DA JANELA FLUTUANTE ====================
-const floatWin = document.getElementById("floating-note-read");
-const floatHeader = document.getElementById("floating-note-header");
-let isDragging = false, dragX, dragY;
-
-if (floatHeader && floatWin) {
-  floatHeader.addEventListener("mousedown", e => {
-    // Impede que o clique no botão de fechar/editar arraste a janela
-    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return; 
-    isDragging = true;
-    const rect = floatWin.getBoundingClientRect();
-    dragX = e.clientX - rect.left;
-    dragY = e.clientY - rect.top;
-  });
-
-  document.addEventListener("mousemove", e => {
-    if (!isDragging) return;
-    floatWin.style.left = (e.clientX - dragX) + "px";
-    floatWin.style.top = (e.clientY - dragY) + "px";
-    floatWin.style.right = "auto";
-  });
-
-  document.addEventListener("mouseup", () => isDragging = false);
-
-  document.getElementById("btn-close-floating").addEventListener("click", () => {
-    floatWin.classList.add("hidden");
-  });
-}
 
 function openNoteReadModal(note) {
   document.getElementById("note-read-title").textContent = note.titulo;
