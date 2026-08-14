@@ -1171,6 +1171,27 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ==================== Alertas Visuais (Toasts) ====================
+function showToast(message, type = "info", icon = "info") {
+  let container = document.getElementById("toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    container.className = "toast-container";
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span class="icon">${icon}</span> ${escapeHtml(message)}`;
+  container.appendChild(toast);
+  
+  // Some sozinho depois de 3 segundos
+  setTimeout(() => {
+    toast.classList.add("toast-leave");
+    toast.addEventListener("animationend", () => toast.remove());
+  }, 3000);
+}
+
 // ==================== Glossário de magias, habilidades e traços ====================
 const GLOSSARY = {
   "Puf!": "Alcance [DADOS]. Teleporte-se em uma nuvem de fumaça para um lugar que você consiga ver. Pode ser lançada como uma Reação.",
