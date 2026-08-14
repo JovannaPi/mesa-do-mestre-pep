@@ -1299,10 +1299,17 @@ document.addEventListener("mouseover", (e) => {
     tooltip.style.left = (rect.left + rect.width / 2) + "px";
     tooltip.style.top = rect.top + "px";
     tooltip.classList.remove("hidden");
+  } else {
+    // TRUQUE DE MESTRE: Se o mouse encostar em qualquer outra coisa, esconde a caixa!
+    if (tooltip && !tooltip.classList.contains("hidden")) {
+      tooltip.classList.add("hidden");
+    }
   }
 });
+
 document.addEventListener("mouseout", (e) => {
-  if (e.target.closest(".ability-link")) {
+  const link = e.target.closest(".ability-link");
+  if (link && e.relatedTarget && !link.contains(e.relatedTarget)) {
     tooltip.classList.add("hidden");
   }
 });
