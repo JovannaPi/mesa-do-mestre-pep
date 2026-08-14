@@ -1101,6 +1101,25 @@ document.querySelectorAll(".js-close-modal").forEach((btn) => {
   });
 });
 
+// ---------- Fechar modais clicando no fundo escuro ----------
+document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+  overlay.addEventListener("click", (e) => {
+    if (e.target !== overlay) return;
+    overlay.classList.add("hidden");
+    const form = overlay.querySelector("form");
+    if (form) form.reset();
+    if (overlay.id === "modal-token" && pendingNewTokenId) {
+      const map = activeMap();
+      if (map) {
+        map.tokens = map.tokens.filter((t) => t.id !== pendingNewTokenId);
+        saveState();
+        renderMap();
+      }
+      pendingNewTokenId = null;
+    }
+  });
+});
+
 // ---------- Campaign name ----------
 document.getElementById("campaign-name").textContent = state.campaignName;
 document.getElementById("btn-rename-campaign").addEventListener("click", () => {
@@ -2800,7 +2819,7 @@ function openNoteModal(note) {
   document.getElementById("note-modal-title").textContent = note ? "Editar nota" : "Nova nota";
   document.getElementById("note-id").value = note ? note.id : "";
   document.getElementById("note-titulo").value = note ? note.titulo : "";
-  document.getElementById("note-categoria").value = note ? note.categoria || "lore" : activeNoteCategory === "todas" ? "lore" : activeNoteCategory;
+  document.getElementById("note-categoria").value = note ? note.categoria || "lore" : "lore";
   document.getElementById("note-texto").value = note ? note.texto : "";
   noteModal.classList.remove("hidden");
 }
@@ -2836,28 +2855,17 @@ function deleteNote(id) {
   renderNotes();
 }
 
-const NOTE_CATEGORIES = [
-  { key: "todas", label: "Todas" },
-  { key: "regras", label: "Regras" },
-  { key: "lore", label: "Lore" },
-  { key: "aventura", label: "Aventura completa" },
-  { key: "achados", label: "Achados" },
+// Em vez de uma lista única filtrável por categoria (que obriga a clicar num filtro pra
+// entender o que existe), cada categoria vira sua própria "prateleira" sempre visível —
+// mais fácil de escanear com o olho. "Aventura completa" fica separada como uma lista
+// compacta de capítulos (é material de preparo, não algo pra consultar no meio da mesa),
+// seguindo o princípio de prep enxuto do Sly Flourish (slyflourish.com/organizing_notes.html).
+const NOTE_SHELVES = [
+  { key: "aventura", label: "Aventura completa", icon: "menu_book" },
+  { key: "regras", label: "Regras rápidas", icon: "gavel" },
+  { key: "lore", label: "Lore & Mundo", icon: "auto_stories" },
+  { key: "achados", label: "Achados", icon: "diamond" },
 ];
-let activeNoteCategory = "todas";
-
-function renderNoteCategoryPicker() {
-  const picker = document.getElementById("note-category-picker");
-  picker.innerHTML = NOTE_CATEGORIES.map(
-    (c) => `<button class="location-btn ${c.key === activeNoteCategory ? "active" : ""}" data-note-cat="${c.key}">${c.label}</button>`
-  ).join("");
-  picker.querySelectorAll("[data-note-cat]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      activeNoteCategory = btn.dataset.noteCat;
-      renderNoteCategoryPicker();
-      renderNotes();
-    })
-  );
-}
 
 function openNoteReadModal(note) {
   document.getElementById("note-read-title").textContent = note.titulo;
@@ -2869,36 +2877,61 @@ function openNoteReadModal(note) {
   document.getElementById("modal-note-read").classList.remove("hidden");
 }
 
+function noteCardHtml(n) {
+  const categoria = n.categoria || "lore";
+  const isLong = n.texto.length > 500;
+  return `
+    <div class="note-card note-card-${categoria}" data-note-id="${n.id}">
+      <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
+      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyAbilities(n.texto)}</p>
+      <div class="session-card-actions">
+        ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
+        <button class="btn btn-ghost icon-only" data-share-text="nota" data-share-id="${n.id}" title="${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}"><span class="icon">${isTextShared("nota", n.id) ? "visibility_off" : "visibility"}</span></button>
+        <button class="btn btn-ghost icon-only" data-edit-note="${n.id}" title="Editar"><span class="icon">edit</span></button>
+        <button class="btn btn-danger icon-only" style="margin-left:auto;" data-delete-note="${n.id}" title="Excluir"><span class="icon">delete</span></button>
+      </div>
+    </div>`;
+}
+
 function renderNotes() {
   const list = document.getElementById("note-list");
   const query = document.getElementById("note-search").value.trim().toLowerCase();
-  const filtered = state.notes.filter((n) => {
-    const matchesQuery = !query || n.titulo.toLowerCase().includes(query) || n.texto.toLowerCase().includes(query);
-    const matchesCategory = activeNoteCategory === "todas" || (n.categoria || "lore") === activeNoteCategory;
-    return matchesQuery && matchesCategory;
-  });
-  if (filtered.length === 0) {
+  const matches = (n) => !query || n.titulo.toLowerCase().includes(query) || n.texto.toLowerCase().includes(query);
+  const grouped = NOTE_SHELVES.map((shelf) => ({
+    shelf,
+    notes: state.notes.filter((n) => (n.categoria || "lore") === shelf.key && matches(n)),
+  })).filter((g) => g.notes.length > 0);
+
+  if (grouped.length === 0) {
     list.innerHTML = emptyState("auto_stories", "Nenhuma nota encontrada.");
     return;
   }
-  list.innerHTML = filtered
-    .map((n) => {
-      const categoria = n.categoria || "lore";
-      const isAventura = categoria === "aventura";
-      const isLong = n.texto.length > 500;
-      const preview = isAventura && n.texto.length > 260 ? n.texto.slice(0, 260) + "…" : n.texto;
+
+  list.innerHTML = grouped
+    .map(({ shelf, notes }) => {
+      if (shelf.key === "aventura") {
+        return `
+        <div class="note-shelf">
+          <div class="note-shelf-title"><span class="icon">${shelf.icon}</span> ${shelf.label}</div>
+          <div class="note-aventura-list">
+            ${notes
+              .map(
+                (n) => `
+              <button type="button" class="note-aventura-item" data-read-note="${n.id}">
+                <span class="icon">bookmark</span>
+                <span class="note-aventura-item-title">${escapeHtml(n.titulo)}</span>
+                <span class="icon">chevron_right</span>
+              </button>`
+              )
+              .join("")}
+          </div>
+        </div>`;
+      }
       return `
-    <div class="note-card note-card-${categoria}" data-note-id="${n.id}">
-      <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
-      <p class="session-text ${!isAventura && isLong ? "note-collapsed" : ""}">${escapeHtml(preview)}</p>
-      <div class="session-card-actions">
-        ${isAventura ? `<button class="btn btn-ghost" data-read-note="${n.id}">Ler</button>` : isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
-        <button class="btn btn-ghost" data-share-text="nota" data-share-id="${n.id}">${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
-        <button class="btn btn-ghost" data-edit-note="${n.id}">Editar</button>
-        <button class="btn btn-danger" data-delete-note="${n.id}">Excluir</button>
-      </div>
-    </div>
-  `;
+      <div class="note-shelf">
+        <div class="note-shelf-title"><span class="icon">${shelf.icon}</span> ${shelf.label}</div>
+        <div class="note-grid">${notes.map(noteCardHtml).join("")}</div>
+      </div>`;
     })
     .join("");
 
@@ -3012,7 +3045,6 @@ function renderAll() {
   renderLocationPicker();
   renderMap();
   renderObjectives();
-  renderNoteCategoryPicker();
   renderNotes();
   renderSessions();
 }
