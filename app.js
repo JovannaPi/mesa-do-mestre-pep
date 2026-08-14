@@ -1291,25 +1291,21 @@ const tooltip = document.getElementById("tooltip-pop");
 // Hover (Passar o mouse) nas Regras/Poderes
 document.addEventListener("mouseover", (e) => {
   const link = e.target.closest(".ability-link");
-  if (link) {
+  if (link && tooltip) {
     const term = link.dataset.ability;
-    tooltip.innerHTML = `<h4>${term}</h4>${GLOSSARY[term]}`;
+    tooltip.innerHTML = `<h4>${term}</h4>${GLOSSARY[term] || "Sem descrição."}`;
     const rect = link.getBoundingClientRect();
-    // Posiciona exatamente no meio e acima da palavra
+    
+    // Posiciona no centro da palavra
     tooltip.style.left = (rect.left + rect.width / 2) + "px";
     tooltip.style.top = rect.top + "px";
     tooltip.classList.remove("hidden");
-  } else {
-    // TRUQUE DE MESTRE: Se o mouse encostar em qualquer outra coisa, esconde a caixa!
-    if (tooltip && !tooltip.classList.contains("hidden")) {
-      tooltip.classList.add("hidden");
-    }
   }
 });
 
 document.addEventListener("mouseout", (e) => {
   const link = e.target.closest(".ability-link");
-  if (link && e.relatedTarget && !link.contains(e.relatedTarget)) {
+  if (link && tooltip) {
     tooltip.classList.add("hidden");
   }
 });
