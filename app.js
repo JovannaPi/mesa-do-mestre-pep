@@ -1523,7 +1523,7 @@ function npcCardHtml(n) {
       </div>
       <div class="npc-stat-grid ${isMonster ? "monster" : ""}">${statBlock}</div>
       ${n.tags.length ? `<div class="npc-tags">${n.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
-      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyAbilities(n.notas)}</div>` : ""}
+      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyText(n.notas)}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-edit-npc="${n.id}">Editar</button>
         <button class="btn btn-danger" data-delete-npc="${n.id}">Excluir</button>
@@ -1618,7 +1618,7 @@ function itemCardHtml(i) {
         ${i.custo ? `<span class="npc-type-badge">${escapeHtml(i.custo)}</span>` : ""}
       </div>
       ${i.origem ? `<div class="npc-notes"><b>Origem:</b> ${escapeHtml(i.origem)}</div>` : ""}
-      <div class="npc-notes">${linkifyAbilities(i.descricao)}</div>
+      <div class="npc-notes">${linkifyText(i.descricao)}</div>
       ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-share-text="item" data-share-id="${i.id}">${isTextShared("item", i.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
@@ -2341,7 +2341,7 @@ function openCombatantQuickView(c) {
       ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span>${rollAttrBtn(c.nome, "Salvamento", c.salvamento)}</div>` : ""}
       <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
     </div>
-    ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyAbilities(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
+    ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyText(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
   `;
   document.getElementById("modal-combatant-view").classList.remove("hidden");
 }
@@ -2958,7 +2958,7 @@ const NOTE_SHELVES = [
 
 function openNoteReadModal(note) {
   document.getElementById("note-read-title").textContent = note.titulo;
-  document.getElementById("note-read-body").innerHTML = linkifyAbilities(note.texto);
+  document.getElementById("note-read-body").innerHTML = linkifyText(note.texto);
   document.getElementById("btn-edit-from-read").onclick = () => {
     document.getElementById("modal-note-read").classList.add("hidden");
     openNoteModal(note);
@@ -2972,7 +2972,7 @@ function noteCardHtml(n) {
   return `
     <div class="note-card note-card-${categoria}" data-note-id="${n.id}">
       <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
-      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyAbilities(n.texto)}</p>
+      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyText(n.texto)}</p>
       <div class="session-card-actions">
         ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
         <button class="btn btn-ghost icon-only" data-share-text="nota" data-share-id="${n.id}" title="${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}"><span class="icon">${isTextShared("nota", n.id) ? "visibility_off" : "visibility"}</span></button>
