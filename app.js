@@ -1283,12 +1283,7 @@ document.addEventListener("mouseup", () => isDragging = false);
 
 document.getElementById("btn-close-floating").addEventListener("click", () => floatWin.classList.add("hidden"));
 
-function openNoteReadModal(note) {
-  document.getElementById("note-read-title").textContent = note.titulo;
-  // Aplica os links de regras E de NPCs no texto todo!
-  document.getElementById("note-read-body").innerHTML = linkifyText(note.texto);
-  floatWin.classList.remove("hidden");
-}
+
 
 // ==================== LÓGICA DO TOOLTIP E CLIQUE NOS NPCs ====================
 const tooltip = document.getElementById("tooltip-pop");
@@ -2956,62 +2951,6 @@ const NOTE_SHELVES = [
   { key: "achados", label: "Achados", icon: "diamond" },
 ];
 
-// ==================== LÓGICA DA JANELA FLUTUANTE ====================
-const floatWin = document.getElementById("floating-note-read");
-const floatHeader = document.getElementById("floating-note-header");
-let isDragging = false, dragX, dragY;
-
-floatHeader.addEventListener("mousedown", e => {
-  // Impede que o clique no botão de fechar/editar arraste a janela
-  if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return; 
-  isDragging = true;
-  const rect = floatWin.getBoundingClientRect();
-  dragX = e.clientX - rect.left;
-  dragY = e.clientY - rect.top;
-});
-document.addEventListener("mousemove", e => {
-  if (!isDragging) return;
-  floatWin.style.left = (e.clientX - dragX) + "px";
-  floatWin.style.top = (e.clientY - dragY) + "px";
-  floatWin.style.right = "auto";
-});
-document.addEventListener("mouseup", () => isDragging = false);
-
-document.getElementById("btn-close-floating").addEventListener("click", () => floatWin.classList.add("hidden"));
-
-function openNoteReadModal(note) {
-  document.getElementById("note-read-title").textContent = note.titulo;
-  
-  // linkifyText aplica os Tooltips e os Links de NPCs!
-  document.getElementById("note-read-body").innerHTML = linkifyText(note.texto);
-  
-  // Recria a função do botão de Editar sem dar erro
-  const btnEdit = document.getElementById("btn-edit-from-read");
-  if (btnEdit) {
-    btnEdit.onclick = () => {
-      floatWin.classList.add("hidden");
-      openNoteModal(note);
-    };
-  }
-  
-  floatWin.classList.remove("hidden");
-}
-
-function noteCardHtml(n) {
-  const categoria = n.categoria || "lore";
-  const isLong = n.texto.length > 500;
-  return `
-    <div class="note-card note-card-${categoria}" data-note-id="${n.id}">
-      <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
-      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyText(n.texto)}</p>
-      <div class="session-card-actions">
-        ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
-        <button class="btn btn-ghost icon-only" data-share-text="nota" data-share-id="${n.id}" title="${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}"><span class="icon">${isTextShared("nota", n.id) ? "visibility_off" : "visibility"}</span></button>
-        <button class="btn btn-ghost icon-only" data-edit-note="${n.id}" title="Editar"><span class="icon">edit</span></button>
-        <button class="btn btn-danger icon-only" style="margin-left:auto;" data-delete-note="${n.id}" title="Excluir"><span class="icon">delete</span></button>
-      </div>
-    </div>`;
-}
 
 function renderNotes() {
   const list = document.getElementById("note-list");
