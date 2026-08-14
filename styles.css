@@ -1168,11 +1168,12 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   z-index: 9999;
   font-size: 0.95rem;
   line-height: 1.5;
-  pointer-events: none; /* Mouse ignora a caixa para não travar a tela */
+  pointer-events: none; /* ESSENCIAL: O mouse atravessa a caixa, evitando que o bug aconteça */
   transform: translate(-50%, -100%);
   margin-top: -10px;
   animation: fade-in-up 0.2s ease;
 }
+.tooltip-pop.hidden { display: none; } /* Garante que ela suma quando tiver a classe hidden */
 .tooltip-pop h4 { margin: 0 0 6px; color: var(--accent); font-family: "Fredoka", sans-serif; font-size: 1.15rem; }
 .tooltip-pop::after {
   content: ""; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
