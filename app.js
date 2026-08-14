@@ -24,12 +24,13 @@ function uid() {
 const CLOUDINARY_CLOUD_NAME = "m6ma2igg";
 const CLOUDINARY_UPLOAD_PRESET = "mesa-do-mestre";
 
-async function uploadToCloudinary(dataUrl) {
+async function uploadToCloudinary(fileOrDataUrl, resourceType) {
+  resourceType = resourceType || "image";
   try {
     const form = new FormData();
-    form.append("file", dataUrl);
+    form.append("file", fileOrDataUrl);
     form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`, {
       method: "POST",
       body: form,
     });
@@ -37,7 +38,7 @@ async function uploadToCloudinary(dataUrl) {
     const data = await res.json();
     return data.secure_url;
   } catch (err) {
-    console.warn("Não foi possível enviar a imagem pro Cloudinary, guardando só localmente por enquanto:", err);
+    console.warn("Não foi possível enviar o arquivo pro Cloudinary, guardando só localmente por enquanto:", err);
     return null;
   }
 }
@@ -2958,10 +2959,45 @@ function renderAll() {
 renderAll();
 bootstrapCloudSync();
 
-// ==================== Ferramentas de mesa: dados + cronômetro ====================
-const toolsPanel = document.getElementById("tools-panel");
-document.getElementById("btn-toggle-tools").addEventListener("click", () => toolsPanel.classList.toggle("hidden"));
-document.getElementById("btn-close-tools").addEventListener("click", () => toolsPanel.classList.add("hidden"));
+// ==================== Ferramentas de mesa: um botão por ferramenta ====================
+const TOOL_PANELS = {
+  dice: "panel-dice",
+  timer: "panel-timer",
+  music: "panel-music",
+  scratchpad: "panel-scratchpad",
+};
+
+function toggleToolPanel(key) {
+  const panelId = TOOL_PANELS[key];
+  Object.entries(TOOL_PANELS).forEach(([k, id]) => {
+    const panel = document.getElementById(id);
+    const btn = document.getElementById(`btn-toggle-${k}`);
+    if (k === key) {
+      panel.classList.toggle("hidden");
+      btn.classList.toggle("active", !panel.classList.contains("hidden"));
+    } else {
+      panel.classList.add("hidden");
+      btn.classList.remove("active");
+    }
+  });
+}
+
+function openToolPanel(key) {
+  Object.entries(TOOL_PANELS).forEach(([k, id]) => {
+    document.getElementById(id).classList.toggle("hidden", k !== key);
+    document.getElementById(`btn-toggle-${k}`).classList.toggle("active", k === key);
+  });
+}
+
+Object.keys(TOOL_PANELS).forEach((key) => {
+  document.getElementById(`btn-toggle-${key}`).addEventListener("click", () => toggleToolPanel(key));
+});
+document.querySelectorAll(".js-close-tool-panel").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    btn.closest(".tools-panel").classList.add("hidden");
+    document.querySelectorAll(".tools-fab").forEach((f) => f.classList.remove("active"));
+  })
+);
 
 let diceHistory = [];
 
@@ -2976,7 +3012,7 @@ function rollAttributeCheck(entityName, attrLabel, value) {
   diceHistory.unshift(`${entityName} — ${attrLabel} (${value}): d20=${roll} → ${outcome}`);
   diceHistory = diceHistory.slice(0, 6);
   document.getElementById("dice-history").innerHTML = diceHistory.map(escapeHtml).join("<br>");
-  document.getElementById("tools-panel").classList.remove("hidden");
+  openToolPanel("dice");
 }
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".roll-attr");
@@ -3057,57 +3093,9 @@ document.getElementById("btn-timer-reset").addEventListener("click", () => {
 });
 
 // ==================== Trilha Sonora ====================
-// Os arquivos de áudio ficam num IndexedDB local (não entram no JSON salvo/sincronizado,
-// porque música é pesada demais pro localStorage ou pro documento do Firestore).
-// Só o nome/playlist de cada faixa fica guardado no estado normal, pra lista sobreviver
-// a um F5 mesmo antes do IndexedDB responder.
-const MUSIC_DB_NAME = "mestre-pep-musicas";
-const MUSIC_STORE = "faixas";
-let musicDbPromise = null;
-
-function openMusicDb() {
-  if (musicDbPromise) return musicDbPromise;
-  musicDbPromise = new Promise((resolve, reject) => {
-    const req = indexedDB.open(MUSIC_DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore(MUSIC_STORE, { keyPath: "id" });
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-  return musicDbPromise;
-}
-
-async function musicDbPut(record) {
-  const db = await openMusicDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MUSIC_STORE, "readwrite");
-    tx.objectStore(MUSIC_STORE).put(record);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function musicDbGet(id) {
-  const db = await openMusicDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MUSIC_STORE, "readonly");
-    const req = tx.objectStore(MUSIC_STORE).get(id);
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function musicDbDelete(id) {
-  const db = await openMusicDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MUSIC_STORE, "readwrite");
-    tx.objectStore(MUSIC_STORE).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
+// As músicas vão pro Cloudinary (mesmo esquema das fotos) — só o link de cada faixa
+// fica salvo no estado da campanha, então as playlists agora aparecem iguais em
+// qualquer aparelho, não só no navegador onde a música foi enviada.
 const PLAYLISTS = [
   { key: "combate", label: "Combate" },
   { key: "casual", label: "Casual" },
@@ -3120,7 +3108,6 @@ if (!state.playlists) {
 
 let activePlaylist = "combate";
 let currentTrackId = null;
-let currentObjectUrl = null;
 const musicAudioEl = document.getElementById("music-audio-el");
 const musicVolumeEl = document.getElementById("music-volume");
 musicAudioEl.volume = Number(musicVolumeEl.value) / 100;
@@ -3164,30 +3151,22 @@ function renderMusicTrackList() {
     })
   );
   list.querySelectorAll("[data-remove-track]").forEach((btn) =>
-    btn.addEventListener("click", async (e) => {
+    btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const id = btn.dataset.removeTrack;
       if (id === currentTrackId) stopMusic();
       state.playlists[activePlaylist] = state.playlists[activePlaylist].filter((t) => t.id !== id);
       saveState();
       renderMusicTrackList();
-      await musicDbDelete(id);
     })
   );
 }
 
-async function playTrack(id) {
+function playTrack(id) {
   const tracks = state.playlists[activePlaylist] || [];
   const track = tracks.find((t) => t.id === id);
-  if (!track) return;
-  const record = await musicDbGet(id);
-  if (!record) {
-    alert("Essa música não foi encontrada neste navegador (pode ter sido enviada de outro computador). Envie ela de novo.");
-    return;
-  }
-  if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
-  currentObjectUrl = URL.createObjectURL(record.blob);
-  musicAudioEl.src = currentObjectUrl;
+  if (!track || !track.url) return;
+  musicAudioEl.src = track.url;
   musicAudioEl.play();
   currentTrackId = id;
   document.getElementById("music-now-playing").textContent = track.nome;
@@ -3198,8 +3177,6 @@ async function playTrack(id) {
 function stopMusic() {
   musicAudioEl.pause();
   musicAudioEl.removeAttribute("src");
-  if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
-  currentObjectUrl = null;
   currentTrackId = null;
   document.getElementById("music-now-playing").textContent = "Nada tocando";
   document.getElementById("btn-music-playpause").innerHTML = `<span class="icon">play_arrow</span>`;
@@ -3216,13 +3193,20 @@ function playAdjacentTrack(direction) {
 
 document.getElementById("music-upload").addEventListener("change", async () => {
   const files = Array.from(document.getElementById("music-upload").files || []);
+  const nowPlayingEl = document.getElementById("music-now-playing");
   for (const file of files) {
-    const id = uid();
-    await musicDbPut({ id, blob: file });
-    state.playlists[activePlaylist].push({ id, nome: file.name.replace(/\.[^.]+$/, "") });
+    nowPlayingEl.textContent = `Enviando "${file.name}"...`;
+    const url = await uploadToCloudinary(file, "video");
+    if (!url) {
+      alert(`Não foi possível enviar "${file.name}". Confira sua internet e tente de novo.`);
+      continue;
+    }
+    state.playlists[activePlaylist].push({ id: uid(), nome: file.name.replace(/\.[^.]+$/, ""), url });
+    saveState();
+    renderMusicTrackList();
   }
-  saveState();
-  renderMusicTrackList();
+  const playing = state.playlists[activePlaylist].find((t) => t.id === currentTrackId);
+  nowPlayingEl.textContent = playing ? playing.nome : "Nada tocando";
   document.getElementById("music-upload").value = "";
 });
 

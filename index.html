@@ -455,72 +455,81 @@
   </div>
 </div>
 
-<!-- FERRAMENTAS DE MESA (dados + cronômetro) -->
-<button id="btn-toggle-tools" class="tools-fab" title="Dados e cronômetro">
-  <span class="icon">casino</span>
-</button>
-<div id="tools-panel" class="tools-panel hidden">
+<!-- FERRAMENTAS DE MESA (um botão por ferramenta, empilhados na lateral) -->
+<div class="tools-fab-stack">
+  <button id="btn-toggle-scratchpad" class="tools-fab" title="Rascunho"><span class="icon">edit_note</span></button>
+  <button id="btn-toggle-music" class="tools-fab" title="Trilha sonora"><span class="icon">music_note</span></button>
+  <button id="btn-toggle-timer" class="tools-fab" title="Cronômetro"><span class="icon">timer</span></button>
+  <button id="btn-toggle-dice" class="tools-fab" title="Dados"><span class="icon">casino</span></button>
+</div>
+
+<div id="panel-dice" class="tools-panel hidden">
   <div class="tools-panel-header">
-    <span>Ferramentas de mesa</span>
-    <button type="button" id="btn-close-tools" class="btn-close-modal" aria-label="Fechar" style="position:static;">&times;</button>
+    <span>Dados</span>
+    <button type="button" class="btn-close-modal js-close-tool-panel" aria-label="Fechar" style="position:static;">&times;</button>
   </div>
+  <div class="dice-buttons">
+    <button class="btn btn-secondary" data-roll-die="4">d4</button>
+    <button class="btn btn-secondary" data-roll-die="6">d6</button>
+    <button class="btn btn-secondary" data-roll-die="8">d8</button>
+    <button class="btn btn-secondary" data-roll-die="10">d10</button>
+    <button class="btn btn-secondary" data-roll-die="12">d12</button>
+    <button class="btn btn-secondary" data-roll-die="20">d20</button>
+  </div>
+  <div class="dice-custom-row">
+    <input type="text" id="dice-formula" class="input" placeholder="ex: 2d6+3" style="max-width:120px;">
+    <button class="btn btn-primary" id="btn-roll-formula">Rolar</button>
+  </div>
+  <div id="dice-result" class="dice-result"></div>
+  <div id="dice-history" class="dice-history"></div>
+</div>
 
-  <div class="tools-section">
-    <div class="tools-section-title">Dados</div>
-    <div class="dice-buttons">
-      <button class="btn btn-secondary" data-roll-die="4">d4</button>
-      <button class="btn btn-secondary" data-roll-die="6">d6</button>
-      <button class="btn btn-secondary" data-roll-die="8">d8</button>
-      <button class="btn btn-secondary" data-roll-die="10">d10</button>
-      <button class="btn btn-secondary" data-roll-die="12">d12</button>
-      <button class="btn btn-secondary" data-roll-die="20">d20</button>
-    </div>
-    <div class="dice-custom-row">
-      <input type="text" id="dice-formula" class="input" placeholder="ex: 2d6+3" style="max-width:120px;">
-      <button class="btn btn-primary" id="btn-roll-formula">Rolar</button>
-    </div>
-    <div id="dice-result" class="dice-result"></div>
-    <div id="dice-history" class="dice-history"></div>
+<div id="panel-timer" class="tools-panel hidden">
+  <div class="tools-panel-header">
+    <span>Cronômetro</span>
+    <button type="button" class="btn-close-modal js-close-tool-panel" aria-label="Fechar" style="position:static;">&times;</button>
   </div>
+  <div class="timer-display" id="timer-display">00:00</div>
+  <div class="timer-controls">
+    <input type="number" id="timer-minutes" class="input" min="1" max="60" value="3" style="max-width:70px;">
+    <span style="color:var(--text-dim); font-size:0.85rem;">min</span>
+    <button class="btn btn-secondary" id="btn-timer-start">Iniciar</button>
+    <button class="btn btn-secondary" id="btn-timer-pause">Pausar</button>
+    <button class="btn btn-ghost" id="btn-timer-reset">Zerar</button>
+  </div>
+</div>
 
-  <div class="tools-section">
-    <div class="tools-section-title">Cronômetro</div>
-    <div class="timer-display" id="timer-display">00:00</div>
-    <div class="timer-controls">
-      <input type="number" id="timer-minutes" class="input" min="1" max="60" value="3" style="max-width:70px;">
-      <span style="color:var(--text-dim); font-size:0.85rem;">min</span>
-      <button class="btn btn-secondary" id="btn-timer-start">Iniciar</button>
-      <button class="btn btn-secondary" id="btn-timer-pause">Pausar</button>
-      <button class="btn btn-ghost" id="btn-timer-reset">Zerar</button>
-    </div>
+<div id="panel-music" class="tools-panel hidden">
+  <div class="tools-panel-header">
+    <span>Trilha Sonora</span>
+    <button type="button" class="btn-close-modal js-close-tool-panel" aria-label="Fechar" style="position:static;">&times;</button>
   </div>
+  <p class="field-hint" style="margin:0 0 8px;">As músicas ficam na nuvem — as mesmas playlists aparecem em qualquer aparelho.</p>
+  <div id="playlist-picker" class="subtabs" style="margin-bottom:10px;"></div>
+  <label class="btn btn-secondary" style="width:100%; justify-content:center; margin-bottom:8px;">
+    <span class="icon">upload_file</span> Adicionar música(s)
+    <input type="file" id="music-upload" accept="audio/*" multiple hidden>
+  </label>
+  <div id="music-track-list" class="music-track-list"></div>
+  <div class="music-player-bar">
+    <button type="button" id="btn-music-prev" class="btn-icon-round" title="Anterior"><span class="icon">skip_previous</span></button>
+    <button type="button" id="btn-music-playpause" class="btn-icon-round" title="Tocar/Pausar"><span class="icon">play_arrow</span></button>
+    <button type="button" id="btn-music-next" class="btn-icon-round" title="Próxima"><span class="icon">skip_next</span></button>
+    <span id="music-now-playing" class="music-now-playing">Nada tocando</span>
+  </div>
+  <div class="music-volume-row">
+    <span class="icon" style="font-size:1.1rem;">volume_up</span>
+    <input type="range" id="music-volume" min="0" max="100" value="70">
+  </div>
+  <audio id="music-audio-el" hidden></audio>
+</div>
 
-  <div class="tools-section">
-    <div class="tools-section-title">Trilha Sonora</div>
-    <p class="field-hint" style="margin:0 0 8px;">As músicas ficam salvas só neste navegador (não vão pra nuvem).</p>
-    <div id="playlist-picker" class="subtabs" style="margin-bottom:10px;"></div>
-    <label class="btn btn-secondary" style="width:100%; justify-content:center; margin-bottom:8px;">
-      <span class="icon">upload_file</span> Adicionar música(s)
-      <input type="file" id="music-upload" accept="audio/*" multiple hidden>
-    </label>
-    <div id="music-track-list" class="music-track-list"></div>
-    <div class="music-player-bar">
-      <button type="button" id="btn-music-prev" class="btn-icon-round" title="Anterior"><span class="icon">skip_previous</span></button>
-      <button type="button" id="btn-music-playpause" class="btn-icon-round" title="Tocar/Pausar"><span class="icon">play_arrow</span></button>
-      <button type="button" id="btn-music-next" class="btn-icon-round" title="Próxima"><span class="icon">skip_next</span></button>
-      <span id="music-now-playing" class="music-now-playing">Nada tocando</span>
-    </div>
-    <div class="music-volume-row">
-      <span class="icon" style="font-size:1.1rem;">volume_up</span>
-      <input type="range" id="music-volume" min="0" max="100" value="70">
-    </div>
-    <audio id="music-audio-el" hidden></audio>
+<div id="panel-scratchpad" class="tools-panel hidden">
+  <div class="tools-panel-header">
+    <span>Rascunho</span>
+    <button type="button" class="btn-close-modal js-close-tool-panel" aria-label="Fechar" style="position:static;">&times;</button>
   </div>
-
-  <div class="tools-section">
-    <div class="tools-section-title">Rascunho</div>
-    <textarea id="scratchpad-text" class="input" rows="4" placeholder="Anote qualquer coisa rápida durante a sessão — nome de um NPC improvisado, uma pergunta pendente..." style="resize:vertical; font-family:inherit;"></textarea>
-  </div>
+  <textarea id="scratchpad-text" class="input" rows="6" placeholder="Anote qualquer coisa rápida durante a sessão — nome de um NPC improvisado, uma pergunta pendente..." style="resize:vertical; font-family:inherit;"></textarea>
 </div>
 
 <!-- MODAL GLOSSARY -->
