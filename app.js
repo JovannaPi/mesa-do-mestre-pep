@@ -77,6 +77,7 @@ function defaultState() {
     seededFullText: false,
     seededExtras2: false,
     seededMonstros2: false,
+    seededBaileENotas: false,
   };
 }
 
@@ -1140,12 +1141,146 @@ function seedMoreMonsters() {
   }
 }
 
+// Quarta leva: elenco do Baile Eterno (só existiam no texto corrido, sem ficha pra
+// consulta rápida), regras/relógios de fundo que faltavam (Dado de Maldição, progressão
+// de nível), tabelas e geradores do livro, e pequenos ajustes em dados já existentes.
+function seedBaileENotas() {
+  if (state.seededBaileENotas) return;
+  state.seededBaileENotas = true;
+
+  const npc = (nome, determinacao, graca, astucia, coracao, salvamento, armadura, tags, notas) => ({
+    id: uid(), nome, tipo: "NPC", determinacao, graca, astucia, coracao, salvamento, armadura, tags, notas,
+  });
+
+  const newNpcs = [
+    npc("Élvar", 10, 10, 14, 8, 12, 0, ["baile eterno", "portão"],
+      "Esmerado, Perspicaz, Indiferente. Guarda o portão do Baile Eterno e decide o tema do traje exigido para entrar."),
+    npc("Príncipe Aurélio", 10, 16, 10, 8, 14, 0, ["baile eterno", "corte do sol e do céu", "nobre"],
+      "Charmoso, Reservado. Da Corte do Sol e do Céu. Secretamente apaixonado por Penélope; tem medo de aranhas; usa uma ilusão para parecer mais musculoso do que é."),
+    npc("Senhora Amaris", 10, 14, 12, 8, 14, 0, ["baile eterno", "corte da lua e das estrelas", "nobre"],
+      "Bondosa, Sagaz, Modesta. Da Corte da Lua e das Estrelas."),
+    npc("Penélope", 9, 12, 11, 7, 12, 0, ["baile eterno", "criada"],
+      "Criada da Senhora Amaris. Secretamente namorando o Príncipe Aurélio às escondidas."),
+    npc("Cirilla", 8, 13, 10, 6, 12, 0, ["baile eterno", "gêmea"],
+      "Gêmea de Cirillo (marca de nascença em forma de estrela no olho direito). As duas estão brigando por causa de looks combinando."),
+    npc("Cirillo", 8, 13, 10, 6, 12, 0, ["baile eterno", "gêmeo"],
+      "Gêmeo de Cirilla (marca de nascença em forma de estrela no olho esquerdo). Os dois estão brigando por causa de looks combinando."),
+    npc("Arturo, o Trovador", 9, 15, 11, 8, 13, 0, ["baile eterno", "trovador"],
+      "Curioso, Teatral, Jovial. Dá a Harpa Cantacora em troca de uma boa história para contar."),
+    npc("Ilayda", 10, 13, 9, 8, 13, 0, ["baile eterno", "nobre"],
+      "Egoísta, Esnobe, Impulsiva. Mantém Élton (marido de Maya) cativo por vaidade/capricho."),
+    npc("Élton Élis", 8, 8, 8, 6, 10, 0, ["baile eterno", "cativo"],
+      "Marido desaparecido de Maya Élis. Atordoado, Confuso, Saudoso — mantido cativo por Ilayda."),
+    npc("Duquesa Jacinda", 12, 14, 14, 10, 16, 0, ["baile eterno", "corte da sombra e da melancolia", "nobre"],
+      "Maldosa, Crítica, Soberba. Da Corte da Sombra e da Melancolia. Dona do brinco Brincalhetes Sussurrantes."),
+    npc("Senhora Neves", 11, 12, 12, 9, 14, 0, ["baile eterno", "corte da geada e do pinheiro", "nobre"],
+      "Reservada, Dedicada, Nostálgica. Da Corte da Geada e do Pinheiro. Tem um fraco secreto por presentes feitos à mão."),
+    npc("Finnegan", 6, 14, 16, 6, 16, 0, ["baile eterno", "travessura"],
+      "Leviano, Infantil, Impulsivo — aparenta uns 10 anos. Prendeu Ashkan numa pedra no Círculo de Cogumelos. Dono da Varinha do Capricho."),
+    npc("Fazendeiro Listra-d'Olmo", 12, 8, 9, 10, 10, 0, ["vale das bagas", "fazendeiro"],
+      "Dedicado, Modesto, Franco. Machucou a asa. Dá acesso às ferramentas para entrar no Ninho do Rei Rato; recompensa com Bolos de Mel e o Prendedor Borboleta."),
+  ];
+  newNpcs.forEach((n) => {
+    if (!state.npcs.some((x) => x.nome === n.nome)) state.npcs.push(n);
+  });
+
+  const item = (nome, custo, origem, descricao, tags) => ({ id: uid(), nome, custo, origem, descricao, tags });
+
+  const newItems = [
+    // Poções à venda na loja de Rosa (Cervovale)
+    item("Poção de Cura Comum", "50 pp", "Loja de Rosa (compra)", "Cura ferimentos leves.", ["cervovale", "poção", "compra"]),
+    item("Poção de Cura Especial", "100 pp", "Loja de Rosa (compra) — falta um ingrediente", "Cura mais do que a versão comum. Rosa ainda não tem o ingrediente necessário pra fazer mais.", ["cervovale", "poção", "compra"]),
+    item("Coragem Líquida", "100 pp", "Loja de Rosa (compra)", "Concede coragem/resistência a medo por um tempo.", ["cervovale", "poção", "compra"]),
+    item("Acorda Acorda", "100 pp", "Loja de Rosa (compra) — falta um ingrediente", "Afasta o sono/cansaço. Rosa ainda não tem o ingrediente necessário pra fazer mais.", ["cervovale", "poção", "compra"]),
+    item("Acuidade Felina", "150 pp", "Loja de Rosa (compra) — falta um ingrediente", "Aguça os sentidos temporariamente.", ["cervovale", "poção", "compra"]),
+    item("Vínculo Mental", "200 pp", "Loja de Rosa (compra)", "Permite comunicação mental temporária entre quem bebe.", ["cervovale", "poção", "compra"]),
+    item("Visão de Túnel", "200 pp", "Loja de Rosa (compra) — falta um ingrediente", "Foco extremo, ignorando distrações — mas também periféricos.", ["cervovale", "poção", "compra"]),
+    item("Estátua Viva", "200 pp", "Loja de Rosa (compra)", "Transforma temporariamente quem bebe em algo com propriedades de pedra.", ["cervovale", "poção", "compra"]),
+    item("Beijo da Morte", "150 pp", "Loja de Rosa (compra) — falta um ingrediente", "Poção perigosa de efeito extremo — usar com cautela.", ["cervovale", "poção", "compra"]),
+    item("Névoa da Memória", "200 pp", "Loja de Rosa (compra)", "Apaga ou embaça lembranças recentes de quem bebe.", ["cervovale", "poção", "compra"]),
+    // Aquisições da ferraria de Maya (Cervovale)
+    item("Espada (ferraria)", "(1), d8 de dano — 20 pp", "Ferraria de Maya (compra)", "Espada comum à venda na ferraria.", ["cervovale", "arma", "compra"]),
+    item("Adaga (ferraria)", "(1), d6 de dano — 10 pp", "Ferraria de Maya (compra)", "Adaga comum à venda na ferraria.", ["cervovale", "arma", "compra"]),
+    item("Machado de Batalha", "(2), d10 de dano — 20 pp", "Ferraria de Maya (compra)", "Machado pesado à venda na ferraria.", ["cervovale", "arma", "compra"]),
+    item("Frigideira", "(1), d4 de dano — 10 pp", "Ferraria de Maya (compra)", "Serve como arma improvisada e como panela.", ["cervovale", "arma", "compra"]),
+    item("Mangual", "(1), d6 de dano — 20 pp", "Ferraria de Maya (compra)", "Arma de corrente à venda na ferraria.", ["cervovale", "arma", "compra"]),
+    item("Escudo (ferraria)", "(2) — 30 pp", "Ferraria de Maya (compra)", "Escudo comum à venda na ferraria.", ["cervovale", "equipamento", "compra"]),
+    item("Armadura Pesada", "(2) — 50 pp", "Ferraria de Maya (compra)", "Armadura pesada à venda na ferraria.", ["cervovale", "equipamento", "compra"]),
+    // Itens maravilhosos genéricos (livro básico) que faltavam
+    item("Bolotas Robustas", "—", "Itens maravilhosos (livro básico)", "Bolotas que crescem rapidamente em algo útil quando plantadas — detalhes a critério da Mestra.", ["item maravilhoso"]),
+    item("Lamparina Reveladora", "—", "Itens maravilhosos (livro básico)", "Sua luz revela algo escondido (ilusões, portas secretas, magia) quando aceso.", ["item maravilhoso"]),
+    item("Pó de Fada", "—", "Itens maravilhosos (livro básico)", "Pó mágico com um pequeno efeito feérico — detalhes a critério da Mestra.", ["item maravilhoso"]),
+    item("Cola Excelente", "—", "Itens maravilhosos (livro básico)", "Gruda quase qualquer coisa permanentemente.", ["item maravilhoso"]),
+    item("Feijões Mágicos", "—", "Itens maravilhosos (livro básico)", "Ao plantar, crescem em algo definido por uma tabela d6 própria — a critério da Mestra.", ["item maravilhoso"]),
+    item("Pulseiras da Amizade", "—", "Itens maravilhosos (livro básico)", "Par de pulseiras que ligam duas pessoas de alguma forma mágica menor — detalhes a critério da Mestra.", ["item maravilhoso"]),
+    item("Corda de Escalada (genérica)", "—", "Itens maravilhosos (livro básico)", "Corda comum de boa qualidade (não confundir com a Corda de Escalada Encantada de Selene).", ["item maravilhoso"]),
+    // Armas encantadas genéricas (livro básico) que faltavam
+    item("Espada dos Antepassados", "(1 DD)", "Armas encantadas (livro básico)", "Ao gastar o Dado de Dom, invoca o espírito de um ancestral para ajudar em combate.", ["item mágico", "arma"]),
+    item("Lâmina Vorpal", "d10 de dano", "Armas encantadas (livro básico)", "Acerto crítico em 1 ou 2 (causa d10+10 de dano). Tem 3 em 6 de chance de se estilhaçar após um crítico.", ["item mágico", "arma"]),
+    item("Espada Cantante", "(1 DD)", "Armas encantadas (livro básico)", "Ao gastar o Dado de Dom, dá vantagem em testes para todo o grupo por um tempo.", ["item mágico", "arma"]),
+  ];
+  newItems.forEach((i) => {
+    if (!state.items.some((x) => x.nome === i.nome)) state.items.push(i);
+  });
+
+  const note = (titulo, categoria, texto) => ({ id: uid(), titulo, categoria, texto });
+
+  const newNotes = [
+    note("O Dado de Maldição (Cervovale)", "regras",
+      "Relógio de fundo da campanha em Cervovale: role um Dado de Maldição uma vez por dia (começa em d8). Se tirar 1, mais um morador da vila sucumbe completamente à maldição (vira doce por completo) E o dado encolhe um degrau (d8 → d6 → d4), ficando em d4 dali em diante. Use isso pra criar pressão de tempo — quanto mais a Mestra deixa passar dias sem as Princesas agirem, maior a chance (e mais rápido o relógio anda) da vila piorar."),
+    note("Progressão de nível — Doce Vingança", "regras",
+      "Nesta aventura, as Princesas sobem de nível cada vez que recuperam um dos três itens ligados à maldição de Dulcineia (a Cauda do Rei Rato, o Anel do Rei-Elfo, o Pingente Rouba-Alma) — não seguindo XP ou marcos genéricos do livro básico.\n\nAo subir de nível, uma Princesa ganha: a próxima habilidade do seu Dom, +1 no máximo de Dados de Dom, +d4 no Coração máximo, +1 no máximo de Dados de Coração, e pode tentar rerrolar uma Virtude (mantendo o novo valor só se for maior)."),
+    note("Recompensas iniciais de Teodoro (d4)", "achados",
+      "Antes mesmo da missão de levantar o moral da vila, Teodoro oferece uma recompensa só por aceitar ajudar Cervovale — role d4 ou escolha:\n1. 400 pp\n2. A escritura de um chalé\n3. Uma apresentação a um monarca\n4. Um artefato misterioso"),
+    note("Terceiro gancho — Aparições Estranhas", "lore",
+      "Gancho alternativo (além do grito na floresta e de Doces Sonhos): uma nobre contrata o grupo para investigar avistamentos estranhos de criaturas de doce nas redondezas — um jeito de puxar Princesas mais ligadas à nobreza/alta sociedade para dentro da aventura."),
+    note("Itens Quebrados de Zeca (d6)", "achados",
+      "Objetos que Zeca pede para consertar em troca da Luneta Feérica — role d6 ou escolha:\n1. Roca de fiar\n2. Relógio de pêndulo\n3. Tapeçaria rasgada\n4. Alaúde sem cordas\n5. Botas de couro estragadas\n6. Tabuleiro de xadrez incompleto"),
+    note("Gerador de Fada Alta (Lago da Saudade Eterna)", "achados",
+      "Pra gerar uma fada alta rapidamente:\n\nTRAÇO FÍSICO (d6)\n1. Cabelo que muda de cor com o humor\n2. Pinta em forma de coração\n3. Língua bifurcada\n4. Criatura peluda enrolada no pescoço\n5. Um braço de cristal\n6. Tatuagem de aranha viva\n\nNOME (d6) — combine com um sobrenome feérico à sua escolha, ou use como primeiro nome direto: role e adapte ao gênero/personalidade da fada."),
+    note("Animais Companheiros do Bosque Emaranhado (d20)", "achados",
+      "Gerador rápido de animal companheiro (Amizade Poderosa ou similar) — role d20:\n1. Cotovia — Canto Brilhante\n2. Raposa — Focinho Molhado\n3. Urso Pardo — Sono Pesado\n4. Pica-pau — Bico de Pederneira\n5. Víbora — Escama da Perdição\n6. Coruja — Olhos Estrelados\n7-20. (mais opções no livro básico — complete com nomes temáticos parecidos quando precisar de mais variedade)"),
+    note("Nomes de Convidadas do Baile Eterno (d6)", "achados",
+      "Pra nomear rapidamente uma convidada genérica do baile — role d6: Luncina, Baco, Safira, Tristrão, Ozias, Calíope."),
+    note("Frases exatas da aventura", "lore",
+      "ENIGMA DO ESPELHO MALÉFICO (texto completo do poema): \"Para quebrar a maldição e ter êxito... ou verão que a vingança é doce como canapés.\" (verso completo no livro — use pra ler em voz alta na hora certa.)\n\nMALDIÇÃO FINAL DE DULCINEIA (ao morrer/ser derrotada, cite palavra por palavra): \"Minha magia vai infectar a terra...\""),
+    note("Itens na Teia de Aranha (d4) — Caverna opcional", "achados",
+      "Loot da caverna com a Aranha Gigante de Algodão-Doce — role d4:\n1. Mochila com uma poção de Vínculo Mental + 20 pp\n2. Martelo de Guerra (2)(d10) que emite uma luz fraca\n3. Pergaminho/selo com o feitiço Puf!\n4. Bolsa com odres vazios e rações mofadas"),
+  ];
+  newNotes.forEach((n) => {
+    if (!state.notes.some((x) => x.titulo === n.titulo)) state.notes.push(n);
+  });
+
+  // Ajustes em dados que já existiam (origem errada / lore faltando) — só aplica se o
+  // texto novo ainda não estiver lá, pra nunca duplicar em quem já recebeu essa correção.
+  const botasAndarilhas = state.items.find((i) => i.nome === "Botas Andarilhas");
+  if (botasAndarilhas && botasAndarilhas.origem === "Livro básico — itens mágicos") {
+    botasAndarilhas.origem = "Recompensa de Connie Oriente — ajudar a mandar notícias pra família dela";
+  }
+
+  const selene = state.npcs.find((n) => n.nome === "Selene (Lobo Mau)");
+  if (selene && !selene.notas.includes("Agilidade Feérica")) {
+    selene.notas += " Tem todas as habilidades de uma Princesa de Agilidade Feérica de Nível 3. Infiltrou-se na torre pelo esgoto antes de atacar, quando a bruxa estava fora.";
+  }
+
+  const hannah = state.npcs.find((n) => n.nome === "Hannah Falcão");
+  if (hannah && !hannah.notas.includes("Acorda Acorda")) {
+    hannah.notas += " Missão: repor o estoque de Acorda Acorda -> recompensa: Máscara de Baile.";
+  }
+
+  const connie = state.npcs.find((n) => n.nome === "Constança \"Connie\" Oriente");
+  if (connie && !connie.notas.includes("Botas Andarilhas")) {
+    connie.notas += " Missão: mandar notícias para a família dela -> recompensa: Botas Andarilhas.";
+  }
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
 seedFullAdventureText();
 seedExtraLoot();
 seedMoreMonsters();
+seedBaileENotas();
 saveState();
 
 // ---------- Tabs ----------
