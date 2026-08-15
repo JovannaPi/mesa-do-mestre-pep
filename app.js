@@ -1516,28 +1516,43 @@ function linkifyText(rawText) {
   return result;
 }
 
-// ==================== LÓGICA DA JANELA FLUTUANTE DA AVENTURA ====================
-const floatWin = document.getElementById("floating-note-read");
-const floatHeader = document.getElementById("floating-note-header");
-let isDragging = false, dragX, dragY;
+// ==================== LÓGICA DAS JANELAS FLUTUANTES DE LEITURA ====================
+// Cada nota aberta ganha sua própria janela, então dá pra deixar várias abertas ao
+// mesmo tempo (ex.: comparar duas fichas de regras, ou lore + aventura lado a lado).
+const floatingNotesContainer = document.getElementById("floating-notes-container");
+const openFloatingNotes = new Map(); // noteId -> elemento da janela
+let floatingZTop = 500;
 
-// Faz a janela ser arrastável pelo cabeçalho
-floatHeader.addEventListener("mousedown", e => {
-  if (e.target.tagName === 'BUTTON') return;
-  isDragging = true;
-  const rect = floatWin.getBoundingClientRect();
-  dragX = e.clientX - rect.left;
-  dragY = e.clientY - rect.top;
-});
-document.addEventListener("mousemove", e => {
-  if (!isDragging) return;
-  floatWin.style.left = (e.clientX - dragX) + "px";
-  floatWin.style.top = (e.clientY - dragY) + "px";
-  floatWin.style.right = "auto"; // Tira o ancoramento da direita
-});
-document.addEventListener("mouseup", () => isDragging = false);
+function bringFloatingToFront(win) {
+  floatingZTop += 1;
+  win.style.zIndex = floatingZTop;
+}
 
-document.getElementById("btn-close-floating").addEventListener("click", () => floatWin.classList.add("hidden"));
+function closeFloatingNote(noteId) {
+  const win = openFloatingNotes.get(noteId);
+  if (!win) return;
+  win.remove();
+  openFloatingNotes.delete(noteId);
+}
+
+function makeFloatingDraggable(win, header) {
+  let isDragging = false, dragX, dragY;
+  header.addEventListener("mousedown", (e) => {
+    if (e.target.closest("button")) return;
+    isDragging = true;
+    bringFloatingToFront(win);
+    const rect = win.getBoundingClientRect();
+    dragX = e.clientX - rect.left;
+    dragY = e.clientY - rect.top;
+  });
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    win.style.left = (e.clientX - dragX) + "px";
+    win.style.top = (e.clientY - dragY) + "px";
+    win.style.right = "auto"; // Tira o ancoramento da direita
+  });
+  document.addEventListener("mouseup", () => { isDragging = false; });
+}
 
 
 
@@ -3212,21 +3227,42 @@ const NOTE_SHELVES = [
 
 
 function openNoteReadModal(note) {
-  document.getElementById("note-read-title").textContent = note.titulo;
-  
-  // linkifyText aplica os Tooltips e os Links de NPCs no texto todo!
-  document.getElementById("note-read-body").innerHTML = linkifyText(note.texto);
-  
-  // Recria a função do botão de Editar sem dar erro
-  const btnEdit = document.getElementById("btn-edit-from-read");
-  if (btnEdit) {
-    btnEdit.onclick = () => {
-      floatWin.classList.add("hidden");
-      openNoteModal(note);
-    };
+  // Já tem uma janela aberta pra essa nota? Só traz ela pra frente em vez de duplicar.
+  if (openFloatingNotes.has(note.id)) {
+    const existing = openFloatingNotes.get(note.id);
+    existing.querySelector(".floating-body").innerHTML = linkifyText(note.texto);
+    bringFloatingToFront(existing);
+    return;
   }
-  
-  floatWin.classList.remove("hidden");
+
+  const win = document.createElement("div");
+  win.className = "floating-window";
+  win.dataset.noteId = note.id;
+  const cascade = (openFloatingNotes.size % 6) * 28;
+  win.style.top = `calc(10vh + ${cascade}px)`;
+  win.style.right = `calc(5vw + ${cascade}px)`;
+  win.innerHTML = `
+    <div class="floating-header">
+      <span class="icon" style="color: var(--royal-gold);">menu_book</span>
+      <h2>${escapeHtml(note.titulo)}</h2>
+      <button type="button" class="btn-ghost icon-only btn-edit-from-read" style="padding: 4px; margin-right: 8px;" title="Editar">
+        <span class="icon">edit</span>
+      </button>
+      <button type="button" class="btn-close-modal btn-close-floating" style="position: static; padding: 0;">&times;</button>
+    </div>
+    <div class="floating-body">${linkifyText(note.texto)}</div>
+  `;
+  floatingNotesContainer.appendChild(win);
+  openFloatingNotes.set(note.id, win);
+  bringFloatingToFront(win);
+
+  win.addEventListener("mousedown", () => bringFloatingToFront(win));
+  makeFloatingDraggable(win, win.querySelector(".floating-header"));
+  win.querySelector(".btn-close-floating").addEventListener("click", () => closeFloatingNote(note.id));
+  win.querySelector(".btn-edit-from-read").addEventListener("click", () => {
+    closeFloatingNote(note.id);
+    openNoteModal(note);
+  });
 }
 
 function noteRowHtml(n, shelfKey) {
