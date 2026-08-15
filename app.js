@@ -1425,6 +1425,27 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ==================== Alertas Visuais (Toasts) ====================
+function showToast(message, type = "info", icon = "info") {
+  let container = document.getElementById("toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    container.className = "toast-container";
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span class="icon">${icon}</span> ${escapeHtml(message)}`;
+  container.appendChild(toast);
+  
+  // Some sozinho depois de 3 segundos
+  setTimeout(() => {
+    toast.classList.add("toast-leave");
+    toast.addEventListener("animationend", () => toast.remove());
+  }, 3000);
+}
+
 // ==================== Glossário de magias, habilidades e traços ====================
 const GLOSSARY = {
   "Puf!": "Alcance [DADOS]. Teleporte-se em uma nuvem de fumaça para um lugar que você consiga ver. Pode ser lançada como uma Reação.",
@@ -1463,35 +1484,101 @@ const GLOSSARY = {
 
 const GLOSSARY_KEYS_SORTED = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 
-function linkifyAbilities(rawText) {
-  const text = rawText ?? "";
-  if (!text) return "";
+// ==================== O NOVO SUPER LINKIFIER (Poderes e NPCs) ====================
+function linkifyText(rawText) {
+  if (!rawText) return "";
   let result = "";
   let i = 0;
-  outer: while (i < text.length) {
+  // Ordena poderes e NPCs do maior nome pro menor, pra não bugar palavras compostas
+  const npcNames = state.npcs.map(n => n.nome).sort((a,b) => b.length - a.length);
+  
+  outer: while (i < rawText.length) {
+    // 1. Checa se é um poder/regra
     for (const term of GLOSSARY_KEYS_SORTED) {
-      if (text.startsWith(term, i)) {
+      if (rawText.startsWith(term, i)) {
         result += `<span class="ability-link" data-ability="${escapeHtml(term)}">${escapeHtml(term)}</span>`;
         i += term.length;
         continue outer;
       }
     }
-    result += escapeHtml(text[i]);
+    // 2. Checa se é o nome de um NPC ou Monstro
+    for (const name of npcNames) {
+      if (name.length > 2 && rawText.startsWith(name, i)) {
+        result += `<span class="npc-link" data-npc="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
+        i += name.length;
+        continue outer;
+      }
+    }
+    // 3. Letra normal
+    result += escapeHtml(rawText[i]);
     i++;
   }
   return result;
 }
 
-function openGlossaryModal(term) {
-  const desc = GLOSSARY[term];
-  document.getElementById("glossary-title").textContent = term;
-  document.getElementById("glossary-body").textContent = desc || "Sem descrição cadastrada ainda.";
-  document.getElementById("modal-glossary").classList.remove("hidden");
-}
+// ==================== LÓGICA DA JANELA FLUTUANTE DA AVENTURA ====================
+const floatWin = document.getElementById("floating-note-read");
+const floatHeader = document.getElementById("floating-note-header");
+let isDragging = false, dragX, dragY;
 
-document.addEventListener("click", (e) => {
+// Faz a janela ser arrastável pelo cabeçalho
+floatHeader.addEventListener("mousedown", e => {
+  if (e.target.tagName === 'BUTTON') return;
+  isDragging = true;
+  const rect = floatWin.getBoundingClientRect();
+  dragX = e.clientX - rect.left;
+  dragY = e.clientY - rect.top;
+});
+document.addEventListener("mousemove", e => {
+  if (!isDragging) return;
+  floatWin.style.left = (e.clientX - dragX) + "px";
+  floatWin.style.top = (e.clientY - dragY) + "px";
+  floatWin.style.right = "auto"; // Tira o ancoramento da direita
+});
+document.addEventListener("mouseup", () => isDragging = false);
+
+document.getElementById("btn-close-floating").addEventListener("click", () => floatWin.classList.add("hidden"));
+
+
+
+// ==================== LÓGICA DO TOOLTIP E CLIQUE NOS NPCs ====================
+const tooltip = document.getElementById("tooltip-pop");
+
+// Hover (Passar o mouse) nas Regras/Poderes
+document.addEventListener("mouseover", (e) => {
   const link = e.target.closest(".ability-link");
-  if (link) openGlossaryModal(link.dataset.ability);
+  if (link && tooltip) {
+    const term = link.dataset.ability;
+    tooltip.innerHTML = `<h4>${term}</h4>${GLOSSARY[term] || "Sem descrição."}`;
+    const rect = link.getBoundingClientRect();
+    
+    // Posiciona no centro da palavra
+    tooltip.style.left = (rect.left + rect.width / 2) + "px";
+    tooltip.style.top = rect.top + "px";
+    tooltip.classList.remove("hidden");
+  }
+});
+
+document.addEventListener("mouseout", (e) => {
+  const link = e.target.closest(".ability-link");
+  if (link && tooltip) {
+    tooltip.classList.add("hidden");
+  }
+});
+
+// Clicar no nome de um Personagem para pular pra ficha dele
+document.addEventListener("click", (e) => {
+  const npcLink = e.target.closest(".npc-link");
+  if (npcLink) {
+    const name = npcLink.dataset.npc;
+    // Pula para a aba Compêndio
+    document.querySelector('[data-tab="compendio"]').click();
+    // Pula para a sub-aba de NPCs
+    document.querySelector('[data-subtab="npcs"]').click();
+    // Escreve o nome dele na busca e renderiza
+    document.getElementById("npc-search").value = name;
+    renderNpcs();
+  }
 });
 
 function formatDate(iso) {
@@ -1690,7 +1777,7 @@ function npcCardHtml(n) {
       </div>
       <div class="npc-stat-grid ${isMonster ? "monster" : ""}">${statBlock}</div>
       ${n.tags.length ? `<div class="npc-tags">${n.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
-      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyAbilities(n.notas)}</div>` : ""}
+      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyText(n.notas)}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-edit-npc="${n.id}">Editar</button>
         <button class="btn btn-danger" data-delete-npc="${n.id}">Excluir</button>
@@ -1785,7 +1872,7 @@ function itemCardHtml(i) {
         ${i.custo ? `<span class="npc-type-badge">${escapeHtml(i.custo)}</span>` : ""}
       </div>
       ${i.origem ? `<div class="npc-notes"><b>Origem:</b> ${escapeHtml(i.origem)}</div>` : ""}
-      <div class="npc-notes">${linkifyAbilities(i.descricao)}</div>
+      <div class="npc-notes">${linkifyText(i.descricao)}</div>
       ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-share-text="item" data-share-id="${i.id}">${isTextShared("item", i.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
@@ -2508,7 +2595,7 @@ function openCombatantQuickView(c) {
       ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span>${rollAttrBtn(c.nome, "Salvamento", c.salvamento)}</div>` : ""}
       <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
     </div>
-    ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyAbilities(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
+    ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyText(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
   `;
   document.getElementById("modal-combatant-view").classList.remove("hidden");
 }
@@ -3123,14 +3210,23 @@ const NOTE_SHELVES = [
   { key: "achados", label: "Achados", icon: "diamond" },
 ];
 
+
 function openNoteReadModal(note) {
   document.getElementById("note-read-title").textContent = note.titulo;
-  document.getElementById("note-read-body").innerHTML = linkifyAbilities(note.texto);
-  document.getElementById("btn-edit-from-read").onclick = () => {
-    document.getElementById("modal-note-read").classList.add("hidden");
-    openNoteModal(note);
-  };
-  document.getElementById("modal-note-read").classList.remove("hidden");
+  
+  // linkifyText aplica os Tooltips e os Links de NPCs no texto todo!
+  document.getElementById("note-read-body").innerHTML = linkifyText(note.texto);
+  
+  // Recria a função do botão de Editar sem dar erro
+  const btnEdit = document.getElementById("btn-edit-from-read");
+  if (btnEdit) {
+    btnEdit.onclick = () => {
+      floatWin.classList.add("hidden");
+      openNoteModal(note);
+    };
+  }
+  
+  floatWin.classList.remove("hidden");
 }
 
 function noteCardHtml(n) {
@@ -3139,7 +3235,7 @@ function noteCardHtml(n) {
   return `
     <div class="note-card note-card-${categoria}" data-note-id="${n.id}">
       <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
-      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyAbilities(n.texto)}</p>
+      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyText(n.texto)}</p>
       <div class="session-card-actions">
         ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
         <button class="btn btn-ghost icon-only" data-share-text="nota" data-share-id="${n.id}" title="${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}"><span class="icon">${isTextShared("nota", n.id) ? "visibility_off" : "visibility"}</span></button>
