@@ -3229,18 +3229,20 @@ function openNoteReadModal(note) {
   floatWin.classList.remove("hidden");
 }
 
-function noteCardHtml(n) {
-  const categoria = n.categoria || "lore";
-  const isLong = n.texto.length > 500;
+function noteRowHtml(n, shelfKey) {
+  const categoria = shelfKey === "aventura" ? "aventura" : n.categoria || "lore";
+  const shared = isTextShared("nota", n.id);
   return `
-    <div class="note-card note-card-${categoria}" data-note-id="${n.id}">
-      <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
-      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyText(n.texto)}</p>
-      <div class="session-card-actions">
-        ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
-        <button class="btn btn-ghost icon-only" data-share-text="nota" data-share-id="${n.id}" title="${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}"><span class="icon">${isTextShared("nota", n.id) ? "visibility_off" : "visibility"}</span></button>
+    <div class="note-row note-row-${categoria}" data-note-id="${n.id}">
+      <button type="button" class="note-row-main" data-read-note="${n.id}">
+        <span class="icon">${shelfKey === "aventura" ? "bookmark" : "description"}</span>
+        <span class="note-row-title">${escapeHtml(n.titulo)}</span>
+        <span class="icon note-row-chevron">chevron_right</span>
+      </button>
+      <div class="note-row-actions">
+        <button class="btn btn-ghost icon-only" data-share-text="nota" data-share-id="${n.id}" title="${shared ? "Esconder" : "Mostrar aos jogadores"}"><span class="icon">${shared ? "visibility_off" : "visibility"}</span></button>
         <button class="btn btn-ghost icon-only" data-edit-note="${n.id}" title="Editar"><span class="icon">edit</span></button>
-        <button class="btn btn-danger icon-only" style="margin-left:auto;" data-delete-note="${n.id}" title="Excluir"><span class="icon">delete</span></button>
+        <button class="btn btn-danger icon-only" data-delete-note="${n.id}" title="Excluir"><span class="icon">delete</span></button>
       </div>
     </div>`;
 }
@@ -3260,40 +3262,15 @@ function renderNotes() {
   }
 
   list.innerHTML = grouped
-    .map(({ shelf, notes }) => {
-      if (shelf.key === "aventura") {
-        return `
-        <div class="note-shelf">
-          <div class="note-shelf-title"><span class="icon">${shelf.icon}</span> ${shelf.label}</div>
-          <div class="note-aventura-list">
-            ${notes
-              .map(
-                (n) => `
-              <button type="button" class="note-aventura-item" data-read-note="${n.id}">
-                <span class="icon">bookmark</span>
-                <span class="note-aventura-item-title">${escapeHtml(n.titulo)}</span>
-                <span class="icon">chevron_right</span>
-              </button>`
-              )
-              .join("")}
-          </div>
-        </div>`;
-      }
-      return `
+    .map(
+      ({ shelf, notes }) => `
       <div class="note-shelf">
         <div class="note-shelf-title"><span class="icon">${shelf.icon}</span> ${shelf.label}</div>
-        <div class="note-grid">${notes.map(noteCardHtml).join("")}</div>
-      </div>`;
-    })
+        <div class="note-row-list">${notes.map((n) => noteRowHtml(n, shelf.key)).join("")}</div>
+      </div>`
+    )
     .join("");
 
-  list.querySelectorAll("[data-toggle-note]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const p = btn.closest(".note-card").querySelector(".session-text");
-      const collapsed = p.classList.toggle("note-collapsed");
-      btn.textContent = collapsed ? "Ler mais" : "Ler menos";
-    })
-  );
   list.querySelectorAll("[data-read-note]").forEach((btn) =>
     btn.addEventListener("click", () => openNoteReadModal(state.notes.find((n) => n.id === btn.dataset.readNote)))
   );

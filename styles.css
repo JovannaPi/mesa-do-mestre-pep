@@ -555,7 +555,8 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .session-card-actions .btn-ghost { color: #8a6a3f; }
 .session-card-actions .btn-ghost:hover { background: rgba(138, 106, 63, 0.1); }
 
-/* Notas & Lore — mural em grid, com cor por categoria */
+/* Notas & Lore — todas as prateleiras usam a mesma lista compacta: clica no título,
+   abre na janela flutuante de leitura. Nada de cards expandidos ocupando a tela. */
 .note-shelves { display: flex; flex-direction: column; gap: 30px; }
 .note-shelf-title {
   display: flex; align-items: center; gap: 8px;
@@ -563,51 +564,32 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   color: var(--accent-deep); margin-bottom: 12px;
   padding-bottom: 6px; border-bottom: 2px solid var(--border-soft);
 }
-.note-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-  align-items: start;
+.note-row-list { display: flex; flex-direction: column; gap: 8px; }
+.note-row {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--bg-card); border: 2px solid var(--border); border-left: 6px solid var(--accent-strong);
+  border-radius: 14px;
 }
-.note-aventura-list { display: flex; flex-direction: column; gap: 8px; }
-.note-aventura-item {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg-card); border: 2px solid var(--border); border-radius: 14px;
-  padding: 12px 16px; cursor: pointer; text-align: left; font-family: inherit;
-  color: var(--text); font-weight: 600; font-size: 0.98rem;
+.note-row-main {
+  flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0;
+  background: none; border: none; padding: 12px 14px; cursor: pointer;
+  text-align: left; font-family: inherit; color: var(--text); font-weight: 600; font-size: 0.98rem;
 }
-.note-aventura-item:hover { border-color: var(--accent-strong); background: var(--bg-deep); }
-.note-aventura-item .icon:first-child { color: var(--accent-strong); font-size: 1.2rem; }
-.note-aventura-item-title { flex: 1; }
-.note-aventura-item .icon:last-child { color: var(--text-dim); }
+.note-row-main .icon:first-child { color: var(--accent-strong); font-size: 1.2rem; }
+.note-row-title { flex: 1; min-width: 0; overflow-wrap: break-word; }
+.note-row-chevron { color: var(--text-dim); }
+.note-row:hover { border-color: var(--accent-strong); background: var(--bg-deep); }
+.note-row-actions { display: flex; gap: 2px; padding-right: 8px; flex-shrink: 0; }
 .btn.icon-only { padding: 7px; }
 .btn.icon-only .icon { font-size: 1.05rem; }
-.note-card {
-  background: linear-gradient(160deg, var(--parchment) 0%, #fbeed8 100%);
-  color: var(--parchment-text);
-  border: 2px solid #eeddb8;
-  border-left: 6px solid var(--accent-strong);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-}
-.note-card .session-card-actions { margin-top: auto; padding-top: 12px; }
 /* Regras: mecânica fria do jogo — tom azulado/acinzentado */
-.note-card-regras {
-  background: linear-gradient(160deg, #eef2f8 0%, #e2e9f3 100%);
-  color: #2f3d52;
-  border-color: #ccd8e8;
-  border-left-color: #7a92b8;
-}
-.note-card-regras .session-card-actions .btn-ghost { color: #445a7d; }
-.note-card-regras .session-text { color: #3a4a63; }
+.note-row-regras { border-left-color: #7a92b8; }
+.note-row-regras .note-row-main .icon:first-child { color: #5d7aa8; }
+/* Achados: tom dourado, de tesouro */
+.note-row-achados { border-left-color: #c99a3a; }
+.note-row-achados .note-row-main .icon:first-child { color: #b4841f; }
 /* Aventura: destaque roxo/rosa pros blocos principais da narração */
-.note-card-aventura {
-  border-left-color: var(--accent-deep);
-  box-shadow: 0 6px 20px rgba(156, 63, 131, 0.22);
-}
+.note-row-aventura { border-left-color: var(--accent-deep); }
 
 .campanha-layout {
   display: grid;
