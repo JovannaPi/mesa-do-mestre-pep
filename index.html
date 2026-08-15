@@ -537,17 +537,23 @@
   <textarea id="scratchpad-text" class="input" rows="6" placeholder="Anote qualquer coisa rápida durante a sessão — nome de um NPC improvisado, uma pergunta pendente..." style="resize:vertical; font-family:inherit;"></textarea>
 </div>
 
-<!-- MODAL GLOSSARY -->
-<div id="modal-glossary" class="modal-overlay hidden">
-  <div class="modal">
-    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
-    <h2 id="glossary-title">Poder</h2>
-    <p id="glossary-body" class="field-hint" style="font-size:1rem; color: var(--text);"></p>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-ghost js-close-modal">Fechar</button>
-    </div>
+<!-- JANELA FLUTUANTE DE LEITURA (Aventura Completa) -->
+<div id="floating-note-read" class="floating-window hidden">
+  <div class="floating-header" id="floating-note-header">
+    <span class="icon" style="color: var(--royal-gold);">menu_book</span>
+    <h2 id="note-read-title">Título da Aventura</h2>
+    
+    <!-- O botão de Editar voltou, pequenininho e charmoso no cabeçalho -->
+    <button type="button" class="btn-ghost icon-only" id="btn-edit-from-read" style="padding: 4px; margin-right: 8px;" title="Editar">
+      <span class="icon">edit</span>
+    </button>
+    <button type="button" class="btn-close-modal" id="btn-close-floating" style="position: static; padding: 0;">&times;</button>
   </div>
+  <div id="note-read-body" class="floating-body"></div>
 </div>
+
+<!-- TOOLTIP FLUTUANTE PARA MAGIAS E REGRAS (Aparece em cima da palavra) -->
+<div id="tooltip-pop" class="tooltip-pop hidden"></div>
 
 <!-- MODAL FICHA RÁPIDA DO COMBATENTE -->
 <div id="modal-combatant-view" class="modal-overlay hidden">
@@ -561,18 +567,6 @@
   </div>
 </div>
 
-<!-- MODAL LEITURA (Aventura completa) -->
-<div id="modal-note-read" class="modal-overlay hidden">
-  <div class="modal modal-reading">
-    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
-    <h2 id="note-read-title">Título</h2>
-    <div id="note-read-body" class="note-read-body"></div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-ghost" id="btn-edit-from-read">Editar</button>
-      <button type="button" class="btn btn-ghost js-close-modal">Fechar</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL MAP PICKER -->
 <div id="modal-map-picker" class="modal-overlay hidden">
