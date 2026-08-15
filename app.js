@@ -76,6 +76,8 @@ function defaultState() {
     seededItems: false,
     seededFullText: false,
     seededExtras2: false,
+    seededMonstros2: false,
+    seededBaileENotas: false,
   };
 }
 
@@ -505,7 +507,7 @@ function seedItems() {
     item("Prendedor Borboleta", "(1 DD)", "Recompensa da Rainha Gardênia — derrotar o Rei Rato",
       "Preso no cabelo, faz brotar asas temporárias de fada pequena — voa como o feitiço Flutuar. Recarrega ao pregar uma peça/brincadeira enquanto o usa.", ["vale das bagas", "voo"]),
     item("Varinha de Colher de Mel", "(2 DD)", "Vale das Bagas",
-      "Lança Hipnotizar, É Meu! e Amarrar. Recarrega sendo tratada com Geleia Real de uma abelha rainha.", ["vale das bagas", "varinha"]),
+      "Lança Hipnotizar, É Meu! e Enredar. Recarrega sendo tratada com Geleia Real de uma abelha rainha.", ["vale das bagas", "varinha"]),
     item("Escudo Hélice", "(2)", "Depósito de Armas — Ninho do Rei Rato (Sala 4)",
       "Vantagem em Salvamentos contra magia. Desativa quaisquer outros itens mágicos que você carregue e anula magias benéficas recebidas depois de equipado.", ["vale das bagas", "escudo"]),
     item("Corvo Mensageiro", "—", "Reconciliar Cirilla e Cirillo (Baile Eterno)",
@@ -1022,11 +1024,263 @@ function seedExtraLoot() {
   });
 }
 
+// Terceira leva: monstros do bestiário que faltavam no banco (identificados a partir
+// do livro de regras). Sob flag própria pra não duplicar em quem já tinha os dados antigos.
+function seedMoreMonsters() {
+  if (state.seededMonstros2) return;
+  state.seededMonstros2 = true;
+
+  const monster = (nome, determinacao, graca, astucia, coracao, salvamento, armadura, tags, notas) => ({
+    id: uid(),
+    nome,
+    tipo: "Monstro",
+    determinacao,
+    graca,
+    astucia,
+    coracao,
+    salvamento,
+    armadura,
+    tags,
+    notas,
+  });
+
+  const extraMonsters = [
+    monster("Utensílio de Cozinha Animado", 4, 6, 2, 2, 4, 0, ["conjurada"],
+      "Cortar (d6) ou Golpear (d4). Uma Princesa com Magia da Cozinha pode comandar um Utensílio de Cozinha Animado com um teste de Astúcia bem-sucedido."),
+    monster("Biscoitinha, a Cadelinha Encantada", 6, 10, 8, 4, 8, 0, ["cervovale", "padaria", "companheira"],
+      "Mordida (d4). A cadelinha desaparecida de Geraldo Silva, da padaria — achá-la é uma das missões dele."),
+    monster("Cervo Amaldiçoado", 6, 10, 6, 4, 6, 0, ["cervovale", "bosque emaranhado"],
+      "Chifres (d4, ou d10 quando pega impulso correndo). Coberto de protuberâncias pontiagudas de açúcar cristalizado. A origem do nome de Cervovale."),
+    monster("Unicórnio de Algodão-Doce", 10, 16, 12, 10, 16, 1, ["vale das bagas", "fada"],
+      "Investida (d10). Suscetível a derretimento — ataques baseados em água ignoram a Armadura. 3 Dados de Dom — pode lançar Jato de Purpurina, Bolha e Restauração."),
+    monster("Convidada do Baile Eterno", 8, 14, 12, 6, 14, 0, ["baile eterno"],
+      "Desarmada (1) ou Rapieira (d8). 3 Dados de Dom — pode lançar Puf!, Enredar, Dardo Mágico e Bolha."),
+    monster("Aranha Gigante de Algodão-Doce", 10, 8, 8, 8, 10, 1, ["bosque emaranhado"],
+      "Mordida (d8). Pode lançar uma rajada de teias como uma Ação — agarram quem for pego no jato e têm chance de grudar em quem passar por elas depois. O jato recarrega quando a aranha Descansa."),
+    monster("Vulto Sombrio", 6, 14, 14, 4, 12, 0, ["torre da bruxa"],
+      "Dedos (d6, ignora Armadura). Ser etéreo e misterioso que habita lugares profundos e escuros; agarra sorrateiramente e arrasta pra as profundezas. Se Ferida por um Vulto Sombrio, teste Astúcia ou sofra a Maldição Melancolia."),
+    monster("Trepadeira de Alcaçuz", 8, 4, 2, 2, 6, 0, ["torre da bruxa"],
+      "Chicote de Alcaçuz (d4). Tenta agarrar e estrangular suas vítimas."),
+    monster("Serpente de Alcaçuz", 6, 10, 8, 2, 8, 0, ["torre da bruxa"],
+      "Mordida (d12). Se Ferida por esta serpente, sofra a Maldição do Paladar Infantil."),
+    monster("Abelha Rainha", 8, 10, 10, 8, 8, 1, ["vale das bagas"],
+      "2 Dados de Dom — pode lançar Hipnotizar. Governa o Enxame de Abelhas."),
+    monster("Perseguidor Fungo", 8, 6, 6, 2, 8, 0, ["bosque emaranhado", "círculo de cogumelos"],
+      "Cabeçada (d4). Uma vez por dia pode liberar uma nuvem de esporos nocivos — todas Por Perto testam Determinação; falha = efeito de esporo colorido (Vermelho/Laranja/Amarelo = Cansada; Verde/Azul = Atordoada; Anil/Violeta = Confusa)."),
+  ];
+
+  extraMonsters.forEach((m) => {
+    if (!state.npcs.some((n) => n.nome === m.nome)) state.npcs.push(m);
+  });
+
+  const extraItems = [
+    { nome: "A Cauda do Rei Rato", custo: "—", origem: "Derrotar o Rei Rato (Vale das Bagas)",
+      descricao: "Uma cauda rosada, vermiforme, com tufos de pelo emaranhado ainda grudados, cortada do monstruoso Rei Rato. Um troféu enorme enquanto se está do tamanho de uma fada pequena, mas cabe no bolso quando se é humana. Enquanto a carrega, todos os roedores a temem instintivamente.",
+      tags: ["vale das bagas", "objetivo principal"] },
+    { nome: "Botas Andarilhas", custo: "(1 se carregada)", origem: "Livro básico — itens mágicos",
+      descricao: "Enquanto usa estas botas, forçar a marcha durante viagens não causa Cansaço. Quando carregadas, basta bater os calcanhares uma na outra e testar Astúcia para tentar se transportar instantaneamente, junto com quaisquer amigas de mãos dadas, para um local familiar escolhido. Falha coloca vocês num local aleatório num raio de 10km do destino. Transportar-se para sua própria casa é sempre bem-sucedido automaticamente. Recarregam andando 100km em terreno selvagem enquanto as usa.",
+      tags: ["item mágico", "viagem"] },
+    { nome: "Máscara de Baile", custo: "—", origem: "Hannah Falcão",
+      descricao: "Esta máscara feita pelas fadas garante anonimato total quando usada. Nem seus próprios pais a reconheceriam.",
+      tags: ["baile eterno"] },
+  ];
+  extraItems.forEach((i) => {
+    if (!state.items.some((x) => x.nome === i.nome)) state.items.push({ id: uid(), ...i });
+  });
+
+  const complicationsNote = {
+    titulo: "Tabelas de Complicação (d6, por local)",
+    categoria: "regras",
+    texto:
+      "Role quando fizer sentido narrativamente (ex: ao Gastar Tempo explorando ou viajando por uma área).\n\n" +
+      "BOSQUE EMARANHADO (DIA)\n" +
+      "1. Vocês são enfeitiçadas por um cheiro doce e inebriante. Aonde ele leva?\n" +
+      "2. Um Ratel raivoso salta da folhagem mais próxima.\n" +
+      "3. Um cervo agitado, coberto de dolorosas protuberâncias de açúcar cristalizado, vem direto na direção de vocês.\n" +
+      "4. Vocês acidentalmente tropeçam numa armadilha de caça esquecida!\n" +
+      "5. Uma fada pequena tenta surrupiar algo brilhante que alguém do grupo está segurando.\n" +
+      "6. Isso não é uma poça — é uma Gosma de Melaço!\n\n" +
+      "BOSQUE EMARANHADO (NOITE)\n" +
+      "1. Suas pernas ficam enroscadas em Trepadeiras de Alcaçuz.\n" +
+      "2. Uma teia gigante de algodão-doce bloqueia o caminho.\n" +
+      "3. A escuridão é tanta e o bosque tão denso — vocês acham que perderam a trilha.\n" +
+      "4. Vocês veem o que parecem ser pegadas de cachorro, mas não gostam nada da direção pra onde elas levam.\n" +
+      "5. Sussurros sinistros enchem os ouvidos de vocês e um cheiro doce e nauseante toma conta do ar.\n" +
+      "6. Esse uivo é tão penetrante… e está perto.\n\n" +
+      "VALE DAS BAGAS\n" +
+      "1. Um enxame de abelhas loucas por mel aparece!\n" +
+      "2. Uma Serpente Mortal Enorme abre caminho através da névoa.\n" +
+      "3. Uma fada pequena charlatã tenta barganhar com vocês, oferecendo uma poção inútil.\n" +
+      "4. A fada pequena com quem vocês precisam falar teve uma noite particularmente ruim e se recusa a conversar até tomar sua bebida favorita.\n" +
+      "5. Começa a chover. FORTE.\n" +
+      "6. Uma fada pequena desconfiada ACHA que vocês são as culpadas pela Maldição Doce.\n\n" +
+      "NINHO DO REI RATO\n" +
+      "1. O túnel em que vocês estão começa a tremer. É um desabamento!\n" +
+      "2. O que é esse barulho de assobio? Será que uma cobra entrou aqui?\n" +
+      "3. Sua fonte de luz se apaga e vocês ficam completamente no escuro.\n" +
+      "4. O cheiro forte e denso de mel e podridão está começando a deixar vocês Atordoadas.\n" +
+      "5. Vocês ouvem uma voz chamando por socorro. Há mais alguém aqui?\n" +
+      "6. Vocês tropeçam numa das armadilhas antipeste das fadas pequenas.\n\n" +
+      "BAILE ETERNO\n" +
+      "1. Uma fada furiosa confunde vocês com outra pessoa e exige um duelo.\n" +
+      "2. Um nobre começa a flertar com vocês pra provocar ciúmes em seu par. Está funcionando...\n" +
+      "3. Vocês tropeçam e derrubam a bebida de uma convidada muito elegante.\n" +
+      "4. Finnegan aparece e começa a causar travessuras com sua varinha mágica.\n" +
+      "5. Uma convidada extremamente entediante puxa conversa e não deixa vocês saírem.\n" +
+      "6. Um item especial de um nobre desapareceu, e ele acusa vocês de terem roubado!\n\n" +
+      "TORRE DA BRUXA\n" +
+      "1. Um líquido desconhecido se derrama em você!\n" +
+      "2. Você dá um passo em falso e o chão começa a tremer.\n" +
+      "3. Um objeto próximo ganha vida e começa a atacá-la!\n" +
+      "4. Um de seus itens mágicos cai sob influência de Dulcineia.\n" +
+      "5. O familiar da bruxa entra voando e rouba um item do grupo.\n" +
+      "6. São passos de armadura? O Cavaleiro de Chocolate Amargo está aqui?",
+  };
+  if (!state.notes.some((n) => n.titulo === complicationsNote.titulo)) {
+    state.notes.push({ id: uid(), titulo: complicationsNote.titulo, texto: complicationsNote.texto, categoria: complicationsNote.categoria });
+  }
+}
+
+// Quarta leva: elenco do Baile Eterno (só existiam no texto corrido, sem ficha pra
+// consulta rápida), regras/relógios de fundo que faltavam (Dado de Maldição, progressão
+// de nível), tabelas e geradores do livro, e pequenos ajustes em dados já existentes.
+function seedBaileENotas() {
+  if (state.seededBaileENotas) return;
+  state.seededBaileENotas = true;
+
+  const npc = (nome, determinacao, graca, astucia, coracao, salvamento, armadura, tags, notas) => ({
+    id: uid(), nome, tipo: "NPC", determinacao, graca, astucia, coracao, salvamento, armadura, tags, notas,
+  });
+
+  const newNpcs = [
+    npc("Élvar", 10, 10, 14, 8, 12, 0, ["baile eterno", "portão"],
+      "Esmerado, Perspicaz, Indiferente. Guarda o portão do Baile Eterno e decide o tema do traje exigido para entrar."),
+    npc("Príncipe Aurélio", 10, 16, 10, 8, 14, 0, ["baile eterno", "corte do sol e do céu", "nobre"],
+      "Charmoso, Reservado. Da Corte do Sol e do Céu. Secretamente apaixonado por Penélope; tem medo de aranhas; usa uma ilusão para parecer mais musculoso do que é."),
+    npc("Senhora Amaris", 10, 14, 12, 8, 14, 0, ["baile eterno", "corte da lua e das estrelas", "nobre"],
+      "Bondosa, Sagaz, Modesta. Da Corte da Lua e das Estrelas."),
+    npc("Penélope", 9, 12, 11, 7, 12, 0, ["baile eterno", "criada"],
+      "Criada da Senhora Amaris. Secretamente namorando o Príncipe Aurélio às escondidas."),
+    npc("Cirilla", 8, 13, 10, 6, 12, 0, ["baile eterno", "gêmea"],
+      "Gêmea de Cirillo (marca de nascença em forma de estrela no olho direito). As duas estão brigando por causa de looks combinando."),
+    npc("Cirillo", 8, 13, 10, 6, 12, 0, ["baile eterno", "gêmeo"],
+      "Gêmeo de Cirilla (marca de nascença em forma de estrela no olho esquerdo). Os dois estão brigando por causa de looks combinando."),
+    npc("Arturo, o Trovador", 9, 15, 11, 8, 13, 0, ["baile eterno", "trovador"],
+      "Curioso, Teatral, Jovial. Dá a Harpa Cantacora em troca de uma boa história para contar."),
+    npc("Ilayda", 10, 13, 9, 8, 13, 0, ["baile eterno", "nobre"],
+      "Egoísta, Esnobe, Impulsiva. Mantém Élton (marido de Maya) cativo por vaidade/capricho."),
+    npc("Élton Élis", 8, 8, 8, 6, 10, 0, ["baile eterno", "cativo"],
+      "Marido desaparecido de Maya Élis. Atordoado, Confuso, Saudoso — mantido cativo por Ilayda."),
+    npc("Duquesa Jacinda", 12, 14, 14, 10, 16, 0, ["baile eterno", "corte da sombra e da melancolia", "nobre"],
+      "Maldosa, Crítica, Soberba. Da Corte da Sombra e da Melancolia. Dona do brinco Brincalhetes Sussurrantes."),
+    npc("Senhora Neves", 11, 12, 12, 9, 14, 0, ["baile eterno", "corte da geada e do pinheiro", "nobre"],
+      "Reservada, Dedicada, Nostálgica. Da Corte da Geada e do Pinheiro. Tem um fraco secreto por presentes feitos à mão."),
+    npc("Finnegan", 6, 14, 16, 6, 16, 0, ["baile eterno", "travessura"],
+      "Leviano, Infantil, Impulsivo — aparenta uns 10 anos. Prendeu Ashkan numa pedra no Círculo de Cogumelos. Dono da Varinha do Capricho."),
+    npc("Fazendeiro Listra-d'Olmo", 12, 8, 9, 10, 10, 0, ["vale das bagas", "fazendeiro"],
+      "Dedicado, Modesto, Franco. Machucou a asa. Dá acesso às ferramentas para entrar no Ninho do Rei Rato; recompensa com Bolos de Mel e o Prendedor Borboleta."),
+  ];
+  newNpcs.forEach((n) => {
+    if (!state.npcs.some((x) => x.nome === n.nome)) state.npcs.push(n);
+  });
+
+  const item = (nome, custo, origem, descricao, tags) => ({ id: uid(), nome, custo, origem, descricao, tags });
+
+  const newItems = [
+    // Poções à venda na loja de Rosa (Cervovale)
+    item("Poção de Cura Comum", "50 pp", "Loja de Rosa (compra)", "Cura ferimentos leves.", ["cervovale", "poção", "compra"]),
+    item("Poção de Cura Especial", "100 pp", "Loja de Rosa (compra) — falta um ingrediente", "Cura mais do que a versão comum. Rosa ainda não tem o ingrediente necessário pra fazer mais.", ["cervovale", "poção", "compra"]),
+    item("Coragem Líquida", "100 pp", "Loja de Rosa (compra)", "Concede coragem/resistência a medo por um tempo.", ["cervovale", "poção", "compra"]),
+    item("Acorda Acorda", "100 pp", "Loja de Rosa (compra) — falta um ingrediente", "Afasta o sono/cansaço. Rosa ainda não tem o ingrediente necessário pra fazer mais.", ["cervovale", "poção", "compra"]),
+    item("Acuidade Felina", "150 pp", "Loja de Rosa (compra) — falta um ingrediente", "Aguça os sentidos temporariamente.", ["cervovale", "poção", "compra"]),
+    item("Vínculo Mental", "200 pp", "Loja de Rosa (compra)", "Permite comunicação mental temporária entre quem bebe.", ["cervovale", "poção", "compra"]),
+    item("Visão de Túnel", "200 pp", "Loja de Rosa (compra) — falta um ingrediente", "Foco extremo, ignorando distrações — mas também periféricos.", ["cervovale", "poção", "compra"]),
+    item("Estátua Viva", "200 pp", "Loja de Rosa (compra)", "Transforma temporariamente quem bebe em algo com propriedades de pedra.", ["cervovale", "poção", "compra"]),
+    item("Beijo da Morte", "150 pp", "Loja de Rosa (compra) — falta um ingrediente", "Poção perigosa de efeito extremo — usar com cautela.", ["cervovale", "poção", "compra"]),
+    item("Névoa da Memória", "200 pp", "Loja de Rosa (compra)", "Apaga ou embaça lembranças recentes de quem bebe.", ["cervovale", "poção", "compra"]),
+    // Aquisições da ferraria de Maya (Cervovale)
+    item("Espada (ferraria)", "(1), d8 de dano — 20 pp", "Ferraria de Maya (compra)", "Espada comum à venda na ferraria.", ["cervovale", "arma", "compra"]),
+    item("Adaga (ferraria)", "(1), d6 de dano — 10 pp", "Ferraria de Maya (compra)", "Adaga comum à venda na ferraria.", ["cervovale", "arma", "compra"]),
+    item("Machado de Batalha", "(2), d10 de dano — 20 pp", "Ferraria de Maya (compra)", "Machado pesado à venda na ferraria.", ["cervovale", "arma", "compra"]),
+    item("Frigideira", "(1), d4 de dano — 10 pp", "Ferraria de Maya (compra)", "Serve como arma improvisada e como panela.", ["cervovale", "arma", "compra"]),
+    item("Mangual", "(1), d6 de dano — 20 pp", "Ferraria de Maya (compra)", "Arma de corrente à venda na ferraria.", ["cervovale", "arma", "compra"]),
+    item("Escudo (ferraria)", "(2) — 30 pp", "Ferraria de Maya (compra)", "Escudo comum à venda na ferraria.", ["cervovale", "equipamento", "compra"]),
+    item("Armadura Pesada", "(2) — 50 pp", "Ferraria de Maya (compra)", "Armadura pesada à venda na ferraria.", ["cervovale", "equipamento", "compra"]),
+    // Itens maravilhosos genéricos (livro básico) que faltavam
+    item("Bolotas Robustas", "—", "Itens maravilhosos (livro básico)", "Bolotas que crescem rapidamente em algo útil quando plantadas — detalhes a critério da Mestra.", ["item maravilhoso"]),
+    item("Lamparina Reveladora", "—", "Itens maravilhosos (livro básico)", "Sua luz revela algo escondido (ilusões, portas secretas, magia) quando aceso.", ["item maravilhoso"]),
+    item("Pó de Fada", "—", "Itens maravilhosos (livro básico)", "Pó mágico com um pequeno efeito feérico — detalhes a critério da Mestra.", ["item maravilhoso"]),
+    item("Cola Excelente", "—", "Itens maravilhosos (livro básico)", "Gruda quase qualquer coisa permanentemente.", ["item maravilhoso"]),
+    item("Feijões Mágicos", "—", "Itens maravilhosos (livro básico)", "Ao plantar, crescem em algo definido por uma tabela d6 própria — a critério da Mestra.", ["item maravilhoso"]),
+    item("Pulseiras da Amizade", "—", "Itens maravilhosos (livro básico)", "Par de pulseiras que ligam duas pessoas de alguma forma mágica menor — detalhes a critério da Mestra.", ["item maravilhoso"]),
+    item("Corda de Escalada (genérica)", "—", "Itens maravilhosos (livro básico)", "Corda comum de boa qualidade (não confundir com a Corda de Escalada Encantada de Selene).", ["item maravilhoso"]),
+    // Armas encantadas genéricas (livro básico) que faltavam
+    item("Espada dos Antepassados", "(1 DD)", "Armas encantadas (livro básico)", "Ao gastar o Dado de Dom, invoca o espírito de um ancestral para ajudar em combate.", ["item mágico", "arma"]),
+    item("Lâmina Vorpal", "d10 de dano", "Armas encantadas (livro básico)", "Acerto crítico em 1 ou 2 (causa d10+10 de dano). Tem 3 em 6 de chance de se estilhaçar após um crítico.", ["item mágico", "arma"]),
+    item("Espada Cantante", "(1 DD)", "Armas encantadas (livro básico)", "Ao gastar o Dado de Dom, dá vantagem em testes para todo o grupo por um tempo.", ["item mágico", "arma"]),
+  ];
+  newItems.forEach((i) => {
+    if (!state.items.some((x) => x.nome === i.nome)) state.items.push(i);
+  });
+
+  const note = (titulo, categoria, texto) => ({ id: uid(), titulo, categoria, texto });
+
+  const newNotes = [
+    note("O Dado de Maldição (Cervovale)", "regras",
+      "Relógio de fundo da campanha em Cervovale: role um Dado de Maldição uma vez por dia (começa em d8). Se tirar 1, mais um morador da vila sucumbe completamente à maldição (vira doce por completo) E o dado encolhe um degrau (d8 → d6 → d4), ficando em d4 dali em diante. Use isso pra criar pressão de tempo — quanto mais a Mestra deixa passar dias sem as Princesas agirem, maior a chance (e mais rápido o relógio anda) da vila piorar."),
+    note("Progressão de nível — Doce Vingança", "regras",
+      "Nesta aventura, as Princesas sobem de nível cada vez que recuperam um dos três itens ligados à maldição de Dulcineia (a Cauda do Rei Rato, o Anel do Rei-Elfo, o Pingente Rouba-Alma) — não seguindo XP ou marcos genéricos do livro básico.\n\nAo subir de nível, uma Princesa ganha: a próxima habilidade do seu Dom, +1 no máximo de Dados de Dom, +d4 no Coração máximo, +1 no máximo de Dados de Coração, e pode tentar rerrolar uma Virtude (mantendo o novo valor só se for maior)."),
+    note("Recompensas iniciais de Teodoro (d4)", "achados",
+      "Antes mesmo da missão de levantar o moral da vila, Teodoro oferece uma recompensa só por aceitar ajudar Cervovale — role d4 ou escolha:\n1. 400 pp\n2. A escritura de um chalé\n3. Uma apresentação a um monarca\n4. Um artefato misterioso"),
+    note("Terceiro gancho — Aparições Estranhas", "lore",
+      "Gancho alternativo (além do grito na floresta e de Doces Sonhos): uma nobre contrata o grupo para investigar avistamentos estranhos de criaturas de doce nas redondezas — um jeito de puxar Princesas mais ligadas à nobreza/alta sociedade para dentro da aventura."),
+    note("Itens Quebrados de Zeca (d6)", "achados",
+      "Objetos que Zeca pede para consertar em troca da Luneta Feérica — role d6 ou escolha:\n1. Roca de fiar\n2. Relógio de pêndulo\n3. Tapeçaria rasgada\n4. Alaúde sem cordas\n5. Botas de couro estragadas\n6. Tabuleiro de xadrez incompleto"),
+    note("Gerador de Fada Alta (Lago da Saudade Eterna)", "achados",
+      "Pra gerar uma fada alta rapidamente:\n\nTRAÇO FÍSICO (d6)\n1. Cabelo que muda de cor com o humor\n2. Pinta em forma de coração\n3. Língua bifurcada\n4. Criatura peluda enrolada no pescoço\n5. Um braço de cristal\n6. Tatuagem de aranha viva\n\nNOME (d6) — combine com um sobrenome feérico à sua escolha, ou use como primeiro nome direto: role e adapte ao gênero/personalidade da fada."),
+    note("Animais Companheiros do Bosque Emaranhado (d20)", "achados",
+      "Gerador rápido de animal companheiro (Amizade Poderosa ou similar) — role d20:\n1. Cotovia — Canto Brilhante\n2. Raposa — Focinho Molhado\n3. Urso Pardo — Sono Pesado\n4. Pica-pau — Bico de Pederneira\n5. Víbora — Escama da Perdição\n6. Coruja — Olhos Estrelados\n7-20. (mais opções no livro básico — complete com nomes temáticos parecidos quando precisar de mais variedade)"),
+    note("Nomes de Convidadas do Baile Eterno (d6)", "achados",
+      "Pra nomear rapidamente uma convidada genérica do baile — role d6: Luncina, Baco, Safira, Tristrão, Ozias, Calíope."),
+    note("Frases exatas da aventura", "lore",
+      "ENIGMA DO ESPELHO MALÉFICO (texto completo do poema): \"Para quebrar a maldição e ter êxito... ou verão que a vingança é doce como canapés.\" (verso completo no livro — use pra ler em voz alta na hora certa.)\n\nMALDIÇÃO FINAL DE DULCINEIA (ao morrer/ser derrotada, cite palavra por palavra): \"Minha magia vai infectar a terra...\""),
+    note("Itens na Teia de Aranha (d4) — Caverna opcional", "achados",
+      "Loot da caverna com a Aranha Gigante de Algodão-Doce — role d4:\n1. Mochila com uma poção de Vínculo Mental + 20 pp\n2. Martelo de Guerra (2)(d10) que emite uma luz fraca\n3. Pergaminho/selo com o feitiço Puf!\n4. Bolsa com odres vazios e rações mofadas"),
+  ];
+  newNotes.forEach((n) => {
+    if (!state.notes.some((x) => x.titulo === n.titulo)) state.notes.push(n);
+  });
+
+  // Ajustes em dados que já existiam (origem errada / lore faltando) — só aplica se o
+  // texto novo ainda não estiver lá, pra nunca duplicar em quem já recebeu essa correção.
+  const botasAndarilhas = state.items.find((i) => i.nome === "Botas Andarilhas");
+  if (botasAndarilhas && botasAndarilhas.origem === "Livro básico — itens mágicos") {
+    botasAndarilhas.origem = "Recompensa de Connie Oriente — ajudar a mandar notícias pra família dela";
+  }
+
+  const selene = state.npcs.find((n) => n.nome === "Selene (Lobo Mau)");
+  if (selene && !selene.notas.includes("Agilidade Feérica")) {
+    selene.notas += " Tem todas as habilidades de uma Princesa de Agilidade Feérica de Nível 3. Infiltrou-se na torre pelo esgoto antes de atacar, quando a bruxa estava fora.";
+  }
+
+  const hannah = state.npcs.find((n) => n.nome === "Hannah Falcão");
+  if (hannah && !hannah.notas.includes("Acorda Acorda")) {
+    hannah.notas += " Missão: repor o estoque de Acorda Acorda -> recompensa: Máscara de Baile.";
+  }
+
+  const connie = state.npcs.find((n) => n.nome === "Constança \"Connie\" Oriente");
+  if (connie && !connie.notas.includes("Botas Andarilhas")) {
+    connie.notas += " Missão: mandar notícias para a família dela -> recompensa: Botas Andarilhas.";
+  }
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
 seedFullAdventureText();
 seedExtraLoot();
+seedMoreMonsters();
+seedBaileENotas();
 saveState();
 
 // ---------- Tabs ----------
@@ -1171,27 +1425,6 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ==================== Alertas Visuais (Toasts) ====================
-function showToast(message, type = "info", icon = "info") {
-  let container = document.getElementById("toast-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "toast-container";
-    container.className = "toast-container";
-    document.body.appendChild(container);
-  }
-  const toast = document.createElement("div");
-  toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<span class="icon">${icon}</span> ${escapeHtml(message)}`;
-  container.appendChild(toast);
-  
-  // Some sozinho depois de 3 segundos
-  setTimeout(() => {
-    toast.classList.add("toast-leave");
-    toast.addEventListener("animationend", () => toast.remove());
-  }, 3000);
-}
-
 // ==================== Glossário de magias, habilidades e traços ====================
 const GLOSSARY = {
   "Puf!": "Alcance [DADOS]. Teleporte-se em uma nuvem de fumaça para um lugar que você consiga ver. Pode ser lançada como uma Reação.",
@@ -1222,107 +1455,43 @@ const GLOSSARY = {
   "Rugido": "Você solta um rugido bestial. [SOMA] criaturas que possam ouvi-la devem fazer um Salvamento ou ficam aterrorizadas por [DADOS] rodadas.",
   "Farejar": "Sente até o mais fraco traço de cheiro Por Perto; reconhece indivíduos e há quanto tempo estiveram no local.",
   "Forma Selvagem": "Transforma-se num animal já visto por até [DADOS] x 10 minutos, com [SOMA] PC nessa forma.",
+  "Virar Sapo": "Alcance Por Perto. [DADOS] objetos inanimados se transformam em sapo por [SOMA] horas.",
+  "Encolher": "Alcance Por Perto, Salvamento Determinação. [SOMA] alvos diminuem até o tamanho de camundongos, junto com tudo o que estiverem vestindo ou carregando, por [DADOS] horas. Alvos relutantes que falharem no Salvamento podem tentar de novo depois de uma rodada.",
   "Maldição Doce": "Maldição em 4 estágios que transforma gradualmente a vítima em confeitaria; só é curada quebrando a maldição por completo. Veja a nota 'Maldição Doce — tabela completa' na Campanha.",
   "Suscetível a derretimento": "Ataques baseados em calor ou água ignoram a Armadura dessa criatura, e exposição a calor extremo pode derretê-la (perde d4 de PC máximo).",
 };
 
 const GLOSSARY_KEYS_SORTED = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 
-// ==================== O NOVO SUPER LINKIFIER (Poderes e NPCs) ====================
-function linkifyText(rawText) {
-  if (!rawText) return "";
+function linkifyAbilities(rawText) {
+  const text = rawText ?? "";
+  if (!text) return "";
   let result = "";
   let i = 0;
-  // Ordena poderes e NPCs do maior nome pro menor, pra não bugar palavras compostas
-  const npcNames = state.npcs.map(n => n.nome).sort((a,b) => b.length - a.length);
-  
-  outer: while (i < rawText.length) {
-    // 1. Checa se é um poder/regra
+  outer: while (i < text.length) {
     for (const term of GLOSSARY_KEYS_SORTED) {
-      if (rawText.startsWith(term, i)) {
+      if (text.startsWith(term, i)) {
         result += `<span class="ability-link" data-ability="${escapeHtml(term)}">${escapeHtml(term)}</span>`;
         i += term.length;
         continue outer;
       }
     }
-    // 2. Checa se é o nome de um NPC ou Monstro
-    for (const name of npcNames) {
-      if (name.length > 2 && rawText.startsWith(name, i)) {
-        result += `<span class="npc-link" data-npc="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
-        i += name.length;
-        continue outer;
-      }
-    }
-    // 3. Letra normal
-    result += escapeHtml(rawText[i]);
+    result += escapeHtml(text[i]);
     i++;
   }
   return result;
 }
 
-// ==================== LÓGICA DA JANELA FLUTUANTE DA AVENTURA ====================
-const floatWin = document.getElementById("floating-note-read");
-const floatHeader = document.getElementById("floating-note-header");
-let isDragging = false, dragX, dragY;
+function openGlossaryModal(term) {
+  const desc = GLOSSARY[term];
+  document.getElementById("glossary-title").textContent = term;
+  document.getElementById("glossary-body").textContent = desc || "Sem descrição cadastrada ainda.";
+  document.getElementById("modal-glossary").classList.remove("hidden");
+}
 
-// Faz a janela ser arrastável pelo cabeçalho
-floatHeader.addEventListener("mousedown", e => {
-  if (e.target.tagName === 'BUTTON') return;
-  isDragging = true;
-  const rect = floatWin.getBoundingClientRect();
-  dragX = e.clientX - rect.left;
-  dragY = e.clientY - rect.top;
-});
-document.addEventListener("mousemove", e => {
-  if (!isDragging) return;
-  floatWin.style.left = (e.clientX - dragX) + "px";
-  floatWin.style.top = (e.clientY - dragY) + "px";
-  floatWin.style.right = "auto"; // Tira o ancoramento da direita
-});
-document.addEventListener("mouseup", () => isDragging = false);
-
-document.getElementById("btn-close-floating").addEventListener("click", () => floatWin.classList.add("hidden"));
-
-
-
-// ==================== LÓGICA DO TOOLTIP E CLIQUE NOS NPCs ====================
-const tooltip = document.getElementById("tooltip-pop");
-
-// Hover (Passar o mouse) nas Regras/Poderes
-document.addEventListener("mouseover", (e) => {
-  const link = e.target.closest(".ability-link");
-  if (link && tooltip) {
-    const term = link.dataset.ability;
-    tooltip.innerHTML = `<h4>${term}</h4>${GLOSSARY[term] || "Sem descrição."}`;
-    const rect = link.getBoundingClientRect();
-    
-    // Posiciona no centro da palavra
-    tooltip.style.left = (rect.left + rect.width / 2) + "px";
-    tooltip.style.top = rect.top + "px";
-    tooltip.classList.remove("hidden");
-  }
-});
-
-document.addEventListener("mouseout", (e) => {
-  const link = e.target.closest(".ability-link");
-  if (link && tooltip) {
-    tooltip.classList.add("hidden");
-  }
-});
-
-// Clicar no nome de um Personagem para pular pra ficha dele
 document.addEventListener("click", (e) => {
-  const npcLink = e.target.closest(".npc-link");
-  if (npcLink) {
-    const name = npcLink.dataset.npc;
-    // Pula para a aba Compêndio
-    document.querySelector('[data-tab="compendio"]').click();
-    // Pula para a sub-aba de NPCs
-    document.querySelector('[data-subtab="npcs"]').click();
-    // Escreve o nome dele na busca e renderiza
-    document.getElementById("npc-search").value = name;
-    renderNpcs();
-  }
+  const link = e.target.closest(".ability-link");
+  if (link) openGlossaryModal(link.dataset.ability);
 });
 
 function formatDate(iso) {
@@ -1521,7 +1690,7 @@ function npcCardHtml(n) {
       </div>
       <div class="npc-stat-grid ${isMonster ? "monster" : ""}">${statBlock}</div>
       ${n.tags.length ? `<div class="npc-tags">${n.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
-      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyText(n.notas)}</div>` : ""}
+      ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyAbilities(n.notas)}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-edit-npc="${n.id}">Editar</button>
         <button class="btn btn-danger" data-delete-npc="${n.id}">Excluir</button>
@@ -1616,7 +1785,7 @@ function itemCardHtml(i) {
         ${i.custo ? `<span class="npc-type-badge">${escapeHtml(i.custo)}</span>` : ""}
       </div>
       ${i.origem ? `<div class="npc-notes"><b>Origem:</b> ${escapeHtml(i.origem)}</div>` : ""}
-      <div class="npc-notes">${linkifyText(i.descricao)}</div>
+      <div class="npc-notes">${linkifyAbilities(i.descricao)}</div>
       ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-share-text="item" data-share-id="${i.id}">${isTextShared("item", i.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
@@ -2339,7 +2508,7 @@ function openCombatantQuickView(c) {
       ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span>${rollAttrBtn(c.nome, "Salvamento", c.salvamento)}</div>` : ""}
       <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
     </div>
-    ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyText(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
+    ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyAbilities(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
   `;
   document.getElementById("modal-combatant-view").classList.remove("hidden");
 }
@@ -2954,23 +3123,14 @@ const NOTE_SHELVES = [
   { key: "achados", label: "Achados", icon: "diamond" },
 ];
 
-
 function openNoteReadModal(note) {
   document.getElementById("note-read-title").textContent = note.titulo;
-  
-  // linkifyText aplica os Tooltips e os Links de NPCs no texto todo!
-  document.getElementById("note-read-body").innerHTML = linkifyText(note.texto);
-  
-  // Recria a função do botão de Editar sem dar erro
-  const btnEdit = document.getElementById("btn-edit-from-read");
-  if (btnEdit) {
-    btnEdit.onclick = () => {
-      floatWin.classList.add("hidden");
-      openNoteModal(note);
-    };
-  }
-  
-  floatWin.classList.remove("hidden");
+  document.getElementById("note-read-body").innerHTML = linkifyAbilities(note.texto);
+  document.getElementById("btn-edit-from-read").onclick = () => {
+    document.getElementById("modal-note-read").classList.add("hidden");
+    openNoteModal(note);
+  };
+  document.getElementById("modal-note-read").classList.remove("hidden");
 }
 
 function noteCardHtml(n) {
@@ -2979,7 +3139,7 @@ function noteCardHtml(n) {
   return `
     <div class="note-card note-card-${categoria}" data-note-id="${n.id}">
       <div class="session-card-header"><h3>${escapeHtml(n.titulo)}</h3></div>
-      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyText(n.texto)}</p>
+      <p class="session-text ${isLong ? "note-collapsed" : ""}">${linkifyAbilities(n.texto)}</p>
       <div class="session-card-actions">
         ${isLong ? `<button class="btn btn-ghost" data-toggle-note="${n.id}">Ler mais</button>` : ""}
         <button class="btn btn-ghost icon-only" data-share-text="nota" data-share-id="${n.id}" title="${isTextShared("nota", n.id) ? "Esconder" : "Mostrar aos jogadores"}"><span class="icon">${isTextShared("nota", n.id) ? "visibility_off" : "visibility"}</span></button>
