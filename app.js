@@ -76,6 +76,7 @@ function defaultState() {
     seededItems: false,
     seededFullText: false,
     seededExtras2: false,
+    seededMonstros2: false,
   };
 }
 
@@ -505,7 +506,7 @@ function seedItems() {
     item("Prendedor Borboleta", "(1 DD)", "Recompensa da Rainha Gardênia — derrotar o Rei Rato",
       "Preso no cabelo, faz brotar asas temporárias de fada pequena — voa como o feitiço Flutuar. Recarrega ao pregar uma peça/brincadeira enquanto o usa.", ["vale das bagas", "voo"]),
     item("Varinha de Colher de Mel", "(2 DD)", "Vale das Bagas",
-      "Lança Hipnotizar, É Meu! e Amarrar. Recarrega sendo tratada com Geleia Real de uma abelha rainha.", ["vale das bagas", "varinha"]),
+      "Lança Hipnotizar, É Meu! e Enredar. Recarrega sendo tratada com Geleia Real de uma abelha rainha.", ["vale das bagas", "varinha"]),
     item("Escudo Hélice", "(2)", "Depósito de Armas — Ninho do Rei Rato (Sala 4)",
       "Vantagem em Salvamentos contra magia. Desativa quaisquer outros itens mágicos que você carregue e anula magias benéficas recebidas depois de equipado.", ["vale das bagas", "escudo"]),
     item("Corvo Mensageiro", "—", "Reconciliar Cirilla e Cirillo (Baile Eterno)",
@@ -1022,11 +1023,129 @@ function seedExtraLoot() {
   });
 }
 
+// Terceira leva: monstros do bestiário que faltavam no banco (identificados a partir
+// do livro de regras). Sob flag própria pra não duplicar em quem já tinha os dados antigos.
+function seedMoreMonsters() {
+  if (state.seededMonstros2) return;
+  state.seededMonstros2 = true;
+
+  const monster = (nome, determinacao, graca, astucia, coracao, salvamento, armadura, tags, notas) => ({
+    id: uid(),
+    nome,
+    tipo: "Monstro",
+    determinacao,
+    graca,
+    astucia,
+    coracao,
+    salvamento,
+    armadura,
+    tags,
+    notas,
+  });
+
+  const extraMonsters = [
+    monster("Utensílio de Cozinha Animado", 4, 6, 2, 2, 4, 0, ["conjurada"],
+      "Cortar (d6) ou Golpear (d4). Uma Princesa com Magia da Cozinha pode comandar um Utensílio de Cozinha Animado com um teste de Astúcia bem-sucedido."),
+    monster("Biscoitinha, a Cadelinha Encantada", 6, 10, 8, 4, 8, 0, ["cervovale", "padaria", "companheira"],
+      "Mordida (d4). A cadelinha desaparecida de Geraldo Silva, da padaria — achá-la é uma das missões dele."),
+    monster("Cervo Amaldiçoado", 6, 10, 6, 4, 6, 0, ["cervovale", "bosque emaranhado"],
+      "Chifres (d4, ou d10 quando pega impulso correndo). Coberto de protuberâncias pontiagudas de açúcar cristalizado. A origem do nome de Cervovale."),
+    monster("Unicórnio de Algodão-Doce", 10, 16, 12, 10, 16, 1, ["vale das bagas", "fada"],
+      "Investida (d10). Suscetível a derretimento — ataques baseados em água ignoram a Armadura. 3 Dados de Dom — pode lançar Jato de Purpurina, Bolha e Restauração."),
+    monster("Convidada do Baile Eterno", 8, 14, 12, 6, 14, 0, ["baile eterno"],
+      "Desarmada (1) ou Rapieira (d8). 3 Dados de Dom — pode lançar Puf!, Enredar, Dardo Mágico e Bolha."),
+    monster("Aranha Gigante de Algodão-Doce", 10, 8, 8, 8, 10, 1, ["bosque emaranhado"],
+      "Mordida (d8). Pode lançar uma rajada de teias como uma Ação — agarram quem for pego no jato e têm chance de grudar em quem passar por elas depois. O jato recarrega quando a aranha Descansa."),
+    monster("Vulto Sombrio", 6, 14, 14, 4, 12, 0, ["torre da bruxa"],
+      "Dedos (d6, ignora Armadura). Ser etéreo e misterioso que habita lugares profundos e escuros; agarra sorrateiramente e arrasta pra as profundezas. Se Ferida por um Vulto Sombrio, teste Astúcia ou sofra a Maldição Melancolia."),
+    monster("Trepadeira de Alcaçuz", 8, 4, 2, 2, 6, 0, ["torre da bruxa"],
+      "Chicote de Alcaçuz (d4). Tenta agarrar e estrangular suas vítimas."),
+    monster("Serpente de Alcaçuz", 6, 10, 8, 2, 8, 0, ["torre da bruxa"],
+      "Mordida (d12). Se Ferida por esta serpente, sofra a Maldição do Paladar Infantil."),
+    monster("Abelha Rainha", 8, 10, 10, 8, 8, 1, ["vale das bagas"],
+      "2 Dados de Dom — pode lançar Hipnotizar. Governa o Enxame de Abelhas."),
+    monster("Perseguidor Fungo", 8, 6, 6, 2, 8, 0, ["bosque emaranhado", "círculo de cogumelos"],
+      "Cabeçada (d4). Uma vez por dia pode liberar uma nuvem de esporos nocivos — todas Por Perto testam Determinação; falha = efeito de esporo colorido (Vermelho/Laranja/Amarelo = Cansada; Verde/Azul = Atordoada; Anil/Violeta = Confusa)."),
+  ];
+
+  extraMonsters.forEach((m) => {
+    if (!state.npcs.some((n) => n.nome === m.nome)) state.npcs.push(m);
+  });
+
+  const extraItems = [
+    { nome: "A Cauda do Rei Rato", custo: "—", origem: "Derrotar o Rei Rato (Vale das Bagas)",
+      descricao: "Uma cauda rosada, vermiforme, com tufos de pelo emaranhado ainda grudados, cortada do monstruoso Rei Rato. Um troféu enorme enquanto se está do tamanho de uma fada pequena, mas cabe no bolso quando se é humana. Enquanto a carrega, todos os roedores a temem instintivamente.",
+      tags: ["vale das bagas", "objetivo principal"] },
+    { nome: "Botas Andarilhas", custo: "(1 se carregada)", origem: "Livro básico — itens mágicos",
+      descricao: "Enquanto usa estas botas, forçar a marcha durante viagens não causa Cansaço. Quando carregadas, basta bater os calcanhares uma na outra e testar Astúcia para tentar se transportar instantaneamente, junto com quaisquer amigas de mãos dadas, para um local familiar escolhido. Falha coloca vocês num local aleatório num raio de 10km do destino. Transportar-se para sua própria casa é sempre bem-sucedido automaticamente. Recarregam andando 100km em terreno selvagem enquanto as usa.",
+      tags: ["item mágico", "viagem"] },
+    { nome: "Máscara de Baile", custo: "—", origem: "Hannah Falcão",
+      descricao: "Esta máscara feita pelas fadas garante anonimato total quando usada. Nem seus próprios pais a reconheceriam.",
+      tags: ["baile eterno"] },
+  ];
+  extraItems.forEach((i) => {
+    if (!state.items.some((x) => x.nome === i.nome)) state.items.push({ id: uid(), ...i });
+  });
+
+  const complicationsNote = {
+    titulo: "Tabelas de Complicação (d6, por local)",
+    categoria: "regras",
+    texto:
+      "Role quando fizer sentido narrativamente (ex: ao Gastar Tempo explorando ou viajando por uma área).\n\n" +
+      "BOSQUE EMARANHADO (DIA)\n" +
+      "1. Vocês são enfeitiçadas por um cheiro doce e inebriante. Aonde ele leva?\n" +
+      "2. Um Ratel raivoso salta da folhagem mais próxima.\n" +
+      "3. Um cervo agitado, coberto de dolorosas protuberâncias de açúcar cristalizado, vem direto na direção de vocês.\n" +
+      "4. Vocês acidentalmente tropeçam numa armadilha de caça esquecida!\n" +
+      "5. Uma fada pequena tenta surrupiar algo brilhante que alguém do grupo está segurando.\n" +
+      "6. Isso não é uma poça — é uma Gosma de Melaço!\n\n" +
+      "BOSQUE EMARANHADO (NOITE)\n" +
+      "1. Suas pernas ficam enroscadas em Trepadeiras de Alcaçuz.\n" +
+      "2. Uma teia gigante de algodão-doce bloqueia o caminho.\n" +
+      "3. A escuridão é tanta e o bosque tão denso — vocês acham que perderam a trilha.\n" +
+      "4. Vocês veem o que parecem ser pegadas de cachorro, mas não gostam nada da direção pra onde elas levam.\n" +
+      "5. Sussurros sinistros enchem os ouvidos de vocês e um cheiro doce e nauseante toma conta do ar.\n" +
+      "6. Esse uivo é tão penetrante… e está perto.\n\n" +
+      "VALE DAS BAGAS\n" +
+      "1. Um enxame de abelhas loucas por mel aparece!\n" +
+      "2. Uma Serpente Mortal Enorme abre caminho através da névoa.\n" +
+      "3. Uma fada pequena charlatã tenta barganhar com vocês, oferecendo uma poção inútil.\n" +
+      "4. A fada pequena com quem vocês precisam falar teve uma noite particularmente ruim e se recusa a conversar até tomar sua bebida favorita.\n" +
+      "5. Começa a chover. FORTE.\n" +
+      "6. Uma fada pequena desconfiada ACHA que vocês são as culpadas pela Maldição Doce.\n\n" +
+      "NINHO DO REI RATO\n" +
+      "1. O túnel em que vocês estão começa a tremer. É um desabamento!\n" +
+      "2. O que é esse barulho de assobio? Será que uma cobra entrou aqui?\n" +
+      "3. Sua fonte de luz se apaga e vocês ficam completamente no escuro.\n" +
+      "4. O cheiro forte e denso de mel e podridão está começando a deixar vocês Atordoadas.\n" +
+      "5. Vocês ouvem uma voz chamando por socorro. Há mais alguém aqui?\n" +
+      "6. Vocês tropeçam numa das armadilhas antipeste das fadas pequenas.\n\n" +
+      "BAILE ETERNO\n" +
+      "1. Uma fada furiosa confunde vocês com outra pessoa e exige um duelo.\n" +
+      "2. Um nobre começa a flertar com vocês pra provocar ciúmes em seu par. Está funcionando...\n" +
+      "3. Vocês tropeçam e derrubam a bebida de uma convidada muito elegante.\n" +
+      "4. Finnegan aparece e começa a causar travessuras com sua varinha mágica.\n" +
+      "5. Uma convidada extremamente entediante puxa conversa e não deixa vocês saírem.\n" +
+      "6. Um item especial de um nobre desapareceu, e ele acusa vocês de terem roubado!\n\n" +
+      "TORRE DA BRUXA\n" +
+      "1. Um líquido desconhecido se derrama em você!\n" +
+      "2. Você dá um passo em falso e o chão começa a tremer.\n" +
+      "3. Um objeto próximo ganha vida e começa a atacá-la!\n" +
+      "4. Um de seus itens mágicos cai sob influência de Dulcineia.\n" +
+      "5. O familiar da bruxa entra voando e rouba um item do grupo.\n" +
+      "6. São passos de armadura? O Cavaleiro de Chocolate Amargo está aqui?",
+  };
+  if (!state.notes.some((n) => n.titulo === complicationsNote.titulo)) {
+    state.notes.push({ id: uid(), titulo: complicationsNote.titulo, texto: complicationsNote.texto, categoria: complicationsNote.categoria });
+  }
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
 seedFullAdventureText();
 seedExtraLoot();
+seedMoreMonsters();
 saveState();
 
 // ---------- Tabs ----------
@@ -1201,6 +1320,8 @@ const GLOSSARY = {
   "Rugido": "Você solta um rugido bestial. [SOMA] criaturas que possam ouvi-la devem fazer um Salvamento ou ficam aterrorizadas por [DADOS] rodadas.",
   "Farejar": "Sente até o mais fraco traço de cheiro Por Perto; reconhece indivíduos e há quanto tempo estiveram no local.",
   "Forma Selvagem": "Transforma-se num animal já visto por até [DADOS] x 10 minutos, com [SOMA] PC nessa forma.",
+  "Virar Sapo": "Alcance Por Perto. [DADOS] objetos inanimados se transformam em sapo por [SOMA] horas.",
+  "Encolher": "Alcance Por Perto, Salvamento Determinação. [SOMA] alvos diminuem até o tamanho de camundongos, junto com tudo o que estiverem vestindo ou carregando, por [DADOS] horas. Alvos relutantes que falharem no Salvamento podem tentar de novo depois de uma rodada.",
   "Maldição Doce": "Maldição em 4 estágios que transforma gradualmente a vítima em confeitaria; só é curada quebrando a maldição por completo. Veja a nota 'Maldição Doce — tabela completa' na Campanha.",
   "Suscetível a derretimento": "Ataques baseados em calor ou água ignoram a Armadura dessa criatura, e exposição a calor extremo pode derretê-la (perde d4 de PC máximo).",
 };
