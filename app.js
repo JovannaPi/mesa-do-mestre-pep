@@ -77,6 +77,7 @@ function defaultState() {
     seededFullText: false,
     seededExtras2: false,
     seededMonstros2: false,
+    seededCervovaleFlavor: false,
     seededBaileENotas: false,
   };
 }
@@ -1274,6 +1275,83 @@ function seedBaileENotas() {
   }
 }
 
+// Feedback do primeiro grupo de jogadoras: faltou descrição de cenário e mais
+// personalidade nos NPCs. Esta função reforça as duas coisas em Cervovale sem
+// mexer no que já existe — só acrescenta.
+function seedCervovaleFlavor() {
+  if (state.seededCervovaleFlavor) return;
+  state.seededCervovaleFlavor = true;
+
+  const npc = (nome, determinacao, graca, astucia, coracao, salvamento, armadura, tags, notas) => ({
+    id: uid(), nome, tipo: "NPC", determinacao, graca, astucia, coracao, salvamento, armadura, tags, notas,
+  });
+
+  const newNpcs = [
+    npc("Benedita", 8, 9, 12, 8, 10, 0, ["cervovale", "alfaiataria"],
+      "Alfaiate, dona da Linha & Agulha. Meticulosa, sarcástica, leal. Dedos grudando um no outro com fios de puxa-puxa. Voz: fala rápido e sem parar de costurar, corta frases no meio pra prender uma linha com os dentes. Missão: entregar/resolver uma encomenda de roupas do Baile que o dono não vai mais buscar (virou doce) -> costura uma peça de roupa útil de graça."),
+    npc("Firmino", 9, 8, 10, 9, 10, 0, ["cervovale", "sapataria"],
+      "Sapateiro, dono da Sola & Cia. Desconfiado de forasteiros, trabalhador, nostálgico. Dedos virando bala de goma dura, atrapalhando o trabalho fino. Voz: grunhe respostas curtas até confiar em alguém, aí não para mais de contar histórias de botas famosas que já consertou. Missão: ratos do Vale das Bagas roendo o estoque de couro -> resolve de graça qualquer conserto de calçado."),
+    npc("Rodolfo", 12, 8, 8, 11, 10, 0, ["cervovale", "açougue"],
+      "Açougueiro, dono do Corte Nobre. Barulhento, orgulhoso do próprio trabalho, bonachão. Mãos e antebraços virando torresmo caramelizado e crocante. Voz: fala grosso e alto, ri da própria voz, morre de vergonha quando o braço estala (som de doce quebrando) no meio da frase. Missão: falta carne porque ninguém quer caçar no bosque -> se trouxerem carne de caça de dentro do Bosque Emaranhado, dá rações de viagem de graça por um bom tempo."),
+    npc("Ambrósio", 11, 12, 13, 9, 12, 0, ["cervovale", "caçador", "bosque emaranhado"],
+      "Caçador, mora numa cabana na borda da vila. Calado, observador, só fala o necessário. Pernas virando pirulito de caramelo duro, manca. Voz: frases curtas, olha mais pro bosque do que pra quem está falando com ele. É o único morador que ainda entra e sai do Bosque Emaranhado com regularidade, evitando o Cavaleiro de Chocolate Amargo. Conhece rotas seguras, as áreas de neblina onde bichos grandes se perdem, e reconhece pegadas/sinais de criaturas de doce. Missão: aliviar a dor das pernas (poção, magia, ou solução criativa) -> guia o grupo até uma entrada mais segura no bosque, dando vantagem na primeira rolagem de Complicação da jornada."),
+  ];
+  newNpcs.forEach((n) => {
+    if (!state.npcs.some((x) => x.nome === n.nome)) state.npcs.push(n);
+  });
+
+  const note = (titulo, categoria, texto) => ({ id: uid(), titulo, categoria, texto });
+
+  const newNotes = [
+    note("Cervovale — Cenários (leia em voz alta + itens à vista)", "lore",
+      "CENA-CHAVE: quando descrever qualquer lugar de Cervovale, lembre que a maldição já pegou o cenário inteiro, não só as pessoas — cheiro de açúcar queimado no ar, uma poeira fina e doce cobrindo tudo, sons naturais meio abafados (como se o mundo estivesse encoberto por algodão-doce). Use isso pra dar textura mesmo em lugares sem NPC importante.\n\n" +
+
+      "MANSÃO DA PREFEITURA\nUm casarão de dois andares numa colina com vista pra vila, os degraus da entrada cristalizados de açúcar que estalam baixinho sob os pés. Lá dentro, tapeçarias empoeiradas, uma lareira apagada há dias e uma mesa grande coberta de mapas velhos da região. Um relógio de pêndulo bate atrasado, como se a maldição tivesse deixado até o tempo mais lento.\nItens à vista: mapas antigos da região (podem indicar o Bosque Emaranhado e vizinhanças); um retrato de família de Teodoro, rachado ao meio; um baú trancado sob a cama (o Espelho Maléfico, se procurarem); uma pilha de cartas de moradores pedindo ajuda.\n\n" +
+
+      "SALÃO COMUNITÁRIO\nO maior prédio da vila, lotado — quase toda a população amontoada em cobertores e bancos improvisados, vários já parcialmente confeitados. Cheiro de gente e de caramelo doce demais pra ser confortável. Alguém tossindo baixinho no canto, um bebê chorando, o som de unhas de rato correndo por trás das paredes.\nItens à vista: armadilhas de rato malfeitas e vazias; sacos de grão remendados; uma lousa com uma lista de nomes riscados (moradores que já viraram doce por completo); cobertores emprestados uns dos outros.\n\n" +
+
+      "ESTALAGEM A CABRA SORRIDENTE\nPequena e de charme rústico, cheira a canela e cerveja velha. O balcão de madeira tem entalhes de cabras sorridentes gastos pelo tempo. Poucas mesas, quase todas vazias — Cervovale não recebe visitantes há muito tempo.\nItens à vista: um cardápio manuscrito com pratos riscados (não tem mais ingrediente); uma coleção de canecas penduradas, uma delas com o nome \"Élton\" gravado; um livro de hóspedes com poucas assinaturas recentes; um quadro de avisos com pedidos de ajuda da vila.\n\n" +
+
+      "LOJA DE POÇÕES\nCheiro forte de ervas secas, mas as prateleiras atrás do balcão estão visivelmente vazias em vários pontos. Frascos etiquetados à mão, alguns com rótulos borrados de tanto uso. Um caldeirão pequeno borbulha sozinho num canto.\nItens à vista: frascos vazios esperando ingredientes; um pingente de lua de prata pendurado perto do caixa (de Rosa); anotações de receitas de poções incompletas; um vaso com uma planta murcha que Rosa insiste em regar todo dia.\n\n" +
+
+      "ARMAZÉM / POSTO DE TROCA\nPrateleiras abarrotadas numa desorganização total — só Zeca sabe onde as coisas estão. Cheiro de poeira, couro velho e um leve toque de doce vindo de fora. Uma luneta pendurada atrás do balcão, brilhando de um jeito que não parece natural.\nItens à vista: pilhas de itens de troca variados (ferramentas, roupas, bugigangas); os objetos quebrados que Zeca quer consertar (roca de fiar, relógio, tapeçaria, alaúde, botas, tabuleiro de xadrez); uma velha lista de encomendas endereçada a um lugar chamado \"Torre ao Norte do Bosque\".\n\n" +
+
+      "PADARIA\nA casa de Geraldo e Rui cheira mais forte a pão de mel e confeitaria do que o resto da vila — quase enjoativo. Fornos apagados, uma bancada coberta de farinha intocada há dias. Um brinquedo de madeira esquecido no chão.\nItens à vista: pão de viagem embrulhado (ainda à venda, se a padaria estiver aberta); desenhos de criança grudados na parede (de Rui); um par de óculos quebrados guardado numa gaveta (não são os perdidos — são um par velho); uma coleira vazia pendurada perto da porta (de Biscoitinha).\n\n" +
+
+      "FERRARIA\nCheiro de carvão queimando e aço quente. O som metálico do martelo de Maya ecoa antes mesmo de você entrar. Armas e peças de armadura penduradas em fileiras organizadas — o único lugar da vila que parece realmente sob controle.\nItens à vista: armas à venda (espada, adaga, machado, frigideira, mangual, escudo, armadura pesada); um xale que não está à venda, guardado longe da fuligem; uma bigorna com marcas de anos de uso; uma espada inacabada, com forma de ponteiro de relógio, guardada debaixo do balcão (a Estalar de Segundos, sendo forjada).\n\n" +
+
+      "ALFAIATARIA LINHA & AGULHA\nCheira a lã molhada e tintura. Retalhos de tecido empilhados por todo canto, alguns já brilhando com fios de puxa-puxa grudentos. Um manequim de costura no centro da sala, vestido com uma peça inacabada.\nItens à vista: uma encomenda de roupas de baile pronta, sem dono pra buscar; alfinetes e linhas de todas as cores; um figurino antigo emoldurado na parede, de um baile de antes da maldição; um caderno de medidas de clientes, muitos nomes já riscados.\n\n" +
+
+      "SAPATARIA SOLA & CIA\nCheiro forte de couro e cola. Fileiras de sapatos e botas em vários estágios de conserto, algumas com as solas grudentas de tanto caramelo pingando do teto. Ferramentas de sapateiro penduradas numa parede, organizadas por tamanho.\nItens à vista: botas de viagem à venda ou pra conserto; um pote de cola grudenta borbulhando sozinho; uma bota extremamente grande, sem dono conhecido, guardada num canto como curiosidade; recortes de couro sobrando de outro trabalho.\n\n" +
+
+      "AÇOUGUE CORTE NOBRE\nCheiro de defumado e sal grosso, misturado com um toque doce que não devia estar ali. Ganchos de metal pendurados no teto, a maioria vazia. Um bloco de corte de madeira, gasto no centro, com uma faixa caramelizada na beirada.\nItens à vista: pouca carne à venda (estoque baixo); potes de sal e especiarias de defumação; uma lista de fregueses que não aparecem mais; uma faca de açougueiro grande demais pra ser prática em combate, mas assustadora de se ver.\n\n" +
+
+      "CASA DO CAÇADOR (cabana de Ambrósio)\nUma cabana simples na borda da vila, virada de frente pra trilha do Bosque Emaranhado. Peles curtidas penduradas nas paredes, um mapa desenhado à mão com rotas marcadas em carvão. Cheiro de mato e fumaça de fogueira antiga.\nItens à vista: um mapa rústico do bosque com trilhas seguras marcadas; armadilhas de caça penduradas, prontas pra uso; um arco simples encostado na porta; um caderno cheio de anotações sobre pegadas e sinais de criaturas — algumas páginas recentes falam de pegadas \"doces demais pra serem normais\"."),
+  ];
+  newNotes.forEach((n) => {
+    if (!state.notes.some((x) => x.titulo === n.titulo)) state.notes.push(n);
+  });
+
+  // Reforço de personalidade nos NPCs de Cervovale já existentes — o primeiro grupo
+  // sentiu falta disso. Só acrescenta uma pista de voz/maneirismo pra interpretar,
+  // sem reescrever o que já tinha.
+  const voicePatches = [
+    ["Teodoro Éverson", " Voz: fala devagar e formal, escolhendo bem as palavras, mas se atrapalha e repete frases quando fica nervoso — o que é sempre."],
+    ["Baltasar \"Baz\" Hartly", " Voz: seco e direto, respostas curtas, suspira antes de qualquer pedido que dê mais trabalho pra ele."],
+    ["Hannah Falcão", " Voz: fala rápido, pula de assunto em assunto, sempre termina puxando fofoca nova antes que alguém consiga sair."],
+    ["Constança \"Connie\" Oriente", " Voz: inquieta, fala andando de um lado pro outro, olha pra porta toda hora como se fosse sair correndo."],
+    ["Ezequiel \"Zeca\" Grifo", " Voz: animado até demais, começa frases e esquece o final, sempre encontra o lado bom mesmo em más notícias."],
+    ["Geraldo Silva", " Voz: caloroso mas cansado, a voz falha quando fala do filho ou da vila, tenta disfarçar limpando as mãos na farinha que não existe mais."],
+    ["Rui Silva", " Voz: fala rápido e animado como qualquer criança de 8 anos, mas fica sério de repente quando alguém pergunta sobre a bruxa."],
+    ["Rosana \"Rosa\" Águas-Claras", " Voz: séria e focada quando fala de trabalho/poções, mas a voz treme quando alguém menciona a irmã Selene."],
+    ["Maya Élis", " Voz: monossilábica e fria com a maioria dos assuntos, mas fica surpreendentemente falante e detalhista assim que alguém pergunta sobre fadas."],
+  ];
+  voicePatches.forEach(([nomeNpc, acrescimo]) => {
+    const alvo = state.npcs.find((n) => n.nome === nomeNpc);
+    if (alvo && !alvo.notas.includes("Voz:")) alvo.notas += acrescimo;
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -1281,6 +1359,7 @@ seedFullAdventureText();
 seedExtraLoot();
 seedMoreMonsters();
 seedBaileENotas();
+seedCervovaleFlavor();
 saveState();
 
 // ---------- Tabs ----------
