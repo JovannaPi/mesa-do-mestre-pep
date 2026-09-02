@@ -80,6 +80,7 @@ function defaultState() {
     seededCervovaleFlavor: false,
     seededRegioesFlavor: false,
     seededEventosAmbiente: false,
+    seededSegredosMestra: false,
     seededBaileENotas: false,
   };
 }
@@ -1542,6 +1543,102 @@ function seedEventosAmbiente() {
   });
 }
 
+// Camada de segredos só-pra-Mestra por trás da aventura publicada — não muda nada do
+// que já foi contado às jogadoras (Dulcineia sequestrou crianças, morreu no confronto,
+// a vila foi amaldiçoada — tudo isso continua verdade), só aprofunda o "porquê" por
+// baixo. Notas marcadas com [Segredo da Mestra] no título — nunca compartilhe com as
+// jogadoras diretamente, é pra você usar como munição de interpretação e pistas.
+function seedSegredosMestra() {
+  if (state.seededSegredosMestra) return;
+  state.seededSegredosMestra = true;
+
+  const note = (titulo, categoria, texto) => ({ id: uid(), titulo, categoria, texto });
+
+  const newNotes = [
+    note("[Segredo da Mestra] O que a Maldição realmente faz", "lore",
+      "Dulcineia não lançou a maldição como um golpe final qualquer — ela usou, de forma incompleta e distorcida, uma técnica que vinha desenvolvendo havia meses: separar corpo, alma e capacidade de agir sobre o próprio corpo. O ataque dos moradores a interrompeu no meio do processo, então o que sobrou foi instável, lento — e consciente.\n\n" +
+      "A maldição avança em 3 fases silenciosas antes da transformação completa: primeiro a pessoa ainda controla o próprio corpo enquanto ele muda (pele endurecendo, cabelo virando açúcar); depois começa a perder partes — sente o braço, mas não consegue mais mexê-lo; por fim perde a fala, mas ainda ouve. Na transformação completa, o corpo vira doce de vez — mas a consciência continua lá dentro, presa.\n\n" +
+      "O pior segredo, que ninguém em Cervovale sabe ainda: quanto mais tempo alguém passa transformada, mais a identidade se apaga. Primeiro somem rostos, nomes, vozes queridas. Depois lugares e sentimentos. No limite, a pessoa esquece quem era — o doce continua, a consciência continua, mas a pessoa por trás começa a sumir. Use isso pra aumentar a urgência sem precisar de um relógio numérico: um morador específico que a Princesa conhece pode, numa cena, já não lembrar o próprio nome.\n\n" +
+      "O Dado de Maldição (nota já existente em Regras) não é só \"quantas pessoas sumiram\" — é o quanto a maldição já virou parte da realidade ali. Em d8, a vila ainda finge normalidade. Em d6, a rotina quebra e todo mundo começa a agir como quem está se despedindo. Em d4, a transformação deixa de ser ameaça futura: açúcar nas ruas, paredes caramelizando, bichos com mutações — o ambiente físico começa a adoecer junto com as pessoas."),
+
+    note("[Segredo da Mestra] O Ovo de Dragão e as almas presas", "lore",
+      "Dulcineia nunca terminou o experimento. Algumas crianças sequestradas já tinham a alma separada do corpo quando o ataque começou; ela precisava de um recipiente poderoso o bastante pra guardar essa magia com segurança, e escolheu o ovo de dragão que vinha incubando havia anos. As almas não se misturaram ao dragão — ficam presas num espaço interno, como se o ovo fosse uma casa. Elas continuam existindo: lembram quem são, lembram de Cervovale, sabem que estão presas, percebem umas às outras. O tempo lá dentro não corre igual ao de fora — pra cada criança, quase um ano pode ter parecido dias, meses, ou uma eternidade.\n\n" +
+      "O pulso que o ovo emite (mencionado na descrição de cenário do Viveiro) não é só o coração do dragão — é a combinação do coração com a presença das almas. Uma Princesa sensível ou com Talento ligado a percepção/magia pode, ao se aproximar, jurar ouvir batidas fora de ritmo, sussurros, uma criança chamando alguém, ou várias vozes tentando falar ao mesmo tempo. Use isso como um momento de arrepio antes do combate do Viveiro, não como um enigma pra resolver ali mesmo.\n\n" +
+      "O dilema (não revele isso de forma explícita — deixe o grupo desconfiar e decidir com informação incompleta): destruir o ovo impede Dulcineia de possuir o dragão, mas ninguém sabe o que acontece com as almas — libertação, destruição, ou continuarem presas sem ninguém pra alcançá-las de novo. Não existe finalização 100% limpa aqui. Se quiser dar uma pista de que há algo mais no ovo antes do confronto final, o Fantasma familiar (se conquistado como aliado) ou o diário/livro de experimentos são bons lugares pra deixar escapar uma linha ambígua tipo \"ela nunca terminou o grande projeto\"."),
+
+    note("[Segredo da Mestra] Selene — a verdade por trás do lobisomem", "lore",
+      "Selene não morreu no confronto final com Dulcineia — foi atingida pela magia da bruxa no exato instante em que desferiu o golpe fatal, e a maldição, ainda em formação, se agarrou no que havia de mais forte nela naquele momento: medo, raiva, culpa, puro instinto de sobrevivência. Virou lobisomem ali mesmo. Fugiu da torre, tentou voltar pra Cervovale, mas não conseguiu se trazer a entrar — viu a vila começando a mudar e decidiu, errada ou certamente, que sua presença só pioraria as coisas. Vive escondida no Bosque desde então.\n\n" +
+      "A culpa dela não é sobre ser um monstro — é sobre ter tomado a decisão de atacar. Ela liderou o grupo, ela matou Dulcineia, e depois viu a vila inteira pagar o preço. Se pergunta o tempo todo se deveria ter esperado, ou tentado prender a bruxa em vez de matá-la, ou entendido o ritual antes de agir. Ela não acha Dulcineia inocente — sabe muito bem das atrocidades que a bruxa cometeu — mas percebe agora que matá-la resolveu uma ameaça e criou outra. Isso significa que Selene NÃO é uma fonte confiável e neutra de respostas: ela pode lembrar errado, omitir detalhes por vergonha, ou resistir a ser perdoada mesmo quando o grupo tentar.\n\n" +
+      "Segredo que só ela sabe: durante a fuga, encontrou alguém já completamente transformado — e percebeu que a pessoa ainda estava consciente lá dentro. Isso destruiu o pouco de paz que ela tinha, porque significa que ela não só falhou em impedir a maldição, como também não entendeu a natureza dela até ser tarde. Selene pode ter desenvolvido, sozinha, pequenos métodos de \"conversar\" com os transformados (batidas, estalos, um sistema de sinais) — e pode ser a única prova que convence as jogadoras de que os moradores virados doce continuam vivos lá dentro."),
+
+    note("[Segredo da Mestra] O Cavaleiro de Chocolate Amargo — por trás da armadura", "lore",
+      "O Cavaleiro não é só um monstro recorrente — Dulcineia o criou com um coração de verdade batendo dentro do peito de chocolate, porque acreditava que proteção de verdade exige compreender aquilo que se protege. Isso deu a ele algo que ela não esperava totalmente controlar: ele sente. Sente medo, questiona, tem objetivos próprios dentro dos limites da ordem que recebeu.\n\n" +
+      "A missão dele é proteger Cervovale — só que a interpretação dele disso é terrível: pessoas amaldiçoadas não podem sair, porque ele acredita (sem estar totalmente errado) que a transformação pode se espalhar pra outras terras se alguém contaminado atravessar a fronteira. Ele está isolando a vila achando que está sacrificando poucos pra proteger muitos. É um argumento genuinamente difícil de refutar — use isso: se o grupo tentar razoar com ele, ele pode responder algo como \"Vocês querem salvar esta vila. Quantas outras estão dispostas a condenar?\" antes de continuar o combate ou a perseguição.\n\n" +
+      "Ele não sabe (ou não aceita) que Dulcineia morreu — continua cumprindo a última ordem recebida dela sem questionar a fonte. A tragédia real do Cavaleiro é que ele foi feito pra proteger algo que talvez já não possa mais ser protegido do jeito que ele entende — e mesmo assim continua tentando, sozinho, patrulhando havia um ano inteiro."),
+
+    note("[Segredo da Mestra] Rui Silva — o que ele viu (e não entendeu)", "lore",
+      "Rui não é especial magicamente — não tem Dom, não é escolhido, não tem sangue nobre escondido. É só uma criança que, fugindo do Ursinho de Goma, acabou passando por lugares do Bosque que um adulto normalmente evitaria ou nem notaria. Ele viu coisas — só não entende o que significam, e conta tudo com a lógica de uma criança de 8 anos.\n\n" +
+      "Coisas que ele pode ter visto (solte aos poucos, como comentários soltos, não como uma lista de pistas): uma figura grande observando de longe; uma mulher escondida entre as árvores, chorando (é a Selene); luzes que apareciam e desapareciam perto do Lago; uma criatura carregando alguma coisa grande; marcas estranhas perto da base da Torre. Ele conta assim: \"Tinha um cachorro gigante chorando\" (Selene em forma de loba, ainda emocionalmente humana), ou \"A árvore estava respirando\" (pode ser só uma árvore encantada — ou pode ser algo maior, à sua escolha). Rui funciona melhor quando tem informação verdadeira mas não sabe que é importante — deixe as jogadoras conectarem os pontos, não ele.\n\n" +
+      "Se ele for salvo no gancho inicial: pode voltar como presença recorrente, confiando nas Princesas, e servir de lembrete vivo de que a primeira escolha da aventura teve peso. Se ele NÃO for salvo: o Cavaleiro o captura (não porque ele seja especial, mas porque viu coisa demais perto da Torre) — e mais tarde o grupo pode encontrar um pequeno cavaleiro de chocolate com o rosto dele. Essa é a revelação horrível de que o Cavaleiro consegue transformar gente em construtos — e talvez não seja o único que ele já fez isso com."),
+
+    note("[Segredo da Mestra] O Rei Rato — falas na batalha (d8)", "regras",
+      "O Rei Rato não é burro — é uma consciência formada pela fusão de milhares de ratos, cada um tendo visto, ouvido e vivido coisas diferentes em lugares diferentes (Cervovale, a Torre, o Bosque, até o Baile Eterno). O problema é que essas memórias estão todas misturadas e fragmentadas — ele sabe demais, mas não consegue organizar o que sabe em ordem ou em contexto.\n\n" +
+      "Durante o combate, solte 1-2 frases crípticas dessas (role d8 ou escolha) — nenhuma deve explicar nada diretamente; a ideia é que, quando as jogadoras descobrirem a verdade depois (pelas notas de Selene/Cavaleiro/Ovo acima), lembrem \"ele estava falando disso\":\n" +
+      "1. \"Nós vimos as crianças entrarem.\"\n" +
+      "2. \"Nós não as vimos sair.\"\n" +
+      "3. \"A guarda sangrou.\"\n" +
+      "4. \"A bruxa também.\"\n" +
+      "5. \"A coisa no alto ainda respirava.\"\n" +
+      "6. \"O coração não era o único que batia.\"\n" +
+      "7. \"Muitos pequenos estavam acordados.\"\n" +
+      "8. \"Vocês chegaram tarde demais.\""),
+
+    note("Regras estranhas do mundo (flavor, sem mecânica fixa)", "regras",
+      "Regrinhas do mundo feérico/mágico que podem simplesmente ser verdadeiras nessa campanha, sem precisar de explicação — use pra dar textura quando fizer sentido, não como sistema obrigatório:\n\n" +
+      "1. Nomes têm poder: nunca diga seu nome completo pra uma fada desconhecida. Ela não necessariamente ganha controle sobre você, mas passa a saber como te chamar — e ser chamada pelo nome verdadeiro tem consequências.\n" +
+      "2. Presentes nunca são de graça: uma criatura feérica pode oferecer algo sem pedir nada na hora. Isso não significa que não exista preço depois. A pergunta certa nunca é \"quanto custa\", é \"o que você espera receber\".\n" +
+      "3. Comida cria vínculo: comer algo preparado num reino feérico é aceitar hospitalidade — e hospitalidade é uma forma de vínculo (ver a comida do Banquete no Baile Eterno, que deixa humanos Confusos e relutantes em partir).\n" +
+      "4. Promessas são perigosas: no mundo comum, promessa se quebra. No mundo encantado, palavras têm memória — uma promessa feita na presença errada pode durar a vida inteira.\n" +
+      "5. Espelhos não mentem, mas também não têm obrigação de mostrar tudo (relevante pro Espelho Maléfico).\n" +
+      "6. Nunca siga alguém que conhece seu caminho melhor que você: no Bosque Emaranhado, algumas criaturas sabem exatamente aonde você quer chegar — isso não significa que queiram te levar até lá.\n" +
+      "7. Nunca responda de imediato quando ouvir a própria voz — especialmente se estiver sozinha."),
+
+    note("Rumores do mundo (tabela, d8)", "lore",
+      "Rumores soltos que podem ser verdadeiros, parcialmente verdadeiros, ou pura invenção de quem contou — sirva um de vez em quando em qualquer conversa de taverna/praça, sem confirmar nem negar:\n" +
+      "1. \"Dizem que algumas pessoas viraram doce porque aceitaram a maldição, não porque foram pegas por ela.\"\n" +
+      "2. \"O Cavaleiro de Chocolate Amargo não consegue entrar em Cervovale — só patrulha por fora.\"\n" +
+      "3. \"Tem alguém na floresta que nunca foi humano.\"\n" +
+      "4. \"Uma fada perdeu a própria sombra e anda procurando ela.\"\n" +
+      "5. \"A Rainha Gardênia nunca come mel — nem toca nele.\"\n" +
+      "6. \"O Rei-Elfo não tem reflexo.\"\n" +
+      "7. \"Quem dorme perto do Lago da Saudade Eterna sonha com a pessoa de quem mais sente falta.\"\n" +
+      "8. \"Uma das crianças desaparecidas voltou pra casa.\" (ninguém confirma se é verdade — pode ser um gancho, pode ser só um boato cruel)"),
+
+    note("Objetos estranhos (achados sem missão fixa)", "achados",
+      "Pequenos objetos que podem aparecer largados por aí, sem virar missão — só pra lembrar que o mundo é maior que a trama principal. Use como achado aleatório, prêmio de curiosidade, ou gancho pra uma sessão mais tranquila:\n" +
+      "1. Um relógio que só funciona quando alguém por perto está mentindo.\n" +
+      "2. Uma chave sem fechadura correspondente — muda de forma dependendo de quem a segura.\n" +
+      "3. Uma maçã com uma única mordida já dada. Quem morde pode fazer uma pergunta; a resposta vem da pessoa por perto que mais quer mentir sobre aquilo.\n" +
+      "4. Um espelho quebrado em vários pedaços — cada pedaço mostra uma versão diferente do futuro, nunca do presente.\n" +
+      "5. Uma boneca de pano que aparece sempre perto de alguém prestes a tomar uma decisão importante. Nunca fala.\n" +
+      "6. Uma carta escrita com a caligrafia de uma das Princesas — que ela não reconhece ter escrito."),
+  ];
+  newNotes.forEach((n) => {
+    if (!state.notes.some((x) => x.titulo === n.titulo)) state.notes.push(n);
+  });
+
+  const patches = [
+    ["Selene (Lobo Mau)", " Segredo (ver nota \"Selene — a verdade por trás do lobisomem\"): a maldição a atingiu no instante em que golpeou Dulcineia; carrega uma culpa profunda por ter escolhido matar em vez de entender; já provou, sozinha, que quem vira doce por completo continua consciente."],
+    ["O Cavaleiro de Chocolate Amargo", " Segredo (ver nota \"O Cavaleiro de Chocolate Amargo — por trás da armadura\"): tem um coração de verdade batendo no peito; acredita, com algum fundamento, que impedir a maldição de sair da vila protege o resto do mundo; não sabe ou não aceita que Dulcineia morreu."],
+    ["Rui Silva", " Segredo (ver nota \"Rui Silva — o que ele viu\"): viu mais do que entende no Bosque — uma figura observando de longe, uma mulher chorando escondida entre as árvores, luzes sumindo perto do Lago, marcas estranhas perto da Torre."],
+    ["Rato Louco Amaldiçoado", " Ver nota \"O Rei Rato — falas na batalha (d8)\" pra frases crípticas que ele pode soltar durante a luta — memórias fragmentadas de tudo que os ratos da região testemunharam."],
+  ];
+  patches.forEach(([nomeNpc, acrescimo]) => {
+    const alvo = state.npcs.find((n) => n.nome === nomeNpc);
+    if (alvo && !alvo.notas.includes("Segredo") && !alvo.notas.includes("Ver nota \"O Rei Rato")) alvo.notas += acrescimo;
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -1552,6 +1649,7 @@ seedBaileENotas();
 seedCervovaleFlavor();
 seedRegioesFlavor();
 seedEventosAmbiente();
+seedSegredosMestra();
 saveState();
 
 // ---------- Tabs ----------
