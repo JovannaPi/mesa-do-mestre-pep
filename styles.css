@@ -189,6 +189,36 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 
 .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* Barra fina sempre visível com o estado atual da campanha — pra não precisar entrar em
+   Campanha toda hora só pra lembrar onde o grupo está ou qual o objetivo ativo. */
+.campaign-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 16px;
+  background: rgba(0, 0, 0, 0.15);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.campaign-status-bar .icon { font-size: 1.05rem; color: var(--accent-strong); }
+.status-bar-sep { width: 1px; height: 14px; background: var(--border-soft); margin: 0 4px; }
+.status-bar-input, .status-bar-select {
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.status-bar-input { width: 160px; }
+.status-bar-input:hover, .status-bar-select:hover,
+.status-bar-input:focus, .status-bar-select:focus { background: rgba(255, 255, 255, 0.08); outline: none; }
+.status-bar-select option { background: var(--bg-card); color: var(--text); }
+.status-bar-text { font-weight: 600; color: var(--text); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.foco-mode .campaign-status-bar { padding: 4px 16px; }
+
 .tabs-wrap { position: relative; }
 .tabs {
   display: flex;
@@ -1179,6 +1209,28 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 @keyframes fade-in-up {
   from { opacity: 0; transform: translate(-50%, -90%); }
   to { opacity: 1; transform: translate(-50%, -100%); }
+}
+
+/* =========================================================
+   VISUALIZAÇÃO EM TELA CHEIA DE IMAGEM
+========================================================= */
+.fullscreen-image-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+.fullscreen-image-overlay.hidden { display: none; }
+.fullscreen-image-overlay img {
+  max-width: 92vw;
+  max-height: 92vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
 /* Link dos Personagens na História */

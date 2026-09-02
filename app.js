@@ -55,6 +55,9 @@ function defaultState() {
     sessions: [],
     notes: [],
     objectives: [],
+    consequences: [],
+    localAtual: "",
+    dadoMaldicaoAtual: "d8",
     items: [],
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
@@ -2350,6 +2353,7 @@ function renderHandouts() {
       ${isShowing ? `<span class="npc-type-badge" style="background:var(--success); color:#0d3a26; border-color:var(--success);">Mostrando aos jogadores</span>` : ""}
       <div class="npc-card-actions">
         <button class="btn ${isShowing ? "btn-danger" : "btn-primary"}" data-toggle-handout="${h.id}">${isShowing ? "Esconder" : "Mostrar aos jogadores"}</button>
+        <button class="btn btn-ghost icon-only" data-fullscreen-handout="${h.id}" title="Ver em tela cheia"><span class="icon">fullscreen</span></button>
         <button class="btn btn-ghost" data-delete-handout="${h.id}">Excluir</button>
       </div>
     </div>
@@ -2362,7 +2366,25 @@ function renderHandouts() {
   list.querySelectorAll("[data-delete-handout]").forEach((btn) =>
     btn.addEventListener("click", () => deleteHandout(btn.dataset.deleteHandout))
   );
+  list.querySelectorAll("[data-fullscreen-handout]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const h = state.imagens.find((x) => x.id === btn.dataset.fullscreenHandout);
+      if (h) openFullscreenImage(h.imagem);
+    })
+  );
 }
+
+function openFullscreenImage(src) {
+  document.getElementById("fullscreen-image-img").src = src;
+  document.getElementById("fullscreen-image-overlay").classList.remove("hidden");
+}
+document.getElementById("fullscreen-image-overlay").addEventListener("click", () => {
+  document.getElementById("fullscreen-image-overlay").classList.add("hidden");
+});
+document.getElementById("btn-close-fullscreen-image").addEventListener("click", (e) => {
+  e.stopPropagation();
+  document.getElementById("fullscreen-image-overlay").classList.add("hidden");
+});
 
 // ==================== Locais (visão cruzada por local) ====================
 const LOCATIONS = [
@@ -2767,6 +2789,7 @@ function newCombatant(overrides) {
       armadura: 0,
       notas: "",
       tipo: "",
+      notaMestra: "",
     },
     overrides
   );
@@ -2994,7 +3017,17 @@ function openCombatantQuickView(c) {
       <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
     </div>
     ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyText(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
+    <div class="npc-section-label">Nota de combate (só pra você — comportamento, gatilho, o que fazer nesse turno)</div>
+    <textarea id="combatant-view-nota" class="input" rows="3" placeholder="Ex.: Não quer matar Rui, quer capturar. Foge se chegar a 5 de Coração." style="resize:vertical; font-family:inherit;">${escapeHtml(c.notaMestra || "")}</textarea>
   `;
+  let notaMestraDebounce = null;
+  document.getElementById("combatant-view-nota").addEventListener("input", (e) => {
+    c.notaMestra = e.target.value;
+    saveState();
+    // Atualiza o ícone de "tem nota" no card por trás sem re-renderizar a cada tecla
+    clearTimeout(notaMestraDebounce);
+    notaMestraDebounce = setTimeout(renderCombat, 400);
+  });
   document.getElementById("modal-combatant-view").classList.remove("hidden");
 }
 
@@ -3014,7 +3047,7 @@ function renderCombat() {
       if (c.sucesso === true) statusBadge = `<span class="init-status age-antes">Age antes${c.critico ? " — crítico! 2 ações no 1º turno" : ""}</span>`;
       else if (c.sucesso === false) statusBadge = `<span class="init-status age-depois">Age depois</span>`;
 
-      const hasDetails = c.notas || c.determinacao !== null || c.graca !== null || c.salvamento !== null;
+      const hasDetails = c.notas || c.determinacao !== null || c.graca !== null || c.salvamento !== null || c.notaMestra;
 
       return `
       <div class="combatant-card ${isCurrent ? "current-turn" : ""} ${c.isPc ? "is-pc" : "is-npc"}">
@@ -3025,6 +3058,7 @@ function renderCombat() {
           </div>
           <div class="combatant-name" ${hasDetails ? `data-toggle-combatant="${c.id}"` : ""}>
             ${isCurrent ? "▶ " : ""}${escapeHtml(c.nome)}${c.tipo ? ` <span class="npc-type-badge">${escapeHtml(c.tipo)}</span>` : ""}
+            ${c.notaMestra ? `<span class="icon expand-caret" title="Tem nota de combate">sticky_note_2</span>` : ""}
             ${hasDetails ? `<span class="icon expand-caret">info</span>` : ""}
           </div>
           <div class="hp-control">
@@ -3552,6 +3586,54 @@ function renderObjectives() {
   );
 }
 
+// ==================== Campanha: consequências ====================
+// Pra lembrar decisões que as jogadoras tomaram e que vão voltar mais tarde (ex: "Rui foi
+// capturado pelo Cavaleiro" depois de uma falha no gancho inicial). Marcar como resolvida
+// só risca — não apaga, pra manter o histórico de decisões da campanha.
+document.getElementById("btn-add-consequence").addEventListener("click", () => {
+  const texto = prompt("Nova consequência (o que aconteceu, e o que isso muda):");
+  if (texto && texto.trim()) {
+    state.consequences.push({ id: uid(), texto: texto.trim(), feito: false });
+    saveState();
+    renderConsequences();
+  }
+});
+
+function renderConsequences() {
+  const list = document.getElementById("consequence-list");
+  if (state.consequences.length === 0) {
+    list.innerHTML = emptyState("history_edu", "Nenhuma consequência registrada ainda.");
+    return;
+  }
+  list.innerHTML = state.consequences
+    .map(
+      (o) => `
+    <div class="objective-row ${o.feito ? "done" : ""}">
+      <input type="checkbox" data-consequence-check="${o.id}" ${o.feito ? "checked" : ""} title="Marcar como resolvida">
+      <span>${escapeHtml(o.texto)}</span>
+      <button class="icon-btn" data-consequence-delete="${o.id}" title="Remover"><span class="icon">delete</span></button>
+    </div>
+  `
+    )
+    .join("");
+
+  list.querySelectorAll("[data-consequence-check]").forEach((cb) =>
+    cb.addEventListener("change", () => {
+      const o = state.consequences.find((x) => x.id === cb.dataset.consequenceCheck);
+      o.feito = cb.checked;
+      saveState();
+      renderConsequences();
+    })
+  );
+  list.querySelectorAll("[data-consequence-delete]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      state.consequences = state.consequences.filter((x) => x.id !== btn.dataset.consequenceDelete);
+      saveState();
+      renderConsequences();
+    })
+  );
+}
+
 // ==================== Campanha: notas ====================
 const noteModal = document.getElementById("modal-note");
 const formNote = document.getElementById("form-note");
@@ -3784,6 +3866,28 @@ function renderSessions() {
   );
 }
 
+// ==================== Barra de estado da campanha ====================
+document.getElementById("status-local-atual").addEventListener("input", (e) => {
+  state.localAtual = e.target.value;
+  saveState();
+});
+document.getElementById("status-dado-maldicao").addEventListener("change", (e) => {
+  state.dadoMaldicaoAtual = e.target.value;
+  saveState();
+});
+
+function renderCampaignStatusBar() {
+  const localInput = document.getElementById("status-local-atual");
+  if (document.activeElement !== localInput) localInput.value = state.localAtual || "";
+  document.getElementById("status-dado-maldicao").value = state.dadoMaldicaoAtual || "d8";
+
+  const objetivoPendente = state.objectives.find((o) => !o.feito);
+  document.getElementById("status-objetivo-atual").textContent = objetivoPendente ? objetivoPendente.texto : "Nenhum objetivo pendente";
+
+  const ultimaSessao = state.sessions[state.sessions.length - 1];
+  document.getElementById("status-ultima-sessao").textContent = ultimaSessao ? ultimaSessao.titulo : "Nenhuma sessão ainda";
+}
+
 function renderAll() {
   renderCombat();
   renderPcs();
@@ -3793,8 +3897,10 @@ function renderAll() {
   renderLocationPicker();
   renderMap();
   renderObjectives();
+  renderConsequences();
   renderNotes();
   renderSessions();
+  renderCampaignStatusBar();
 }
 
 renderAll();

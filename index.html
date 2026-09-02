@@ -39,6 +39,23 @@
       <button class="tab-btn" data-tab="sessoes"><span class="icon">history_edu</span> Sessões</button>
     </nav>
   </div>
+  <div class="campaign-status-bar">
+    <span class="icon">location_on</span>
+    <input type="text" id="status-local-atual" class="status-bar-input" placeholder="Local atual...">
+    <span class="status-bar-sep"></span>
+    <span class="icon">casino</span>
+    <select id="status-dado-maldicao" class="status-bar-select" title="Dado de Maldição atual">
+      <option value="d8">d8</option>
+      <option value="d6">d6</option>
+      <option value="d4">d4</option>
+    </select>
+    <span class="status-bar-sep"></span>
+    <span class="icon">flag</span>
+    <span id="status-objetivo-atual" class="status-bar-text">Nenhum objetivo pendente</span>
+    <span class="status-bar-sep"></span>
+    <span class="icon">history_edu</span>
+    <span id="status-ultima-sessao" class="status-bar-text">Nenhuma sessão ainda</span>
+  </div>
   <button id="btn-toggle-foco" class="btn-foco-toggle" title="Modo foco (esconde o topo)"><span class="icon">fullscreen</span></button>
 </header>
 
@@ -164,6 +181,12 @@
         </div>
         <div id="objective-list" class="objective-list"></div>
         <button id="btn-add-objective" class="btn btn-ghost"><span class="icon">add</span> Novo objetivo</button>
+
+        <div class="campanha-col-header" style="margin-top:24px;">
+          <h2>Consequências ativas</h2>
+        </div>
+        <div id="consequence-list" class="objective-list"></div>
+        <button id="btn-add-consequence" class="btn btn-ghost"><span class="icon">add</span> Nova consequência</button>
       </div>
       <div class="campaign-block campanha-col-notas">
         <div class="campanha-col-header">
@@ -542,6 +565,12 @@
 
 <!-- TOOLTIP FLUTUANTE PARA MAGIAS E REGRAS (Aparece em cima da palavra) -->
 <div id="tooltip-pop" class="tooltip-pop hidden"></div>
+
+<!-- VISUALIZAÇÃO EM TELA CHEIA DE UMA IMAGEM -->
+<div id="fullscreen-image-overlay" class="fullscreen-image-overlay hidden">
+  <img id="fullscreen-image-img" alt="">
+  <button type="button" id="btn-close-fullscreen-image" class="btn-close-modal" style="position:fixed; top:20px; right:20px;">&times;</button>
+</div>
 
 <!-- MODAL FICHA RÁPIDA DO COMBATENTE -->
 <div id="modal-combatant-view" class="modal-overlay hidden">
