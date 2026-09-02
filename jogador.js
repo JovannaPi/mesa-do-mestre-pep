@@ -224,6 +224,7 @@ function renderSharedText(state) {
   let entry = null;
   if (tipo === "item") entry = (state.items || []).find((i) => i.id === id);
   else if (tipo === "nota") entry = (state.notes || []).find((n) => n.id === id);
+  else if (tipo === "documento") entry = (state.documentos || []).find((d) => d.id === id);
   if (!entry) {
     box.style.display = "none";
     return;

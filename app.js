@@ -59,6 +59,7 @@ function defaultState() {
     localAtual: "",
     dadoMaldicaoAtual: "d8",
     items: [],
+    documentos: [],
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
     activeMapId: null,
@@ -84,6 +85,7 @@ function defaultState() {
     seededRegioesFlavor: false,
     seededEventosAmbiente: false,
     seededSegredosMestra: false,
+    seededDocumentosEAchados: false,
     seededBaileENotas: false,
   };
 }
@@ -1642,6 +1644,195 @@ function seedSegredosMestra() {
   });
 }
 
+// Documentos & Achados: cartas, bilhetes, objetos e pistas espalhados pelas 5 regiões,
+// pra dar assunto de conversa com NPCs e fazer o mundo parecer vivo sem cada papel
+// virar "a pista da vez". Cada um vira um registro em Compêndio > Documentos & Achados,
+// com "Mostrar aos jogadores" igual já existe pra Itens/Notas — o campo 🔒 Verdade da
+// Mestra nunca é enviado pra tela das jogadoras (ver renderSharedText em jogador.js).
+function seedDocumentosEAchados() {
+  if (state.seededDocumentosEAchados) return;
+  state.seededDocumentosEAchados = true;
+
+  const documento = (nome, tipo, categoria, tags, texto, verdadeMestra, autor, pistaRelacionada) => ({
+    id: uid(), nome, tipo, categoria, tags, texto, verdadeMestra: verdadeMestra || "",
+    autor: autor || "", pistaRelacionada: pistaRelacionada || "", encontrado: false,
+  });
+
+  const newDocumentos = [
+    // ---------- CERVOVALE ----------
+    documento("Lista dos Moradores", "Documento", "pista", ["cervovale", "prefeitura"],
+      "CERVOVALE — REGISTRO DE MORADORES\nTeodoro — Prefeitura\nSelene — Guarda\nMaya Élis — Ferraria\nGeraldo — Padaria\n(...)\nCrianças:\nRui Silva\nAmélia Duarte\nTomás Vieira\nHelena Costa\n(...)\n\nAnotação posterior, com tinta diferente: \"Verificar novamente os nomes das crianças.\"",
+      "Alguns nomes de crianças foram riscados — não porque morreram, mas porque alguém tentou apagar o fato de que elas existiam. Se perguntarem a Teodoro, ele fica desconfortável: \"Esses registros são antigos. Não gosto muito de mexer neles.\""),
+    documento("Aviso da Guarda", "Documento", "pista", ["cervovale", "guarita"],
+      "AVISO AOS MORADORES\nPor determinação da guarda:\nNenhuma criança deve entrar na floresta.\nNão seguir vozes.\nNão aceitar alimentos de desconhecidos.\nSe encontrar uma mulher usando chapéu vermelho, retornar imediatamente à vila.\nNão tentar negociar.\n— Selene",
+      "Esse aviso foi escrito antes da morte de Dulcineia. A última frase (\"Não tentar negociar\") foi adicionada depois — a letra é visivelmente diferente."),
+    documento("Carta de Selene para Teodoro", "Carta", "pessoal", ["cervovale", "prefeitura"],
+      "Teodoro,\nSe alguma coisa acontecer comigo, não conte às crianças o que aconteceu naquela noite. Não ainda. Eles precisam acreditar que fizemos a coisa certa. Talvez tenhamos feito. Talvez não. Eu ainda não sei.\n— Selene",
+      "Selene já havia começado a desconfiar que matar Dulcineia não resolveria tudo — mesmo antes de virar lobisomem.", "Selene"),
+    documento("Página do Diário de uma Criança", "Documento", "pista", ["cervovale"],
+      "Hoje a senhora Dulcineia perguntou meu nome. Eu não respondi. Mamãe disse que nunca devemos contar nosso nome para estranhos. Mas ela já sabia. Ela disse: \"Nomes são coisas curiosas. Algumas pessoas passam a vida inteira tentando descobrir quem são.\" Depois ela me deu uma bala. Eu não comi.",
+      "Dulcineia tinha interesse em nomes e identidade, não só em crianças em si — plante isso cedo, sem explicar."),
+    documento("Receita do Padeiro", "Documento", "ambientacao", ["cervovale", "padaria"],
+      "PÃO DE MEL DA CASA\nFarinha — 2 medidas\nMel — 1 medida\nÁgua — meia medida\nAçúcar — 3 colheres\nNÃO USAR: açúcar vermelho.\n\nAnotação de Geraldo: \"Não sei quem continua deixando isso aqui.\"",
+      "O açúcar vermelho veio de uma antiga remessa usada por Dulcineia em experimentos."),
+    documento("Bilhete de Maya", "Carta", "pessoal", ["cervovale", "ferraria"],
+      "Elton,\nVocê prometeu voltar antes do jantar. Se estiver lendo isso depois, significa que falhou. De novo. Não demore.\n— Maya",
+      "Mostra que Maya não é só a ferreira fechada que aparenta — ela e Élton tinham intimidade, humor e rotina de casal.", "Maya",
+      "A letra de Maya pode ser reconhecida se acharem uma mensagem dela no Baile Eterno (ver Carta de Élton para Maya)."),
+    documento("Relatório da Noite da Bruxa", "Documento", "decisivo", ["cervovale", "guarda"],
+      "Dulcineia foi localizada na torre. As crianças estavam presentes. Selene liderou a entrada. Houve confronto. A suspeita foi atingida. Antes de morrer, pronunciou palavras que ninguém conseguiu compreender. Depois disso: o primeiro morador começou a adoecer.",
+      "O \"primeiro morador\" foi a primeira pessoa a apresentar a transformação doce — a origem visível da maldição."),
+    documento("Sino da Guarda", "Objeto", "ambientacao", ["cervovale"],
+      "Um pequeno sino de bronze. Quando tocado: nada acontece. Mas se alguém tocar três vezes seguidas durante a madrugada... um sino distante responde.",
+      "O som vem da antiga torre de observação."),
+    documento("Bala que Nunca Derrete", "Objeto", "pista", ["cervovale"],
+      "Uma pequena bala vermelha. Ela nunca perde o formato. Se alguém comer: não causa dano, mas por alguns segundos a pessoa escuta \"Ainda estamos aqui.\"",
+      "É uma pequena manifestação da magia das almas presas no ovo de dragão."),
+
+    // ---------- BOSQUE EMARANHADO ----------
+    documento("Diário do Explorador", "Documento", "ambientacao", ["bosque emaranhado"],
+      "Dia 1. A floresta parece maior por dentro.\nDia 2. Voltei ao mesmo lugar.\nDia 3. Minha bússola aponta para mim.\nDia 4. Encontrei minhas próprias pegadas.\nDia 5. Elas estavam vindo na direção contrária.",
+      "O bosque reorganiza seus caminhos de acordo com quem o atravessa."),
+    documento("Bilhete de Rui", "Carta", "pista", ["bosque emaranhado"],
+      "Eu vi uma coisa. Não era um monstro. Era um homem de chocolate. Ele estava olhando para a vila. Acho que estava triste.",
+      "Rui foi uma das primeiras pessoas a perceber que o Cavaleiro não age como um predador comum. Só entregue isso se Rui foi salvo no gancho inicial.", "Rui Silva"),
+    documento("Página de Selene", "Documento", "decisivo", ["bosque emaranhado"],
+      "Não consigo voltar. Não assim. Eles olhariam para mim e veriam um monstro. Talvez estejam certos. Mas ainda consigo lembrar os rostos. Ainda consigo lembrar Dulcineia. Ainda consigo lembrar as crianças. É isso que mais dói.",
+      "Confirma pras jogadoras que Selene esteve viva na floresta por muito tempo — achado no acampamento escondido dela.", "Selene"),
+    documento("Espelho Rachado", "Objeto", "pista", ["bosque emaranhado"],
+      "Um pequeno fragmento do Espelho Maléfico. Ele não mostra o rosto — mostra uma cena que poderia acontecer.",
+      "Nunca explique se é futuro garantido ou só uma possibilidade — deixe a ambiguidade."),
+    documento("Chave Sem Fechadura", "Objeto", "pista", ["bosque emaranhado"],
+      "Uma pequena chave dourada. Nenhuma porta conhecida combina com ela.",
+      "No Baile Eterno, ela abre uma porta que não deveria existir (ver Chave Sem Porta / Documento 11 do Baile).", "", "Chave Sem Porta (Baile Eterno)"),
+    documento("Receita de Poção (memória)", "Documento", "ambientacao", ["bosque emaranhado"],
+      "Pétalas de rosa. Uma lágrima verdadeira. Mel de fada. Uma lembrança que você não quer perder. Misturar sob luar.",
+      "Receita antiga usada pra criar poções de memória."),
+    documento("Fita Vermelha", "Objeto", "pista", ["bosque emaranhado"],
+      "Uma fita presa a um galho. Quando alguém segura a fita, sente uma lembrança que não é sua: uma criança correndo. Uma mulher gritando. Um sino. Depois, nada.",
+      "Eco sensorial de algum evento importante da região — use pra plantar clima antes de uma revelação maior."),
+
+    // ---------- VALE DAS BAGAS ----------
+    documento("Registro da Colmeia", "Documento", "pista", ["vale das bagas"],
+      "PRODUÇÃO DE MEL\nPrimavera: normal.\nVerão: abundante.\nOutono: impossível. O mel não para de crescer.\nAs abelhas começaram a nascer com olhos vermelhos.\nNão abrir a colmeia principal.",
+      "A magia do mel foi corrompida pelo pólen amaldiçoado."),
+    documento("Carta da Rainha Gardênia", "Documento", "pessoal", ["vale das bagas"],
+      "Humanos sempre chegam querendo alguma coisa. Mel. Magia. Abrigo. Respostas. Depois vão embora. Dulcineia também chegou pedindo apenas uma coisa. A Colher de Mel. Nós dissemos não. Ela roubou mesmo assim.",
+      "Explica a origem da desconfiança das fadas pequenas com humanos.", "Rainha Gardênia"),
+    documento("O Juramento da Colher", "Documento", "ambientacao", ["vale das bagas"],
+      "Placa antiga: \"Aquele que receber a Colher de Mel deverá: alimentar antes de pedir; oferecer antes de receber; cumprir aquilo que prometer.\"",
+      "Regra do mundo: fadas levam promessas literalmente."),
+    documento("Semente Azul", "Objeto", "ambientacao", ["vale das bagas"],
+      "Uma semente minúscula. Quando plantada, cresce instantaneamente. Mas só floresce quando alguém diz uma verdade.", ""),
+    documento("Colher de Madeira", "Objeto", "pista", ["vale das bagas"],
+      "Parece inútil. Tem pequenas marcas: a letra \"D\".",
+      "É uma réplica da Colher de Mel roubada por Dulcineia."),
+    documento("Bilhete de uma Fada", "Documento", "pista", ["vale das bagas"],
+      "Não confie no rato. Ele sabe o caminho. Ele sabe o cheiro. Ele sabe seus nomes. E ele está com fome.", ""),
+    documento("Receita de Mel (das fadas)", "Documento", "ambientacao", ["vale das bagas"],
+      "Para fazer o verdadeiro mel das fadas: uma flor colhida ao amanhecer; três gotas de água do lago; uma história contada sem mentiras; e uma colher compartilhada.",
+      "Pode ser usado pra curar uma pequena corrupção ou ganhar a confiança das fadas — deixe o grupo descobrir o uso na prática."),
+    documento("Pequeno Dente de Rato", "Objeto", "pista", ["vale das bagas"],
+      "Encontrado perto dos túneis. Quando levado perto da cabeça do Rei Rato, ele sussurra: \"Ainda lembro.\"",
+      "Conecta com as falas crípticas do Rei Rato em combate (ver nota \"O Rei Rato — falas na batalha\")."),
+
+    // ---------- BAILE ETERNO ----------
+    documento("Convite para o Baile", "Carta", "ambientacao", ["baile eterno"],
+      "Vossa presença é solicitada. O baile começa ao anoitecer. O baile termina ao amanhecer. O baile continuará até que todos tenham dançado. Não se preocupe com o tempo. Aqui, ele não passa.",
+      "O baile realmente não termina — isso não é força de expressão."),
+    documento("Lista de Convidados", "Documento", "pista", ["baile eterno"],
+      "Entre centenas de nomes: Élton Élis. Ao lado do nome: \"Convidado permanente.\"", ""),
+    documento("Carta de Élton para Maya", "Carta", "decisivo", ["baile eterno"],
+      "Maya,\nEu tentei voltar. Acredite em mim. Mas cada vez que penso em ir embora, alguma coisa me convence a ficar mais uma noite. Talvez amanhã. Sempre amanhã.\n— Élton",
+      "Élton não está só preso fisicamente — o próprio Baile está alterando sua percepção de tempo e desejo.", "Élton Élis",
+      "A letra combina com o Bilhete de Maya, achado em Cervovale."),
+    documento("Manual de Etiqueta do Baile", "Documento", "ambientacao", ["baile eterno"],
+      "Nunca recuse uma dança. Nunca aceite uma bebida cujo nome você não conheça. Nunca diga \"para sempre\" durante o Baile. Nunca pergunte há quanto tempo alguém está aqui. E, principalmente: não prometa voltar.", ""),
+    documento("Máscara de Porcelana", "Objeto", "pista", ["baile eterno"],
+      "Uma máscara branca. Quando usada, as pessoas enxergam quem a usa como alguém que esperavam encontrar.",
+      "Pode dificultar que alguém reconheça a verdadeira identidade de quem a usa — útil e perigoso ao mesmo tempo."),
+    documento("Taça do Meio-Dia", "Objeto", "pista", ["baile eterno"],
+      "Uma taça dourada. Quando cheia: quem bebe sente felicidade absoluta por alguns minutos. Depois esquece por alguns minutos por que estava triste.",
+      "O Baile usa emoções como combustível mágico."),
+    documento("Página do Livro do Rei-Elfo", "Documento", "decisivo", ["baile eterno"],
+      "Um reino perfeito não possui tristeza. Mas também não possui saudade. Não possui despedidas. Não possui amanhã. Talvez seja por isso que todos aqui sorriam.",
+      "Deve aparecer antes das jogadoras entenderem completamente o problema do Baile — planta o tema sem explicar."),
+    documento("Chave Sem Porta", "Objeto", "pista", ["baile eterno"],
+      "A chave encontrada no bosque finalmente encontra sua fechadura. Abre uma pequena porta atrás de uma cortina. Dentro: nada, exceto uma cadeira e uma carta: \"Eu também procurei a saída.\"",
+      "Alguém antes das Princesas também tentou escapar do Baile e não conseguiu — deixe em aberto quem.", "", "Chave Sem Fechadura (Bosque Emaranhado)"),
+
+    // ---------- TORRE DA BRUXA ----------
+    documento("Página do Diário de Dulcineia (identidade)", "Documento", "decisivo", ["torre da bruxa"],
+      "A alma não é fixa. A alma muda. O corpo muda. O nome muda. Então por que todos insistem que uma pessoa precisa permanecer a mesma?",
+      "Uma das primeiras pistas sobre o verdadeiro interesse de Dulcineia: identidade e permanência, não só poder.", "Dulcineia"),
+    documento("Registro do Experimento", "Documento", "decisivo", ["torre da bruxa"],
+      "Experimento 12: Falha. O recipiente preservou o corpo. A essência desapareceu.\nExperimento 13: Falha. A essência permaneceu. O corpo não.\nExperimento 14: Sucesso parcial. A consciência permaneceu separada.",
+      "Origem da lógica por trás da maldição — corpo, alma e consciência sendo separados de propósito."),
+    documento("Lista de Nomes (crianças)", "Documento", "decisivo", ["torre da bruxa"],
+      "Uma longa lista com os nomes das crianças desaparecidas. Ao lado de cada nome: \"Preservada.\" Alguns nomes estão riscados. Outros circulados. Um nome está escrito várias vezes: Rui Silva. Depois é riscado.",
+      "Dulcineia chegou a considerar Rui para um experimento — mas isso aconteceu antes da aventura começar, não é uma ameaça atual."),
+    documento("Anotação Sobre o Ovo", "Documento", "decisivo", ["torre da bruxa"],
+      "O ovo não é apenas um ovo. O coração pertence a uma criatura. As vozes pertencem a outras. Se as duas coisas acordarem juntas... não sei qual delas nascerá primeiro.",
+      "Uma das pistas mais importantes da campanha — NÃO entregue cedo. Segure até bem perto do Viveiro/confronto final."),
+    documento("Carta Nunca Enviada", "Carta", "decisivo", ["torre da bruxa"],
+      "Selene,\nvocê acha que me matou. Talvez tenha. Mas aquilo que você interrompeu não morreu. Você apenas deixou tudo incompleto. Quando o ovo abrir, eles voltarão. Todos.\n— Dulcineia",
+      "Não significa que Dulcineia seja inocente — ela sequestrou crianças e fez experiências. Mas ela sabia que o ritual estava incompleto.", "Dulcineia"),
+    documento("Instruções do Pingente", "Documento", "decisivo", ["torre da bruxa"],
+      "O Pingente Rouba-Alma não destrói. Ele separa. Corpo de espírito. Memória de carne. Desejo de forma. O que for separado deverá encontrar um recipiente.",
+      "Agora dá pra juntar as peças: o doce é o recipiente."),
+    documento("Boneca de Açúcar", "Objeto", "pista", ["torre da bruxa"],
+      "Uma pequena boneca feita de açúcar, com rosto de criança. Quando colocada perto de uma pessoa transformada: a boneca começa a chorar.", ""),
+    documento("Frasco com Pó Dourado", "Objeto", "pista", ["torre da bruxa"],
+      "Etiqueta: \"Memórias — lote 7.\" Se aberto, libera uma lembrança — não necessariamente da pessoa que abriu.", ""),
+    documento("Pena Negra", "Objeto", "pista", ["torre da bruxa"],
+      "Encontrada no laboratório. Não pertence a nenhuma ave comum. Quando segurada, fica quente perto do ovo.", ""),
+    documento("Pequeno Caderno Preto", "Objeto", "decisivo", ["torre da bruxa"],
+      "A maior parte das páginas está vazia. Na última página: \"Se alguém encontrar isto, não destrua o ovo.\" Sem assinatura.",
+      "Não foi escrito por Dulcineia — isso deve ficar sem resposta por bastante tempo. É deliberadamente misterioso."),
+
+    // ---------- QUALQUER LOCAL ----------
+    documento("Fita Azul", "Objeto", "ambientacao", ["geral"], "Sempre aparece em lugares onde alguém tomou uma decisão importante.", ""),
+    documento("Colher Torta", "Objeto", "ambientacao", ["geral"], "Parece inútil. Uma fada reconhece imediatamente: \"Essa não deveria estar aqui.\"", ""),
+    documento("Chave Sem Número", "Objeto", "ambientacao", ["geral"], "Não abre nenhuma porta conhecida.", ""),
+    documento("Moeda com Duas Faces Iguais", "Objeto", "ambientacao", ["geral"], "Sempre cai com a mesma face para cima.", ""),
+    documento("Maçã Vermelha (que responde)", "Objeto", "pista", ["geral"],
+      "Quando alguém pergunta algo para ela, responde. Mas responde aquilo que alguém próximo mais gostaria que fosse verdade.", ""),
+    documento("Relógio Parado", "Objeto", "pista", ["geral"], "Só funciona quando alguém por perto está mentindo.", ""),
+    documento("Brinquedo de Madeira", "Objeto", "pista", ["geral", "torre da bruxa"],
+      "Uma pequena criança de madeira. Se colocado próximo ao ovo: vira o rosto sozinho.", ""),
+    documento("Fragmento de Espelho (achado)", "Objeto", "pista", ["geral"],
+      "Mostra uma pessoa que a personagem conhece. Mas não necessariamente como ela está agora.", ""),
+  ];
+  newDocumentos.forEach((d) => {
+    if (!state.documentos.some((x) => x.nome === d.nome)) state.documentos.push(d);
+  });
+
+  const note = (titulo, categoria, texto) => ({ id: uid(), titulo, categoria, texto });
+
+  const newNotes = [
+    note("Rumores por região (verdadeiro / falso / meia-verdade)", "regras",
+      "Use esses rumores em qualquer conversa de taverna, praça ou fogueira — a Mestra sabe qual é a verdade, as jogadoras não.\n\n" +
+      "CERVOVALE\n1. \"Selene morreu.\" — falso\n2. \"O prefeito sabe mais do que conta.\" — verdadeiro\n3. \"O poço fala de madrugada.\" — verdadeiro\n4. \"Maya recebeu uma carta de Élton.\" — verdadeiro\n5. \"O Cavaleiro não consegue entrar em Cervovale.\" — verdadeiro\n6. \"Dulcineia ainda está viva.\" — falso\n7. \"Algumas pessoas transformadas ainda conseguem falar.\" — verdadeiro\n8. \"O padeiro sabe onde estão as crianças.\" — falso\n\n" +
+      "BOSQUE EMARANHADO\n1. \"A floresta sabe o nome de quem entra.\" — verdadeiro\n2. \"Se ouvir sua própria voz, não responda.\" — verdadeiro\n3. \"Existe um homem-lobo no bosque.\" — verdadeiro\n4. \"O Cavaleiro mora na floresta.\" — meia verdade\n5. \"Cogumelos podem ouvir.\" — verdadeiro\n6. \"A floresta nunca deixa ninguém sair.\" — falso\n7. \"Existe uma passagem para o Baile Eterno.\" — verdadeiro\n8. \"Selene está morta.\" — falso\n\n" +
+      "VALE DAS BAGAS\n1. \"As fadas odeiam humanos.\" — meia verdade\n2. \"A Rainha sabe quem roubou a colher.\" — verdadeiro\n3. \"O mel está deixando os ratos inteligentes.\" — falso\n4. \"Existe um rei vivendo debaixo do depósito.\" — verdadeiro\n5. \"Quem mente diante da rainha perde a voz.\" — meia verdade\n6. \"A Colher de Mel pode curar a maldição.\" — falso\n7. \"As fadas sabem entrar no Baile Eterno.\" — verdadeiro\n8. \"O Rei Rato conhece Dulcineia.\" — verdadeiro\n\n" +
+      "BAILE ETERNO\n1. \"O Rei-Elfo pode conceder qualquer desejo.\" — meia verdade\n2. \"Ninguém consegue deixar o Baile.\" — verdadeiro\n3. \"Élton está aqui.\" — verdadeiro\n4. \"Quem dança três músicas com o Rei recebe um presente.\" — falso\n5. \"Senhora Neves nunca sorri.\" — falso\n6. \"Príncipe Aurélio guarda um segredo.\" — verdadeiro\n7. \"Duquesa Jacinda elogia qualquer pessoa.\" — falso\n8. \"O Baile conhece o desejo de cada convidado.\" — verdadeiro\n\n" +
+      "TORRE DA BRUXA\n1. \"Dulcineia ainda está viva.\" — não exatamente\n2. \"A torre muda de lugar.\" — falso\n3. \"As paredes conseguem ouvir.\" — verdadeiro\n4. \"O ovo contém um dragão.\" — verdadeiro\n5. \"O dragão está sozinho.\" — falso\n6. \"O pingente mata almas.\" — falso\n7. \"Dulcineia queria viver para sempre.\" — meia verdade\n8. \"As crianças estão dentro do ovo.\" — verdadeiro\n9. \"Destruir o ovo libertará todo mundo.\" — ninguém sabe\n10. \"Existe outra forma.\" — talvez\n\n" +
+      "BANCO GERAL (qualquer NPC, qualquer lugar)\nVerdadeiros: \"A maldição começou antes de todo mundo perceber.\" / \"Tem gente que virou doce e continua consciente.\" / \"Selene não morreu.\" / \"O Cavaleiro não gosta de crianças.\" / \"Existe uma passagem para o Baile.\" / \"As fadas conhecem a história de Dulcineia.\" / \"O Rei-Elfo sabe mais do que demonstra.\" / \"O ovo não deve ser aberto.\"\n" +
+      "Falsos: \"Dulcineia voltou.\" / \"O Cavaleiro é filho dela.\" / \"Comer um doce de Cervovale faz você virar doce.\" / \"Selene matou todas as crianças.\" / \"O Rei Rato criou a maldição.\"\n" +
+      "Meias-verdades: \"Dulcineia queria ser imortal.\" / \"O Cavaleiro protege a vila.\" / \"As fadas odeiam humanos.\" / \"O Rei-Elfo pode fazer qualquer coisa.\" / \"Destruir o ovo resolve tudo.\" / \"O Espelho Maléfico nunca mente.\""),
+
+    note("Como usar Documentos & Achados (guia rápido)", "regras",
+      "NÃO ENTREGUE SIMPLESMENTE\n\"Aqui está um documento. Leiam.\" Faça o documento entrar na cena — a Princesa pergunta pra Maya \"Você conhecia Élton?\", Maya faz uma pausa, pega uma caixa, e dentro está a carta. Ou: investigando a prefeitura, uma gaveta trancada esconde a Lista dos Moradores. Ou: no bosque, uma árvore tem um papel preso — a letra é da própria Princesa, que não lembra de ter escrito.\n\n" +
+      "DOCUMENTOS QUE CRIAM PERGUNTAS, NÃO SÓ RESPOSTAS\nEm vez de responder tudo de uma vez, deixe a informação se acumular. Ex.: \"O ovo não é apenas um ovo\" → \"Como assim?\" → depois encontram \"O coração pertence a uma criatura. As vozes pertencem a outras\" → \"QUAIS vozes?\" → depois a Lista de Nomes das crianças → \"Elas estão no ovo?\" → sim. Essa progressão é bem mais satisfatória que entregar a resposta inteira de uma vez.\n\n" +
+      "REDE DE CONEXÕES (documentos que levam a outros documentos)\nDulcineia → crianças → almas → pingente → ovo → dragão → maldição.\nMaya → Élton → Baile → Rei-Elfo.\nSelene → Dulcineia → Cavaleiro → Cervovale.\nUse pistaRelacionada nos documentos (já preenchido em vários) pra lembrar dessas ligações na hora.\n\n" +
+      "PROPORÇÃO RECOMENDADA (não todo papel é importante)\n~40% ambientação (mundo parece real) / ~30% pistas (ajudam a investigação) / ~20% histórias pessoais (cartas, relações, problemas de NPC) / ~10% decisivo (muda a compreensão da campanha). Às vezes é só uma receita. Às vezes é a coisa mais importante que acharam na sessão — e elas nunca sabem qual até ser tarde.\n\n" +
+      "PERGUNTAS PRA DAR PROFUNDIDADE A UM NPC IMPORTANTE (sem precisar improvisar tudo na hora)\n3 assuntos que ele adora / 3 que evita / 3 coisas que sabe / 2 coisas que acredita mas estão erradas / 1 segredo / 1 pessoa de quem gosta / 1 de quem desconfia / 1 objeto importante / 1 frase característica / 1 coisa que mudaria a opinião dele sobre as Princesas. Os documentos dão assunto pra essas conversas: a jogadora acha uma carta → pergunta ao NPC → ele reage → revela algo → leva a outro documento → outro NPC → outro local. A aventura passa a se mover pela curiosidade das próprias jogadoras."),
+  ];
+  newNotes.forEach((n) => {
+    if (!state.notes.some((x) => x.titulo === n.titulo)) state.notes.push(n);
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -1653,6 +1844,7 @@ seedCervovaleFlavor();
 seedRegioesFlavor();
 seedEventosAmbiente();
 seedSegredosMestra();
+seedDocumentosEAchados();
 saveState();
 
 // ---------- Tabs ----------
@@ -2463,6 +2655,119 @@ function renderLocationView() {
   );
 }
 
+// ==================== Documentos & Achados ====================
+const TIPO_ICON = { Documento: "description", Carta: "mail", Objeto: "redeem", Pista: "search" };
+const CATEGORIA_LABEL = {
+  ambientacao: "Ambientação",
+  pista: "Pista",
+  pessoal: "História pessoal",
+  decisivo: "Decisivo",
+};
+
+const documentoModal = document.getElementById("modal-documento");
+const formDocumento = document.getElementById("form-documento");
+
+function openDocumentoModal(doc) {
+  document.getElementById("documento-modal-title").textContent = doc ? "Editar documento/achado" : "Novo documento/achado";
+  document.getElementById("documento-id").value = doc ? doc.id : "";
+  document.getElementById("documento-nome").value = doc ? doc.nome : "";
+  document.getElementById("documento-tipo").value = doc ? doc.tipo : "Documento";
+  document.getElementById("documento-categoria").value = doc ? doc.categoria : "ambientacao";
+  document.getElementById("documento-local").value = doc ? doc.tags.join(", ") : "";
+  document.getElementById("documento-texto").value = doc ? doc.texto : "";
+  document.getElementById("documento-verdade").value = doc ? doc.verdadeMestra : "";
+  document.getElementById("documento-autor").value = doc ? doc.autor : "";
+  document.getElementById("documento-pista-relacionada").value = doc ? doc.pistaRelacionada : "";
+  document.getElementById("documento-encontrado").checked = doc ? doc.encontrado : false;
+  documentoModal.classList.remove("hidden");
+}
+
+function closeDocumentoModal() { documentoModal.classList.add("hidden"); formDocumento.reset(); }
+
+document.getElementById("btn-add-documento").addEventListener("click", () => openDocumentoModal(null));
+document.getElementById("btn-cancel-documento").addEventListener("click", closeDocumentoModal);
+
+formDocumento.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("documento-id").value;
+  const data = {
+    id: id || uid(),
+    nome: document.getElementById("documento-nome").value.trim(),
+    tipo: document.getElementById("documento-tipo").value,
+    categoria: document.getElementById("documento-categoria").value,
+    tags: parseTags(document.getElementById("documento-local").value),
+    texto: document.getElementById("documento-texto").value.trim(),
+    verdadeMestra: document.getElementById("documento-verdade").value.trim(),
+    autor: document.getElementById("documento-autor").value.trim(),
+    pistaRelacionada: document.getElementById("documento-pista-relacionada").value.trim(),
+    encontrado: document.getElementById("documento-encontrado").checked,
+  };
+  if (id) {
+    const idx = state.documentos.findIndex((d) => d.id === id);
+    state.documentos[idx] = data;
+  } else {
+    state.documentos.push(data);
+  }
+  saveState();
+  closeDocumentoModal();
+  renderDocumentos();
+});
+
+function deleteDocumento(id) {
+  if (!confirm("Excluir este documento/achado?")) return;
+  state.documentos = state.documentos.filter((d) => d.id !== id);
+  saveState();
+  renderDocumentos();
+}
+
+function documentoCardHtml(d) {
+  const shared = isTextShared("documento", d.id);
+  return `
+    <div class="npc-card">
+      <div class="npc-card-header">
+        <h3><span class="icon" style="vertical-align:-5px; color:var(--accent-strong);">${TIPO_ICON[d.tipo] || "description"}</span> ${escapeHtml(d.nome)}</h3>
+        <span class="npc-type-badge">${CATEGORIA_LABEL[d.categoria] || d.categoria}</span>
+      </div>
+      ${d.autor ? `<div class="npc-notes"><b>Quem escreveu:</b> ${escapeHtml(d.autor)}</div>` : ""}
+      <div class="npc-notes">${linkifyText(d.texto)}</div>
+      ${d.verdadeMestra ? `<div class="npc-notes documento-secret"><b>🔒 Verdade da Mestra:</b> ${linkifyText(d.verdadeMestra)}</div>` : ""}
+      ${d.pistaRelacionada ? `<div class="npc-notes"><b>🧩 Conecta com:</b> ${escapeHtml(d.pistaRelacionada)}</div>` : ""}
+      ${d.tags.length ? `<div class="npc-tags">${d.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
+      ${d.encontrado ? `<span class="npc-type-badge" style="background:var(--success); color:#0d3a26; border-color:var(--success);">Já encontrado</span>` : ""}
+      <div class="npc-card-actions">
+        <button class="btn btn-ghost" data-share-text="documento" data-share-id="${d.id}">${shared ? "Esconder" : "Mostrar aos jogadores"}</button>
+        <button class="btn btn-ghost" data-edit-documento="${d.id}">Editar</button>
+        <button class="btn btn-danger" data-delete-documento="${d.id}">Excluir</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderDocumentos() {
+  const list = document.getElementById("documento-list");
+  const query = document.getElementById("documento-search").value.trim().toLowerCase();
+  const filtered = state.documentos.filter((d) => {
+    if (!query) return true;
+    return (
+      d.nome.toLowerCase().includes(query) ||
+      d.texto.toLowerCase().includes(query) ||
+      d.tipo.toLowerCase().includes(query) ||
+      d.tags.some((t) => t.toLowerCase().includes(query))
+    );
+  });
+  list.innerHTML = filtered.length
+    ? filtered.map(documentoCardHtml).join("")
+    : emptyState("description", "Nenhum documento ou achado encontrado.");
+
+  list.querySelectorAll("[data-edit-documento]").forEach((btn) =>
+    btn.addEventListener("click", () => openDocumentoModal(state.documentos.find((d) => d.id === btn.dataset.editDocumento)))
+  );
+  list.querySelectorAll("[data-delete-documento]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteDocumento(btn.dataset.deleteDocumento))
+  );
+}
+document.getElementById("documento-search").addEventListener("input", renderDocumentos);
+
 // ==================== Mostrar texto (itens/notas) e tags clicáveis ====================
 function isTextShared(tipo, id) {
   return state.textoCompartilhadoTipo === tipo && state.textoCompartilhadoId === id;
@@ -2479,6 +2784,7 @@ function toggleSharedText(tipo, id) {
   saveState(true);
   renderItems();
   renderNotes();
+  renderDocumentos();
 }
 
 function goToTagFilter(tag) {
@@ -3893,6 +4199,7 @@ function renderAll() {
   renderPcs();
   renderNpcs();
   renderItems();
+  renderDocumentos();
   renderHandouts();
   renderLocationPicker();
   renderMap();

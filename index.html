@@ -95,6 +95,7 @@
       <button class="subtab-btn" data-subtab="itens">Itens</button>
       <button class="subtab-btn" data-subtab="locais">Por Local</button>
       <button class="subtab-btn" data-subtab="imagens">Imagens</button>
+      <button class="subtab-btn" data-subtab="documentos">Documentos &amp; Achados</button>
     </nav>
 
     <div id="subtab-npcs" class="subtab-panel active">
@@ -134,6 +135,15 @@
       </div>
       <p class="field-hint">Envie artes, retratos ou cenas aqui. Clique em "Mostrar aos jogadores" para exibir na tela deles (celular/tablet); "Esconder" tira a imagem de lá.</p>
       <div id="handout-list" class="card-grid"></div>
+    </div>
+
+    <div id="subtab-documentos" class="subtab-panel">
+      <div class="panel-toolbar">
+        <button id="btn-add-documento" class="btn btn-primary"><span class="icon">add</span> Novo documento/achado</button>
+        <input id="documento-search" class="input" type="text" placeholder="Buscar por nome, local, tipo ou texto...">
+      </div>
+      <p class="field-hint">Cartas, bilhetes, objetos, pistas — nem tudo precisa ser importante, alguns só existem pra fazer o mundo parecer vivo. O 🔒 "Verdade da Mestra" nunca aparece pras jogadoras, mesmo mostrando o documento.</p>
+      <div id="documento-list" class="card-grid"></div>
     </div>
   </section>
 
@@ -621,6 +631,59 @@
       </label>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-item">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL DOCUMENTO / ACHADO -->
+<div id="modal-documento" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="documento-modal-title">Novo documento/achado</h2>
+    <form id="form-documento">
+      <input type="hidden" id="documento-id">
+      <label>Nome
+        <input type="text" id="documento-nome" required placeholder="ex: Carta de Selene para Teodoro">
+      </label>
+      <label>Tipo
+        <select id="documento-tipo">
+          <option value="Documento">📜 Documento</option>
+          <option value="Carta">💌 Carta / Bilhete</option>
+          <option value="Objeto">🎁 Objeto</option>
+          <option value="Pista">🔎 Pista</option>
+        </select>
+      </label>
+      <label>Categoria (o quanto isso importa pra trama)
+        <select id="documento-categoria">
+          <option value="ambientacao">Ambientação — só pra dar vida ao mundo</option>
+          <option value="pista">Pista — ajuda a investigação</option>
+          <option value="pessoal">História pessoal — cartas, relações, NPCs</option>
+          <option value="decisivo">Decisivo — muda a compreensão da campanha</option>
+        </select>
+      </label>
+      <label>Onde encontrar / local (tags separadas por vírgula)
+        <input type="text" id="documento-local" placeholder="ex: cervovale, prefeitura">
+      </label>
+      <label>Texto visível (o que as jogadoras leem)
+        <textarea id="documento-texto" rows="5" required></textarea>
+      </label>
+      <label>🔒 Verdade da Mestra (nunca aparece pras jogadoras, mesmo mostrando o documento)
+        <textarea id="documento-verdade" rows="3" placeholder="O que isso realmente significa, por trás do que está escrito"></textarea>
+      </label>
+      <label>Quem escreveu / origem (opcional)
+        <input type="text" id="documento-autor" placeholder="ex: Selene">
+      </label>
+      <label>Pista relacionada (opcional)
+        <input type="text" id="documento-pista-relacionada" placeholder="ex: conecta com o Diário de Dulcineia">
+      </label>
+      <label>
+        <input type="checkbox" id="documento-encontrado">
+        Já foi encontrado pelas jogadoras
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-documento">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>

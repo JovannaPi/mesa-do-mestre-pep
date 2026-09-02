@@ -566,6 +566,13 @@ body.foco-mode .campaign-status-bar { padding: 4px 16px; }
   font-weight: 700; margin-top: 2px;
 }
 .npc-notes { font-size: 0.95rem; color: var(--text); white-space: pre-wrap; max-height: 110px; overflow-y: auto; line-height: 1.5; }
+.documento-secret {
+  background: rgba(156, 63, 131, 0.1);
+  border: 1px dashed var(--accent-strong);
+  border-radius: 8px;
+  padding: 8px 10px;
+  max-height: 140px;
+}
 
 .npc-card-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 10px; border-top: 2px dashed var(--border); flex-wrap: wrap; }
 
