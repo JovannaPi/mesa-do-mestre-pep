@@ -416,6 +416,20 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 }
 .ability-link:hover { color: var(--accent); }
 
+.dice-inline {
+  font: inherit;
+  background: rgba(156, 63, 131, 0.12);
+  color: var(--accent-deep);
+  border: 1px solid rgba(156, 63, 131, 0.3);
+  border-radius: 6px;
+  padding: 0 5px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.dice-inline:hover { background: rgba(156, 63, 131, 0.22); }
+.dice-inline:active { transform: scale(0.96); }
+
 .combatant-card.current-turn {
   border-color: var(--accent-strong);
   animation: turn-pulse-glow 2.2s ease-in-out infinite;

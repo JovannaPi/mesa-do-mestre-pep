@@ -79,6 +79,7 @@ function defaultState() {
     seededMonstros2: false,
     seededCervovaleFlavor: false,
     seededRegioesFlavor: false,
+    seededEventosAmbiente: false,
     seededBaileENotas: false,
   };
 }
@@ -1464,6 +1465,83 @@ function seedRegioesFlavor() {
   });
 }
 
+// Tabelas de atmosfera — flashes rápidos de mundo vivo pra puxar de vez em quando
+// durante viagem/tempo livre, sem efeito mecânico nenhum (diferente das Complicações,
+// que já existem no livro e têm consequência). Em Cervovale, os 3 estágios acompanham
+// o tamanho atual do Dado de Maldição (d8 leve, d6 médio, d4 grave) — conteúdo próprio,
+// não vem do livro.
+function seedEventosAmbiente() {
+  if (state.seededEventosAmbiente) return;
+  state.seededEventosAmbiente = true;
+
+  const note = (titulo, categoria, texto) => ({ id: uid(), titulo, categoria, texto });
+
+  const newNotes = [
+    note("Eventos Ambiente (tabelas de atmosfera)", "regras",
+      "Como usar: de vez em quando — não toda cena, só quando quiser um toque extra de mundo vivo — puxe (role ou escolha) um evento da tabela da região onde o grupo está. São só flashes de atmosfera, sem efeito mecânico, pra reforçar que o mundo continua se movendo e a maldição continua avançando, mesmo quando nada de \"importante\" está acontecendo. Diferente das Complicações do livro (que têm consequência de jogo), esses eventos são só sabor — 10 a 20 segundos de descrição e segue o jogo.\n\n" +
+
+      "CERVOVALE — ligado ao Dado de Maldição atual (veja a nota \"O Dado de Maldição\")\n\n" +
+      "Estágio leve (dado ainda d8) — role d6 ou escolha:\n" +
+      "1. Uma criança brinca de pular corda cantando uma cantiga nova, sem perceber que rima com o nome de Dulcineia.\n" +
+      "2. O cheiro de pão quente da padaria hoje tem um travo estranhamente doce demais.\n" +
+      "3. Um gato do bairro se recusa terminantemente a entrar numa certa casa.\n" +
+      "4. Alguém jura ter visto o próprio reflexo sorrir sozinho por um segundo antes de se corrigir.\n" +
+      "5. O sino da capela toca fora de hora, sem ninguém puxando a corda.\n" +
+      "6. Um morador está escondendo, sem muito sucesso, uma mancha doce crescendo na pele.\n\n" +
+
+      "Estágio médio (dado já em d6) — role d6 ou escolha:\n" +
+      "1. Um morador conhecido não aparece na rotina de sempre — é encontrado horas depois, já rígido e brilhante como caramelo.\n" +
+      "2. O poço da praça começa a borbulhar um cheirinho de mel, ninguém sabe explicar por quê.\n" +
+      "3. Duas crianças brigam feio: uma quer \"brincar de doce\", a outra tem pesadelos com isso.\n" +
+      "4. Moscas incomumente grandes, atraídas pelo açúcar no ar, começam a rondar as ruas.\n" +
+      "5. Alguém tenta esconder que os próprios dedos já não dobram direito — viraram bala.\n" +
+      "6. Um cão late sem parar pra uma sombra que mais ninguém consegue ver.\n\n" +
+
+      "Estágio grave (dado já em d4) — role d4 ou escolha:\n" +
+      "1. Alguém desaba no meio da rua gritando que \"está tudo tão doce que dói\", antes de ficar imóvel.\n" +
+      "2. O sino da capela racha ao meio sozinho.\n" +
+      "3. Uma poça de caramelo se forma sozinha no centro da praça, refletindo um rosto que não é de ninguém ali.\n" +
+      "4. Um morador em pânico implora ao grupo que façam alguma coisa — \"eu não aguento mais o gosto na boca\".\n\n" +
+
+      "BOSQUE EMARANHADO — role d8 ou escolha:\n" +
+      "1. Um pássaro de plumagem estranhamente cristalizada canta uma melodia que gruda na cabeça.\n" +
+      "2. O caminho à frente parece, por um instante, se contorcer — e volta ao normal.\n" +
+      "3. Um cheiro de baunilha surge do nada e desaparece tão rápido quanto veio.\n" +
+      "4. Pegadas de animal terminam abruptamente no meio do caminho, como se o bicho tivesse simplesmente sumido.\n" +
+      "5. Uma trilha de migalhas brilhantes serpenteia entre as árvores — leva a lugar nenhum, ou leva a algo?\n" +
+      "6. Um silêncio súbito e completo cai sobre a floresta por alguns segundos, depois volta ao normal.\n" +
+      "7. Vocês encontram uma árvore com um coração entalhado, iniciais borradas demais pra ler.\n" +
+      "8. Uma risada infantil ecoa distante, sem fonte visível.\n\n" +
+
+      "VALE DAS BAGAS — role d6 ou escolha:\n" +
+      "1. Fadas pequenas cochicham entre si e se calam abruptamente ao perceberem que estão sendo observadas.\n" +
+      "2. Uma pétala de flor cai devagar sem vento nenhum soprando.\n" +
+      "3. Um brinde alegre ecoa de dentro de uma casa — seguido por um silêncio constrangido.\n" +
+      "4. Um artesão remenda algo pela terceira vez, sempre quebrando de novo sem motivo aparente.\n" +
+      "5. Uma fada mais velha encara o grupo por tempo demais, depois vira as costas sem dizer nada.\n" +
+      "6. Sinos de vento tocam uma melodia triste, mesmo sem vento nenhum.\n\n" +
+
+      "BAILE ETERNO — tempo estranho, alegria forçada. Role d6 ou escolha:\n" +
+      "1. Uma convidada dança sozinha, repetindo os mesmos passos, sem notar ninguém ao redor.\n" +
+      "2. Um relógio na parede do salão nunca muda de hora, não importa quanto tempo passe.\n" +
+      "3. Alguém ri alto demais de uma piada que ninguém contou.\n" +
+      "4. Um brinde é erguido por toda a sala — para um nome que ninguém reconhece.\n" +
+      "5. Por um instante, a música toca ao contrário antes de voltar ao normal.\n" +
+      "6. Uma convidada pisca duas vezes seguidas, e da segunda vez está num lugar ligeiramente diferente.\n\n" +
+
+      "TORRE DA BRUXA — tensão, algo observando. Role d6 ou escolha:\n" +
+      "1. Uma sombra passa por baixo de uma porta fechada, rápido demais pra ver o que era.\n" +
+      "2. O cheiro de açúcar queimado fica, por um instante, insuportável — depois volta ao normal.\n" +
+      "3. Um objeto cai sozinho de uma prateleira, longe de qualquer contato.\n" +
+      "4. Vocês sentem, por um segundo, que estão sendo observadas através de uma parede sólida.\n" +
+      "5. Um sussurro baixo demais pra entender ecoa de algum lugar próximo.\n" +
+      "6. Uma pegada doce e pegajosa aparece no chão à frente — fresca, mas de ninguém visível."),
+  ];
+  newNotes.forEach((n) => {
+    if (!state.notes.some((x) => x.titulo === n.titulo)) state.notes.push(n);
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -1473,6 +1551,7 @@ seedMoreMonsters();
 seedBaileENotas();
 seedCervovaleFlavor();
 seedRegioesFlavor();
+seedEventosAmbiente();
 saveState();
 
 // ---------- Tabs ----------
@@ -1685,7 +1764,21 @@ function linkifyText(rawText) {
   const npcNames = state.npcs.map(n => n.nome).sort((a,b) => b.length - a.length);
   
   outer: while (i < rawText.length) {
-    // 1. Checa se é um poder/regra
+    // 1. Checa se é uma notação de dado (ex: d6, 2d6, 1d4+1) — clicável, rola na hora
+    const boundaryBefore = i === 0 || !/[a-zà-úA-ZÀ-Ú0-9]/.test(rawText[i - 1]);
+    if (boundaryBefore) {
+      const diceMatch = rawText.slice(i).match(/^\d{0,2}d\d{1,3}(\s*[+-]\s*\d+)?/i);
+      if (diceMatch) {
+        const afterChar = rawText[i + diceMatch[0].length];
+        const boundaryAfter = !afterChar || !/[a-zà-úA-ZÀ-Ú0-9]/.test(afterChar);
+        if (boundaryAfter) {
+          result += `<button type="button" class="dice-inline" data-dice="${escapeHtml(diceMatch[0].trim())}" title="Rolar">${escapeHtml(diceMatch[0])}</button>`;
+          i += diceMatch[0].length;
+          continue outer;
+        }
+      }
+    }
+    // 2. Checa se é um poder/regra
     for (const term of GLOSSARY_KEYS_SORTED) {
       if (rawText.startsWith(term, i)) {
         result += `<span class="ability-link" data-ability="${escapeHtml(term)}">${escapeHtml(term)}</span>`;
@@ -1693,7 +1786,7 @@ function linkifyText(rawText) {
         continue outer;
       }
     }
-    // 2. Checa se é o nome de um NPC ou Monstro
+    // 3. Checa se é o nome de um NPC ou Monstro
     for (const name of npcNames) {
       if (name.length > 2 && rawText.startsWith(name, i)) {
         result += `<span class="npc-link" data-npc="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
@@ -1701,7 +1794,7 @@ function linkifyText(rawText) {
         continue outer;
       }
     }
-    // 3. Letra normal
+    // 4. Letra normal
     result += escapeHtml(rawText[i]);
     i++;
   }
@@ -3684,11 +3777,12 @@ document.querySelectorAll("[data-roll-die]").forEach((btn) =>
   })
 );
 
-document.getElementById("btn-roll-formula").addEventListener("click", () => {
-  const raw = document.getElementById("dice-formula").value.trim().toLowerCase();
+function rollFormulaString(rawInput) {
+  const raw = (rawInput || "").trim().toLowerCase();
   const match = raw.match(/^(\d*)d(\d+)\s*([+-]\s*\d+)?$/);
   if (!match) {
     showDiceResult("?", `fórmula inválida (use ex: 2d6+3)`);
+    openToolPanel("dice");
     return;
   }
   const count = Math.min(20, Number(match[1] || 1));
@@ -3697,6 +3791,18 @@ document.getElementById("btn-roll-formula").addEventListener("click", () => {
   const rolls = Array.from({ length: count }, () => 1 + Math.floor(Math.random() * sides));
   const total = rolls.reduce((a, b) => a + b, 0) + mod;
   showDiceResult(total, `${count}d${sides}${mod ? (mod > 0 ? "+" + mod : mod) : ""} (${rolls.join(", ")})`);
+  openToolPanel("dice");
+}
+
+document.getElementById("btn-roll-formula").addEventListener("click", () => {
+  rollFormulaString(document.getElementById("dice-formula").value);
+});
+
+// Qualquer "d6", "2d6", "1d4+1" etc. dentro de um texto (notas, regras, itens...) vira um
+// botãozinho clicável que já rola na hora, via linkifyText — não precisa copiar pro painel.
+document.addEventListener("click", (e) => {
+  const diceBtn = e.target.closest(".dice-inline");
+  if (diceBtn) rollFormulaString(diceBtn.dataset.dice);
 });
 
 let timerInterval = null;
