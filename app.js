@@ -78,6 +78,7 @@ function defaultState() {
     seededExtras2: false,
     seededMonstros2: false,
     seededCervovaleFlavor: false,
+    seededRegioesFlavor: false,
     seededBaileENotas: false,
   };
 }
@@ -1352,6 +1353,117 @@ function seedCervovaleFlavor() {
   });
 }
 
+// Mesma ideia do seedCervovaleFlavor, mas para as outras 4 regiões da aventura
+// (Bosque Emaranhado, Vale das Bagas, Baile Eterno, Torre da Bruxa) — descrição
+// de cenário pra ler em voz alta + itens à vista, e "Voz:" nos NPCs que já existem.
+function seedRegioesFlavor() {
+  if (state.seededRegioesFlavor) return;
+  state.seededRegioesFlavor = true;
+
+  const note = (titulo, categoria, texto) => ({ id: uid(), titulo, categoria, texto });
+
+  const newNotes = [
+    note("Bosque Emaranhado — Cenários (leia em voz alta + itens à vista)", "lore",
+      "CÍRCULO DE COGUMELOS\nNo fundo do bosque, sete cogumelos gigantes — cada um de uma cor do arco-íris — formam um círculo perfeito ao redor de uma pedra ereta, mais alta que uma pessoa. O ar aqui é parado demais, como se a própria floresta estivesse prendendo a respiração. Símbolos entalhados na pedra brilham fracamente quando tocados por luar, e de dentro dela vem um gemido baixo, quase humano.\nItens à vista: o enigma em língua das fadas gravado na pedra (resposta: \"laranja\"); gravura de uma mão arrancando um cogumelo do chão; os sete cogumelos coloridos (arrancar o errado cria um Perseguidor Fungo); uma silhueta visível dentro da pedra — Ashkan, imóvel, observando.\n\n" +
+
+      "COVA MISTERIOSA\nAo norte de Cervovale, um monte de terra revirada esconde uma sepultura solitária. A lápide é grande demais pra quem quer que esteja ali embaixo ter sido esquecido — mas não há nome nenhum, só um símbolo arcano cortado fundo na pedra. Ao anoitecer, sombras se movem entre as árvores sem que nada as projete.\nItens à vista: o símbolo arcano na lápide, idêntico ao gravado no Espelho Maléfico; terra do local foi usada pra animar o Cavaleiro de Chocolate Amargo; Vultos Sombrios infestam a área à noite; enterrar o Espelho Maléfico ali por uma noite o conserta e recarrega.\n\n" +
+
+      "LAGO DA SAUDADE ETERNA\nA água é tão cristalina que deveria dar pra ver o fundo — mas só existe um azul sem fundo, quieto demais pra ser natural. A superfície não ondula com o vento; ela espera. Quem se aproxima sente um puxão gentil, quase uma saudade de um lugar em que nunca esteve.\nItens à vista: portal para o Baile Eterno (só ativa se quem entra carregar algo de origem feérica e tiver intenção de viajar); sem ativação, só se fica molhado; a saída correta é um espelho no saguão do Baile Eterno; objetos feéricos conhecidos que ativam: Máscara de Baile, Corda de Escalada de Selene, xale de Maya.\n\n" +
+
+      "A CAVERNA (encontro opcional)\nA entrada é um convite traiçoeiro de abrigo contra o vento e a chuva — até vocês notarem as teias grossas bloqueando a passagem, parte fio de aranha comum, parte fios rosados e pegajosos de algodão-doce. Alguma coisa grande se move lá dentro, no escuro, esperando.\nItens à vista: mochila de couro com poção de Vínculo Mental e 20 pp; martelo de guerra que emite luz fraca; estojo de pergaminho com o feitiço Puf!; bolsa de odres vazios e rações mofadas; a Aranha Gigante de Algodão-Doce guardando tudo.\n\n" +
+
+      "ÁREA DE COLETA (ervas e cogumelos)\nAqui a mata se abre um pouco, e entre raízes retorcidas crescem tufos de musgo luminoso, flores de pontas afiadas e cogumelos com chapéus de textura estranhamente macia. Alguns brilham fracamente; outros liberam um perfume que muda de doce para amargo dependendo de quão perto se chega.\nItens à vista: Musgo da Alvorada (cura, precisa estar fresco); Chapéu-de-Agulha (vantagem em Astúcia; 1 em 6 lança magia aleatória); Papoula Noturna e Azevinho de Erudito (ingredientes de poção); marcas de garras/dentes em alguns troncos — sinal de que o Cavaleiro pode estar por perto."),
+
+    note("Vale das Bagas — Cenários (leia em voz alta + itens à vista)", "lore",
+      "ENTRADA DA VILA (a Ponte e a Névoa)\nUma névoa espessa e rodopiante engole a trilha à frente, girando devagar como se respirasse. Ao atravessar a pontezinha de madeira entrelaçada com raízes, vocês encolhem — ou é o mundo que cresce — e casas esculpidas em cogumelos e troncos se erguem ao redor. Dezenas de olhos pequenos e desconfiados observam de janelas entreabertas. Ninguém sorri.\nItens à vista: a névoa expulsa qualquer criatura maior que uma raposa sem magia de auxílio; guardas da Guarda Espinheiro barrando a entrada; sinais de tensão (portas trancadas, cercas reforçadas); conversa nervosa sobre um vaga-lume perdido.\n\n" +
+
+      "PRAÇA DA ALDEIA\nUma clareira serve de coração da aldeia, cercada de lojinhas talhadas em tocos e cogumelos gigantes — alfaiataria, armarinho, uma cafeteria minúscula de onde sobe cheirinho de chá de flor. Fadas pequenas cruzam voando, murmurando entre si e lançando olhares de esguelha ao grupo.\nItens à vista: boatos locais sobre a Rainha, o Círculo de Cogumelos, a senha da Torre da Bruxa (\"Maçapão Maravilhoso\"); lojinhas variadas; rumor sobre um artesão que visita secretamente \"a mulher Raposa\" na vila humana (é a Maya).\n\n" +
+
+      "CASTELO DA RAINHA GARDÊNIA\nUm palácio imponente foi esculpido diretamente nas raízes retorcidas de uma árvore gigantesca — a árvore continua viva, florida, como se o castelo respirasse. Guardas ladeiam um caminho de pétalas até o trono, onde a Rainha observa a chegada com olhos afiados e um silêncio calculado.\nItens à vista: o trono entalhado em madeira viva florida; guardas da corte atentos; conhecimento sobre o portal do Baile Eterno e o Rei-Elfo; mágoa antiga com Dulcineia escondida sob etiqueta real.\n\n" +
+
+      "FAZENDA MEL CRISTA\nO cheiro doce e pesado de mel chega antes da própria fazenda — só que aqui tem um travo errado, quase podre. Campos de flores pisoteados até a lama, colmeias reduzidas a destroços de cera. Um zumbido furioso ainda ecoa ao longe, como um aviso.\nItens à vista: colmeias destruídas e campos arrasados; o Fazendeiro Listra-d'Olmo com a asa ferida; Cravos-do-Pântano (afastam animais); ferramentas que abrem caminho até a masmorra do Rei Rato.\n\n" +
+
+      "NINHO DO REI RATO — ENTRADA\nTábuas de madeira foram pregadas às pressas sobre a entrada de uma toca. O vento, ao passar pelas frestas, carrega o que parece — só parece — um guincho fino e agudo. Dois túneis se abrem logo depois: de um vem um zumbido baixo constante; do outro, um cheiro forte e confuso de substâncias misturadas.\nItens à vista: barreira de tábuas fácil de remover com ferramenta certa; túnel direito leva ao zumbido de abelhas, esquerdo ao cheiro de poções; complicações no ninho (desabamentos, cobras, escuridão, armadilhas antipeste).\n\n" +
+
+      "SALA DAS POÇÕES\nUm miasma denso e colorido paira no ar, recusando-se a dissipar. O chão inteiro está coberto por uma poça cintilante de vidro quebrado e líquido multicolorido, borbulhando baixinho. Cada passo arrisca um efeito imprevisível.\nItens à vista: a poça mágica no chão (efeito aleatório ao pisar); duas garrafas intactas — poção de cura especial e poção de Estátua Viva.\n\n" +
+
+      "DEPÓSITO AUXILIAR DE ALIMENTOS\nNo fundo desta câmara, um brilho verde-vivo pulsa contra a escuridão — o vaga-lume de estimação de Castanho, preso e agonizante contra a parede. Ao redor, uma gosma vermelha imóvel cobre paredes e chão como uma ferida aberta.\nItens à vista: o vaga-lume de Castanho, aprisionado e vivo; Limo Vermelho Tóxico cobrindo paredes/chão (corroí madeira e metal, vulnerável a fogo/congelamento).\n\n" +
+
+      "O DEPÓSITO DE ARMAS\nEstantes de armas enferrujadas viraram, sem querer, extensão da colmeia: favos de mel se espalham por cima de espadas quebradas, larvas se contorcendo nas células de cera. O zumbido aqui é mais alto, mais irritado.\nItens à vista: abelhas amaldiçoadas defendendo o local; maioria das armas inutilizável; o Escudo Hélice, preservado intacto dentro da cera.\n\n" +
+
+      "A COLMEIA PRINCIPAL\nCélulas hexagonais de cera cobrem paredes e teto, pingando um mel espesso e âmbar que não parece natural. No centro, uma rachadura recente na terra denuncia por onde algo grande cavou um caminho pra dentro.\nItens à vista: enxames de abelhas amaldiçoadas; mel amaldiçoado (contamina com a Maldição Doce se consumido); a rachadura que leva à toca do Rei Rato — até as abelhas evitam a área.\n\n" +
+
+      "CÂMARA DA ABELHA RAINHA\nNuma câmara lateral, isolada, algo enorme se move devagar entre paredes de cera macia. A Abelha Rainha é maior que qualquer outra criatura ali, pesada demais pra voar, e observa o grupo com uma calma perturbadora.\nItens à vista: a Abelha Rainha (não ataca fisicamente, tenta Hipnotizar); zumbido hipnótico constante no ar.\n\n" +
+
+      "OS TÚNEIS DOS RATOS\nOs túneis se torcem e se bifurcam sem padrão aparente, esculpidos às pressas por garras desesperadas. O ar fica cada vez mais denso com cheiro de mel rançoso e pelo molhado.\nItens à vista: navegação exige teste de Astúcia com desvantagem (sem ferramenta/talento de orientação); marcas de garras e pelos grudados nas paredes.\n\n" +
+
+      "A TOCA DO REI RATO\nO cheiro chega primeiro — mel podre e almíscar quente. No centro da câmara, uma massa pulsante de sete corpos de rato se contorce como uma coisa só, caudas fundidas numa trança pegajosa de mel cristalizado. Múltiplos pares de olhos vermelhos giram em direções diferentes.\nItens à vista: o Rei Rato — amálgama de sete ratos com caudas fundidas (a cauda pode ser decepada após subjugação); estoques de comida das fadas devorados e espalhados pelo chão."),
+
+    note("Baile Eterno — Cenários (leia em voz alta + itens à vista)", "lore",
+      "O SAGUÃO / PORTÃO DO BAILE\nVocês saem cambaleando de um espelho ricamente emoldurado para um saguão grandioso, cheio de fadas altas vestidas com um esplendor que dói nos olhos. Uma fila serpenteia até um par de portas duplas, guardadas por uma única fada solitária e imperturbável. Além das portas, só se vê uma névoa colorida, pulsando ao ritmo de uma música distante.\nItens à vista: Élvar controlando a entrada (exige código de vestimenta + convite ou acompanhante); tema atual da festa \"Celestial\" (indicado pelo lenço de Élvar); tentar entrar escondida resulta num Jato de Purpurina humilhante (desvantagem em testes sociais).\n\n" +
+
+      "O JARDIM (Alvorada)\nAlém da barreira prismática, um jardim impecável se abre sob um céu pintado no rosa do amanhecer, como se o sol estivesse eternamente prestes a nascer sem nunca chegar a tanto. Caminhos serpenteiam entre roseiras perfeitas demais, e risadinhas abafadas escapam de trás de arbustos onde casais trocam segredos.\nItens à vista: grupo jogando Croquê Fada (pontuação sem sentido, ótimo pra impressionar o Príncipe Aurélio); cantos escondidos ideais pra \"espionar\"; fofocas sobre o caso proibido de Aurélio e Penélope.\n\n" +
+
+      "O BANQUETE (Meio-Dia)\nUma mesa sem fim se estende sob um céu de meio-dia brilhante demais, coberta por travessas de comida de fada que muda de forma quase imperceptivelmente sob o olhar de vocês. Num canto, um grupo barulhento aposta rodadas de um jogo de dados, gritando cada vez que os cubos param de girar.\nItens à vista: a comida de fada (deixa humanos Confusos e relutantes em partir); o jogo Encrenca em Dobro (apostas por favores e bugigangas); Élton e Ilayda sempre presentes num canto do banquete.\n\n" +
+
+      "O SALÃO DE BAILE (Crepúsculo)\nA seção final é uma pista de dança vasta, banhada por uma luz de estrelas vinda de lugar nenhum e de todo lugar ao mesmo tempo. Uma melodia cativante toca sem músicos visíveis, e os pés de quem se aproxima começam a se mover antes mesmo de decidir dançar. No fundo, um trono suntuoso e vazio espera — o Rei-Elfo prefere estar entre a multidão.\nItens à vista: a música hipnótica (exige teste de Astúcia pra parar de dançar); o trono vazio do Rei-Elfo; nobres circulando (Duquesa Jacinda, Senhora Neves); Finnegan cruzando o salão feito um furacão de travessuras."),
+
+    note("Torre da Bruxa — Cenários (leia em voz alta + itens à vista)", "lore",
+      "TRAVESSIA DO RIO FIOAZUL\nO rio é largo, frio e de correnteza traiçoeira, sem ponte à vista. A água carrega destroços estranhos: um sapato encharcado, o brilho de uma moeda afundando, algo que pode ter sido uma flecha em chamas. Do outro lado, a névoa já começa a ficar mais doce, mais pesada.\nItens à vista: nenhuma travessia segura sem Teste de Virtude; tabela \"o que tem no rio\" (poções, botas, moedas, um anel que não sai depois de posto); a partir daqui, animais têm 50% de chance de estarem corrompidos.\n\n" +
+
+      "CÔMODO 1 — DRENO DA TORRE\nSeguindo o escoamento colorido pelo pântano de chocolate, vocês encontram uma grade enferrujada, presa mas larga o bastante pra uma pessoa passar. O cheiro de açúcar queimado é quase sufocante, e uma massa disforme se move devagar no escuro, procurando qualquer coisa doce pra engolir.\nItens à vista: a Gosma de Açúcar guardando o local; uma chave dourada escondida dentro dela (abre o baú do Quarto da Bruxa); grade no teto leva à Cozinha (teste de Determinação).\n\n" +
+
+      "CÔMODO 2 — A PORTA DA FRENTE\nA torre se ergue altíssima, cheiro de açúcar tão denso que formiga na pele. Dois vultos junto à porta se revelam guerreiros esculpidos em chocolate com hortelã, lanças em punho. Eles não se movem — ainda — mas os olhos de açúcar cristalizado parecem seguir cada passo.\nItens à vista: dois Construtos de Chocolate com Hortelã guardando a entrada; senha correta \"Maçapão Maravilhoso\" evita o ataque; vulneráveis a calor/água (derretem).\n\n" +
+
+      "CÔMODO 3 — A COZINHA\nUm pequeno saguão dá pra uma cozinha enorme, cheia de panelas, temperos e o calor de um forno sempre aceso. Um caldeirão borbulha sozinho, sem ninguém pra mexê-lo. Nas prateleiras, facas e utensílios parecem se reposicionar sutilmente quando ninguém olha diretamente.\nItens à vista: caldeirão animado (chão escorregadio, queimaduras se cair dentro); três utensílios de cozinha animados; uma tapeçaria de jardim na parede + garrafa \"Chave do Jardim\"; ingredientes raros do Chá de Soneca crescendo ali.\n\n" +
+
+      "CÔMODO 4 — O JARDIM MÁGICO\nUm prado impossivelmente verdejante se abre além do portal translúcido, salpicado de violetas e rosas cristalizadas que brilham como vidro colorido. Sentado a uma mesa de chá, imóvel da cintura pra baixo, um coelho de chocolate branco meio derretido sorri largo demais pra ser reconfortante.\nItens à vista: Alistair, preso ao assento, oferecendo a Roleta do Chá; maçãs carameladas e ameixas açucaradas (ingredientes raros); as xícaras de chá — cada uma pode trocar corpos com Alistair.\n\n" +
+
+      "CÔMODO 5 — O ESCRITÓRIO\nEstantes altas e apinhadas de livros cobrem cada parede, lombadas sem título escritas à mão pela própria bruxa. Uma poltrona de leitura guarda um diário aberto e uma xícara vazia com resíduos de chá. Na parede do fundo, uma tapeçaria retrata um jardim tranquilo demais.\nItens à vista: estante de dez livros (a maioria armadilhada — mordem, tomam sono, envenenam); o diário de Dulcineia (revela sua história); o Chapéu da Bruxa pendurado num gancho (1 DD); a tapeçaria é portal pro Quarto da Bruxa (requer Chá de Soneca).\n\n" +
+
+      "CÔMODO 6 — A SALA DE EXPERIMENTOS\nUma grande mesa de trabalho domina o cômodo, coberta de frascos, um pilão manchado e um minicaldeirão ainda morno. Um livro manuscrito jaz aberto no meio da bagunça. Ao lado, uma vitrine vazia do tamanho de uma pessoa espera por algo que já não está mais ali.\nItens à vista: o Livro de Experimentos de Dulcineia (revela seus planos: corpo sintético, açúcar de alma, dragão); vitrine vazia; o Grimório Proibido (magias poderosas, com custo em Ferimentos).\n\n" +
+
+      "CÔMODO 7 — O VIVEIRO\nFileiras de criações de doce ficam paradas como estátuas de museu — um unicórnio de algodão-doce, uma serpente de alcaçuz, um ursinho de goma de dentes afiados demais. No centro, sobre um pedestal, um ovo de dragão gigante de chocolate pulsa com um calor visível.\nItens à vista: construtos-estátua que ganham vida se tocados/caminho errado; o Ovo de Dragão (quente ao toque, só a Adaga Ruína dos Dragões o arranha); poleiro do familiar Fantasma.\n\n" +
+
+      "CÔMODO 8 — O TORREÃO\nColchões de palha finos e maltratados estão espalhados pelo chão de pedra fria — o lugar onde crianças roubadas dormiram, com medo, longe de casa. Um padrão estranho de linhas e pontos está riscado discretamente numa das paredes.\nItens à vista: um amuleto de sorte de criança (pedrinha pintada como joaninha) sob um cobertor; padrão musical na parede — SOL-LÁ-FÁ-SOL (assobiar/cantar libera a saída); tentar sair sem a melodia ativa névoa de sono.\n\n" +
+
+      "CÔMODO 9 — O QUARTO DA BRUXA\nUma penteadeira transbordando de potes de maquiagem domina um canto. Um baú pesado e trancado espera do outro lado, e no centro, como um manequim de loja macabro, está um construto perfeito da jovem Dulcineia, olhos de vidro fixos em algum ponto distante. No peito, uma luz azul gira lentamente.\nItens à vista: o construto contendo o Pingente Rouba-Alma; baú trancado (chave na Gosma de Açúcar do porão — forçá-lo causa a Maldição do Paladar Infantil); dentro do baú: joias, medalhão com retrato de Dulcineia jovem, a Adaga Ruína dos Dragões disfarçada, vestidos antigos."),
+  ];
+  newNotes.forEach((n) => {
+    if (!state.notes.some((x) => x.titulo === n.titulo)) state.notes.push(n);
+  });
+
+  const voicePatches = [
+    ["Ashkan", " Voz: fala baixo e devagar, como quem escolhe cada palavra com cuidado — pausas longas antes de responder, e tendência a citar fatos históricos ou mágicos mesmo em meio a uma crise."],
+    ["Selene (Lobo Mau)", " Voz: em forma humana, fala pouco e com peso de quem carrega um segredo — frases curtas, protetoras, sempre voltando ao tema da irmã e do dever; em forma de lobisomem, só rosnados, grunhidos e um único uivo hesitante se reconhece algo familiar no grupo."],
+    ["O Cavaleiro de Chocolate Amargo", " Voz: nunca fala — comunica-se só pelo ranger metálico-doce da armadura derretendo levemente, pelo bater cadenciado dos cascos do corcel, e por um silêncio implacável mesmo se confrontado."],
+    ["Castanho", " Voz: fala em frases curtas e cortantes, sem rodeios, testando cada palavra do grupo como se fosse uma armadilha — mas a voz suaviza visivelmente sempre que o vaga-lume é mencionado."],
+    ["Rainha Gardênia", " Voz: tom medido e formal, cada frase construída como um veredito — pausas calculadas pra deixar o peso das palavras assentar, e um leve endurecimento sempre que o nome de Dulcineia surge."],
+    ["Fazendeiro Listra-d'Olmo", " Voz: fala simples e direto ao ponto, um pouco cansado, intercalando queixas práticas sobre a fazenda com uma humildade genuína — nunca pede ajuda sem antes minimizar a própria dor."],
+    ["Élvar", " Voz: fala com precisão cortante e desdém educado, cada avaliação de roupa soando como um veredito final — nunca levanta a voz, porque não precisa."],
+    ["Príncipe Aurélio", " Voz: charme fluido e ensaiado, frases que soam como elogios até você perceber que evitaram responder à pergunta — mas falha, sincera e insegura, sempre que Penélope é mencionada."],
+    ["Senhora Amaris", " Voz: fala pouco, escolhendo cada palavra como quem guarda um cofre — tom calmo e afetuoso ao proteger quem ama, gelado e cortante com quem tenta invadir esse espaço."],
+    ["Penélope", " Voz: gagueja levemente e evita contato visual direto, a voz baixando quase a um sussurro sempre que o nome de Aurélio surge — mas ganha firmeza súbita ao defender a reputação dele."],
+    ["Cirilla", " Voz: fala rápido, dramática, cada frase pontuada com suspiros exagerados de adolescente — alterna entre desprezo teatral pelo irmão e desespero genuíno se ele estiver em perigo."],
+    ["Cirillo", " Voz: espelha Cirilla — respostas curtas e emburradas, sarcasmo fácil, mas a voz treme de verdade quando fala da irmã longe dele."],
+    ["Arturo, o Trovador", " Voz: narra tudo como se já estivesse compondo a canção sobre aquilo, pontuando frases com \"ah, que verso isso renderia!\" — curioso a ponto de ser insistente, mas nunca hostil."],
+    ["Ilayda", " Voz: tom possessivo e levemente entediado, como se estivesse sempre avaliando o valor de mercado de tudo à sua volta — fica cortante e defensiva se sente que \"sua posse\" está ameaçada."],
+    ["Élton Élis", " Voz: fala devagar, com pausas confusas no meio das frases, como quem tenta lembrar algo que escorrega o tempo todo — ganha um brilho momentâneo de clareza quando algo do mundo humano o toca."],
+    ["Duquesa Jacinda", " Voz: cada frase é uma lâmina educada, entregue com um sorriso fino — pausas calculadas pra deixar o insulto atingir antes de continuar a conversa como se nada tivesse acontecido."],
+    ["Senhora Neves", " Voz: fala pouco e devagar, tom plano e distante como gelo — mas aquece visivelmente, quase surpresa consigo mesma, ao falar de presentes feitos à mão."],
+    ["Finnegan", " Voz: fala em rajadas de energia infantil, pulando de assunto em assunto, terminando frases com risadinhas — nunca fica quieto por mais de alguns segundos."],
+    ["O Rei-Elfo", " Voz: fala devagar e deliberadamente, cada palavra escolhida pra parecer que ele já sabe como a conversa vai terminar — um sorriso constante na voz, como quem está sempre se divertindo com um segredo que não vai contar."],
+    ["Alistair", " Voz: fala arrastado e sarcástico, entediado até a medula, cada frase soando como se já soubesse o final da piada — mas há um brilho genuíno de malícia divertida sempre que propõe um jogo."],
+    ["Fantasma (familiar de Dulcineia)", " Voz: não fala normalmente — grasnidos curtos e irritados, cabeça inclinada calculando vantagem; se conseguir voz por um tempo, fala em frases secas e transacionais, sempre perguntando \"o que eu ganho com isso?\"."],
+    ["Dulcineia (Aparição)", " Voz: sussurra mais do que grita, uma voz fria e fragmentada que ecoa de vários pontos ao mesmo tempo, presa obsessivamente na ideia de juventude roubada — repete variações de \"vocês não tinham o direito\" como um mantra de fúria."],
+    ["Dulcineia (Dragão de Canela)", " Voz: majoritariamente uma fera enfurecida — rugidos guturais entrecortados por fragmentos de fala humana escapando contra a vontade (\"vocês... destruíram...\") que se dissolvem de volta em puro rugido."],
+  ];
+  voicePatches.forEach(([nomeNpc, acrescimo]) => {
+    const alvo = state.npcs.find((n) => n.nome === nomeNpc);
+    if (alvo && !alvo.notas.includes("Voz:")) alvo.notas += acrescimo;
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -1360,6 +1472,7 @@ seedExtraLoot();
 seedMoreMonsters();
 seedBaileENotas();
 seedCervovaleFlavor();
+seedRegioesFlavor();
 saveState();
 
 // ---------- Tabs ----------
