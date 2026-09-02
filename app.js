@@ -56,8 +56,6 @@ function defaultState() {
     notes: [],
     objectives: [],
     consequences: [],
-    localAtual: "",
-    dadoMaldicaoAtual: "d8",
     items: [],
     documentos: [],
     combat: { round: 1, currentIndex: 0, combatants: [] },
@@ -4172,28 +4170,6 @@ function renderSessions() {
   );
 }
 
-// ==================== Barra de estado da campanha ====================
-document.getElementById("status-local-atual").addEventListener("input", (e) => {
-  state.localAtual = e.target.value;
-  saveState();
-});
-document.getElementById("status-dado-maldicao").addEventListener("change", (e) => {
-  state.dadoMaldicaoAtual = e.target.value;
-  saveState();
-});
-
-function renderCampaignStatusBar() {
-  const localInput = document.getElementById("status-local-atual");
-  if (document.activeElement !== localInput) localInput.value = state.localAtual || "";
-  document.getElementById("status-dado-maldicao").value = state.dadoMaldicaoAtual || "d8";
-
-  const objetivoPendente = state.objectives.find((o) => !o.feito);
-  document.getElementById("status-objetivo-atual").textContent = objetivoPendente ? objetivoPendente.texto : "Nenhum objetivo pendente";
-
-  const ultimaSessao = state.sessions[state.sessions.length - 1];
-  document.getElementById("status-ultima-sessao").textContent = ultimaSessao ? ultimaSessao.titulo : "Nenhuma sessão ainda";
-}
-
 function renderAll() {
   renderCombat();
   renderPcs();
@@ -4207,7 +4183,6 @@ function renderAll() {
   renderConsequences();
   renderNotes();
   renderSessions();
-  renderCampaignStatusBar();
 }
 
 renderAll();
