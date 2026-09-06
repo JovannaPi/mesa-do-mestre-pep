@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 import {
@@ -66,6 +67,21 @@ export async function loadCloudState() {
   } catch (err) {
     console.warn("Não foi possível carregar do Firestore (seguindo com dados locais):", err);
     return null;
+  }
+}
+
+// Escrita parcial usada pela tela da jogadora pra editar o próprio inventário — atualiza
+// só o campo "pcs" no Firestore (em vez de reescrever a campanha inteira, como saveCloudState
+// faz), pra não ter risco de apagar uma mudança que a Mestra tenha feito em outra parte do
+// estado ao mesmo tempo.
+export async function savePcs(pcs) {
+  try {
+    await authReadyOrTimeout();
+    await updateDoc(campaignDocRef, { pcs });
+    return true;
+  } catch (err) {
+    console.warn("Não foi possível salvar o inventário no Firestore:", err);
+    return false;
   }
 }
 

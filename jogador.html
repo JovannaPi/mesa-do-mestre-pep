@@ -65,28 +65,54 @@
   .inventory-card .ref-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
   .inventory-card .ref-item-nome { font-weight: 700; color: var(--accent-deep); }
   .inventory-card .ref-item-desc { font-size: 0.88rem; color: var(--text-dim); white-space: pre-wrap; margin-top: 2px; }
+  .inventory-card .ref-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+  .inventory-li { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .item-remove-btn {
+    background: none; border: none; color: var(--text-dim); cursor: pointer;
+    font-size: 1.05rem; line-height: 1; padding: 0 2px; font-family: inherit; flex: none;
+  }
+  .item-remove-btn:hover { color: var(--danger); }
+  .inventory-add-row { display: flex; gap: 6px; margin-top: 10px; }
+  .inventory-add-row input { flex: 1; }
+  .btn-add-compendio-item { margin-top: 8px; width: 100%; }
   .btn-trocar-pc {
     background: none; border: none; color: var(--text-dim); text-decoration: underline;
     font-size: 0.8rem; cursor: pointer; font-family: inherit; padding: 0;
   }
 
-  .player-pc-picker-overlay {
+  .player-modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55);
     display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px;
   }
-  .player-pc-picker-box {
+  .player-modal-box {
     background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 24px 22px; max-width: 380px; width: 100%; text-align: center;
+    padding: 24px 22px; max-width: 420px; width: 100%; text-align: center;
+    max-height: 85vh; display: flex; flex-direction: column;
   }
-  .player-pc-picker-box h2 { margin: 0 0 6px; color: var(--accent); font-family: "Fredoka", sans-serif; }
-  .player-pc-picker-box p { margin: 0 0 16px; color: var(--text-dim); font-size: 0.9rem; }
-  .player-pc-picker-list { display: flex; flex-direction: column; gap: 8px; }
+  .player-modal-box h2 { margin: 0 0 6px; color: var(--accent); font-family: "Fredoka", sans-serif; }
+  .player-modal-box p { margin: 0 0 16px; color: var(--text-dim); font-size: 0.9rem; }
+  .player-modal-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
   .player-pc-picker-list button {
     font-family: "Fredoka", sans-serif; font-size: 1rem; padding: 10px 14px;
     border-radius: var(--radius); border: 2px solid var(--accent-strong); background: #fff;
     color: var(--accent-deep); cursor: pointer;
   }
   .player-pc-picker-list button:hover { background: var(--accent-strong); color: #fff; }
+  .player-item-picker-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    border: 2px solid var(--border); border-radius: var(--radius); padding: 8px 12px; text-align: left;
+  }
+  .player-item-picker-row span { font-weight: 600; color: var(--accent-deep); }
+  .player-item-picker-row button {
+    font-family: "Fredoka", sans-serif; font-size: 0.85rem; padding: 6px 12px; flex: none;
+    border-radius: var(--radius); border: 2px solid var(--accent-strong); background: #fff;
+    color: var(--accent-deep); cursor: pointer;
+  }
+  .player-item-picker-row button:hover { background: var(--accent-strong); color: #fff; }
+  .btn-close-player-modal {
+    align-self: flex-end; background: none; border: none; color: var(--text-dim);
+    font-size: 0.85rem; text-decoration: underline; cursor: pointer; font-family: inherit; margin-top: 12px;
+  }
 </style>
 </head>
 <body>
@@ -122,11 +148,21 @@
   </details>
 </main>
 
-<div id="player-pc-picker" class="player-pc-picker-overlay" style="display:none;">
-  <div class="player-pc-picker-box">
+<div id="player-pc-picker" class="player-modal-overlay" style="display:none;">
+  <div class="player-modal-box">
     <h2>Quem é você?</h2>
     <p>Escolha sua Princesa pra ver seu próprio inventário.</p>
-    <div id="player-pc-picker-list" class="player-pc-picker-list"></div>
+    <div id="player-pc-picker-list" class="player-modal-list player-pc-picker-list"></div>
+  </div>
+</div>
+
+<div id="player-item-picker" class="player-modal-overlay" style="display:none;">
+  <div class="player-modal-box">
+    <h2>Adicionar item</h2>
+    <p>Itens já cadastrados no Compêndio da Mestra — escolha um pra ver a descrição.</p>
+    <input id="player-item-picker-search" class="input" type="text" placeholder="Buscar por nome..." style="margin-bottom:12px;">
+    <div id="player-item-picker-list" class="player-modal-list"></div>
+    <button type="button" class="btn-close-player-modal" id="btn-close-item-picker">Fechar</button>
   </div>
 </div>
 

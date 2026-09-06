@@ -234,11 +234,13 @@ function renderSharedText(state) {
   box.style.display = "";
 }
 
-// Inventário só é editável pela Mestra (aba Personagens); aqui a jogadora só consulta
-// o que já tem, sem precisar perguntar ou lembrar de cabeça durante a sessão. Cada
-// jogadora escolhe "quem é ela" uma vez (guardado só no navegador dela) e daí só vê
-// o próprio inventário, nunca o das colegas.
+// Cada jogadora escolhe "quem é ela" uma vez (guardado só no navegador dela) e daí só vê
+// e edita o próprio inventário, nunca o das colegas. Ela pode digitar um item qualquer
+// ou puxar um item já cadastrado no Compêndio da Mestra (com a descrição junto). As
+// mudanças são salvas direto no Firestore (só o campo "pcs", pra não arriscar sobrescrever
+// outra parte do estado que a Mestra esteja editando ao mesmo tempo).
 const PC_STORAGE_KEY = "mesaJogadoraPcId";
+let fbMod = null;
 
 function getSelectedPcId() {
   try {
@@ -262,6 +264,17 @@ function clearSelectedPcId() {
   } catch (err) {}
 }
 
+// Mostra a pergunta "Quem é você?" assim que a página carrega, sem esperar a campanha
+// terminar de sincronizar — a lista de Princesas é preenchida depois, quando os dados
+// chegarem (renderPlayerPicker cuida disso).
+(function showPlayerPickerImmediately() {
+  if (getSelectedPcId()) return;
+  const overlay = document.getElementById("player-pc-picker");
+  const list = document.getElementById("player-pc-picker-list");
+  overlay.style.display = "flex";
+  list.innerHTML = `<p class="field-hint">Carregando lista de Princesas...</p>`;
+})();
+
 function renderPlayerPicker(state) {
   const overlay = document.getElementById("player-pc-picker");
   const pcs = state.pcs || [];
@@ -282,6 +295,60 @@ function renderPlayerPicker(state) {
   );
 }
 
+async function persistPcs() {
+  if (!latestState) return;
+  setStatus("Salvando...");
+  try {
+    if (!fbMod) fbMod = await import("./firebase-config.js");
+    const ok = await fbMod.savePcs(latestState.pcs);
+    setStatus(ok ? "Conectado" : "Sem conexão — a mudança pode não ter sido salva");
+  } catch (err) {
+    setStatus("Sem conexão — a mudança pode não ter sido salva");
+  }
+}
+
+function currentPc() {
+  if (!latestState) return null;
+  const selectedId = getSelectedPcId();
+  return (latestState.pcs || []).find((p) => p.id === selectedId) || null;
+}
+
+function addFreeformItem(text) {
+  const pc = currentPc();
+  const trimmed = text.trim();
+  if (!pc || !trimmed) return;
+  pc.inventario = pc.inventario || [];
+  pc.inventario.push(trimmed);
+  persistPcs();
+  renderInventories(latestState);
+}
+
+function removeFreeformItem(index) {
+  const pc = currentPc();
+  if (!pc) return;
+  pc.inventario.splice(index, 1);
+  persistPcs();
+  renderInventories(latestState);
+}
+
+function addCompendioRef(tipo, refId) {
+  const pc = currentPc();
+  if (!pc) return;
+  pc.compendioRefs = pc.compendioRefs || [];
+  if (pc.compendioRefs.some((r) => r.tipo === tipo && r.refId === refId)) return;
+  pc.compendioRefs.push({ tipo, refId });
+  persistPcs();
+  renderInventories(latestState);
+}
+
+function removeCompendioRef(tipo, refId) {
+  const pc = currentPc();
+  if (!pc) return;
+  pc.compendioRefs = (pc.compendioRefs || []).filter((r) => !(r.tipo === tipo && r.refId === refId));
+  persistPcs();
+  renderInventories(latestState);
+}
+
 function refEntryHtml(state, ref) {
   const pool = ref.tipo === "documento" ? state.documentos || [] : state.items || [];
   const entry = pool.find((x) => x.id === ref.refId);
@@ -289,7 +356,10 @@ function refEntryHtml(state, ref) {
   const desc = ref.tipo === "documento" ? entry.texto : entry.descricao;
   return `
     <div class="ref-item">
-      <div class="ref-item-nome">${escapeHtml(entry.nome)}</div>
+      <div class="ref-item-header">
+        <div class="ref-item-nome">${escapeHtml(entry.nome)}</div>
+        <button class="item-remove-btn" data-remove-ref-tipo="${ref.tipo}" data-remove-ref-id="${ref.refId}" aria-label="Remover">×</button>
+      </div>
       ${desc ? `<div class="ref-item-desc">${escapeHtml(desc)}</div>` : ""}
     </div>
   `;
@@ -297,9 +367,7 @@ function refEntryHtml(state, ref) {
 
 function renderInventories(state) {
   const list = document.getElementById("inventory-list");
-  const pcs = state.pcs || [];
-  const selectedId = getSelectedPcId();
-  const pc = pcs.find((p) => p.id === selectedId);
+  const pc = currentPc();
   if (!pc) {
     list.innerHTML = `<p class="field-hint">Escolha quem você é pra ver seu inventário.</p>`;
     return;
@@ -307,16 +375,84 @@ function renderInventories(state) {
   const itens = pc.inventario || [];
   const refs = pc.compendioRefs || [];
   const refsHtml = refs.map((r) => refEntryHtml(state, r)).join("");
-  const itensHtml = itens.length ? `<ul>${itens.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>` : "";
+  const itensHtml = itens.length
+    ? `<ul>${itens
+        .map((i, idx) => `<li class="inventory-li">${escapeHtml(i)} <button class="item-remove-btn" data-remove-freeform="${idx}" aria-label="Remover">×</button></li>`)
+        .join("")}</ul>`
+    : "";
   list.innerHTML = `
     <div class="inventory-card">
       <h3>${escapeHtml(pc.nome)}</h3>
       ${itensHtml}
       ${refsHtml}
       ${!itensHtml && !refsHtml ? `<p class="field-hint">Inventário vazio.</p>` : ""}
+      <div class="inventory-add-row">
+        <input id="inventory-add-input" class="input" type="text" placeholder="Adicionar item...">
+        <button type="button" class="btn btn-secondary" id="btn-add-freeform-item">Adicionar</button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-add-compendio-item" id="btn-open-item-picker">+ Item do Compêndio</button>
     </div>
   `;
+
+  list.querySelectorAll("[data-remove-freeform]").forEach((btn) =>
+    btn.addEventListener("click", () => removeFreeformItem(Number(btn.dataset.removeFreeform)))
+  );
+  list.querySelectorAll("[data-remove-ref-id]").forEach((btn) =>
+    btn.addEventListener("click", () => removeCompendioRef(btn.dataset.removeRefTipo, btn.dataset.removeRefId))
+  );
+  const addInput = document.getElementById("inventory-add-input");
+  document.getElementById("btn-add-freeform-item").addEventListener("click", () => {
+    addFreeformItem(addInput.value);
+    addInput.value = "";
+  });
+  addInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addFreeformItem(addInput.value);
+      addInput.value = "";
+    }
+  });
+  document.getElementById("btn-open-item-picker").addEventListener("click", openItemPicker);
 }
+
+function renderItemPickerList() {
+  const list = document.getElementById("player-item-picker-list");
+  const query = document.getElementById("player-item-picker-search").value.trim().toLowerCase();
+  const pc = currentPc();
+  const items = (latestState.items || []).filter((i) => !query || i.nome.toLowerCase().includes(query));
+  if (items.length === 0) {
+    list.innerHTML = `<p class="field-hint">Nenhum item encontrado.</p>`;
+    return;
+  }
+  list.innerHTML = items
+    .map((i) => {
+      const already = pc && (pc.compendioRefs || []).some((r) => r.tipo === "item" && r.refId === i.id);
+      return `
+        <div class="player-item-picker-row">
+          <span>${escapeHtml(i.nome)}</span>
+          <button type="button" data-pick-item="${i.id}" ${already ? "disabled" : ""}>${already ? "Adicionado" : "Adicionar"}</button>
+        </div>
+      `;
+    })
+    .join("");
+  list.querySelectorAll("[data-pick-item]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      addCompendioRef("item", btn.dataset.pickItem);
+      renderItemPickerList();
+    })
+  );
+}
+
+function openItemPicker() {
+  document.getElementById("player-item-picker-search").value = "";
+  renderItemPickerList();
+  document.getElementById("player-item-picker").style.display = "flex";
+}
+
+document.getElementById("player-item-picker-search").addEventListener("input", renderItemPickerList);
+document.getElementById("btn-close-item-picker").addEventListener("click", () => {
+  document.getElementById("player-item-picker").style.display = "none";
+});
 
 function renderAll(state) {
   latestState = state;
@@ -338,6 +474,7 @@ async function start() {
   let mod;
   try {
     mod = await import("./firebase-config.js");
+    fbMod = mod;
   } catch (err) {
     setStatus("Não foi possível conectar. Verifique sua internet e recarregue a página.");
     return;
