@@ -2467,6 +2467,7 @@ function itemCardHtml(i) {
       ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-share-text="item" data-share-id="${i.id}">${isTextShared("item", i.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
+        <button class="btn btn-ghost" data-give-to-pc="item" data-give-id="${i.id}">→ Dar a uma jogadora</button>
         <button class="btn btn-ghost" data-edit-item="${i.id}">Editar</button>
         <button class="btn btn-danger" data-delete-item="${i.id}">Excluir</button>
       </div>
@@ -2498,6 +2499,57 @@ function renderItems() {
 }
 
 document.getElementById("item-search").addEventListener("input", renderItems);
+
+// ==================== Dar item/achado do Compêndio direto a uma Princesa ====================
+// Mesmo destino do "+ Adicionar" na aba Personagens (pc.compendioRefs), só que partindo
+// do Compêndio — pra não precisar trocar de aba enquanto está com o item/achado na tela.
+const giveToPcModal = document.getElementById("modal-give-to-pc");
+let giveToPcTarget = null;
+
+function renderGiveToPcList() {
+  const list = document.getElementById("give-to-pc-list");
+  if (state.pcs.length === 0) {
+    list.innerHTML = emptyState("face_3", "Nenhuma Princesa cadastrada. Crie uma na aba \"Personagens\" primeiro.");
+    return;
+  }
+  list.innerHTML = state.pcs
+    .map((p) => {
+      const already = (p.compendioRefs || []).some(
+        (r) => r.tipo === giveToPcTarget.tipo && r.refId === giveToPcTarget.refId
+      );
+      return `
+      <div class="from-npc-item">
+        <span>${escapeHtml(p.nome)}</span>
+        <button class="btn btn-secondary" data-give-confirm="${p.id}" ${already ? "disabled" : ""}>${already ? "Já tem" : "Dar"}</button>
+      </div>
+    `;
+    })
+    .join("");
+  list.querySelectorAll("[data-give-confirm]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const pc = state.pcs.find((p) => p.id === btn.dataset.giveConfirm);
+      pc.compendioRefs = pc.compendioRefs || [];
+      const already = pc.compendioRefs.some(
+        (r) => r.tipo === giveToPcTarget.tipo && r.refId === giveToPcTarget.refId
+      );
+      if (!already) pc.compendioRefs.push({ tipo: giveToPcTarget.tipo, refId: giveToPcTarget.refId });
+      saveState();
+      renderPcs();
+      renderGiveToPcList();
+    })
+  );
+}
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-give-to-pc]");
+  if (!btn) return;
+  giveToPcTarget = { tipo: btn.dataset.giveToPc, refId: btn.dataset.giveId };
+  document.getElementById("give-to-pc-title").textContent =
+    giveToPcTarget.tipo === "documento" ? "Dar este achado a uma Princesa" : "Dar este item a uma Princesa";
+  renderGiveToPcList();
+  giveToPcModal.classList.remove("hidden");
+});
+document.getElementById("btn-cancel-give-to-pc").addEventListener("click", () => giveToPcModal.classList.add("hidden"));
 
 // ==================== Imagens (handouts para jogadores) ====================
 document.getElementById("handout-upload").addEventListener("change", async () => {
@@ -2734,6 +2786,7 @@ function documentoCardHtml(d) {
       ${d.encontrado ? `<span class="npc-type-badge" style="background:var(--success); color:#0d3a26; border-color:var(--success);">Já encontrado</span>` : ""}
       <div class="npc-card-actions">
         <button class="btn btn-ghost" data-share-text="documento" data-share-id="${d.id}">${shared ? "Esconder" : "Mostrar aos jogadores"}</button>
+        <button class="btn btn-ghost" data-give-to-pc="documento" data-give-id="${d.id}">→ Dar a uma jogadora</button>
         <button class="btn btn-ghost" data-edit-documento="${d.id}">Editar</button>
         <button class="btn btn-danger" data-delete-documento="${d.id}">Excluir</button>
       </div>
