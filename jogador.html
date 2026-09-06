@@ -42,6 +42,24 @@
   }
   .shared-text-box h2 { margin: 0 0 10px; font-family: "Fredoka", sans-serif; color: var(--parchment-text); }
   .shared-text-box p { white-space: pre-wrap; margin: 0; line-height: 1.5; }
+
+  .inventories-section { margin-top: 26px; }
+  .inventories-section > summary {
+    cursor: pointer; font-family: "Fredoka", sans-serif; font-size: 1.15rem;
+    color: var(--accent-deep); padding: 10px 4px; list-style: none;
+  }
+  .inventories-section > summary::-webkit-details-marker { display: none; }
+  .inventories-section > summary::before { content: "▶ "; font-size: 0.8em; }
+  .inventories-section[open] > summary::before { content: "▼ "; }
+  .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .inventory-card {
+    background: var(--bg-card); border: 2px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .inventory-card h3 { margin: 0 0 8px; font-size: 1.02rem; color: var(--accent-deep); }
+  .inventory-card ul { margin: 0; padding-left: 18px; }
+  .inventory-card li { margin-bottom: 3px; }
+  .inventory-card .field-hint { margin: 0; }
 </style>
 </head>
 <body>
@@ -67,6 +85,11 @@
   <div id="player-map-canvas" class="map-canvas">
     <div class="empty-state"><span class="icon empty-state-icon">map</span><span>Aguardando a Mestra escolher um mapa...</span></div>
   </div>
+
+  <details class="inventories-section" open>
+    <summary>Inventários das Princesas</summary>
+    <div id="inventory-list" class="inventory-grid"></div>
+  </details>
 </main>
 
 <script src="jogador.js"></script>

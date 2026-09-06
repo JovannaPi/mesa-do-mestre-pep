@@ -234,12 +234,35 @@ function renderSharedText(state) {
   box.style.display = "";
 }
 
+// Inventário só é editável pela Mestra (aba Personagens); aqui as jogadoras só consultam
+// o que já têm, sem precisar perguntar ou lembrar de cabeça durante a sessão.
+function renderInventories(state) {
+  const list = document.getElementById("inventory-list");
+  const pcs = state.pcs || [];
+  if (pcs.length === 0) {
+    list.innerHTML = `<p class="field-hint">Nenhuma Princesa cadastrada ainda.</p>`;
+    return;
+  }
+  list.innerHTML = pcs
+    .map((p) => {
+      const itens = p.inventario || [];
+      return `
+        <div class="inventory-card">
+          <h3>${escapeHtml(p.nome)}</h3>
+          ${itens.length ? `<ul>${itens.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>` : `<p class="field-hint">Inventário vazio.</p>`}
+        </div>
+      `;
+    })
+    .join("");
+}
+
 function renderAll(state) {
   latestState = state;
   document.getElementById("player-campaign-name").textContent = state.campaignName || "Mesa do Mestre";
   renderHandout(state);
   renderSharedText(state);
   renderMap(state);
+  renderInventories(state);
 }
 
 async function start() {
