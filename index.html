@@ -421,6 +421,23 @@
   </div>
 </div>
 
+<!-- MODAL INVENTORY PICKER (add item/documento from compêndio to a Princesa) -->
+<div id="modal-inventory-picker" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="inventory-picker-title">Adicionar do Compêndio</h2>
+    <div class="location-picker" id="inventory-picker-type">
+      <button type="button" class="location-btn active" data-inventory-picker-type="item">Itens</button>
+      <button type="button" class="location-btn" data-inventory-picker-type="documento">Documentos &amp; Achados</button>
+    </div>
+    <input id="inventory-picker-search" class="input" type="text" placeholder="Buscar por nome..." style="max-width:100%; margin-bottom:12px;">
+    <div id="inventory-picker-list" class="from-npc-list"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="btn-cancel-inventory-picker">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL SESSION -->
 <div id="modal-session" class="modal-overlay hidden">
   <div class="modal">

@@ -47,19 +47,46 @@
   .inventories-section > summary {
     cursor: pointer; font-family: "Fredoka", sans-serif; font-size: 1.15rem;
     color: var(--accent-deep); padding: 10px 4px; list-style: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
   .inventories-section > summary::-webkit-details-marker { display: none; }
-  .inventories-section > summary::before { content: "▶ "; font-size: 0.8em; }
-  .inventories-section[open] > summary::before { content: "▼ "; }
+  .inventories-section-title::before { content: "▶ "; font-size: 0.8em; }
+  .inventories-section[open] .inventories-section-title::before { content: "▼ "; }
   .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
   .inventory-card {
     background: var(--bg-card); border: 2px solid var(--border); border-radius: var(--radius);
     padding: 12px 14px;
   }
   .inventory-card h3 { margin: 0 0 8px; font-size: 1.02rem; color: var(--accent-deep); }
-  .inventory-card ul { margin: 0; padding-left: 18px; }
+  .inventory-card ul { margin: 0 0 4px; padding-left: 18px; }
   .inventory-card li { margin-bottom: 3px; }
   .inventory-card .field-hint { margin: 0; }
+  .inventory-card .ref-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
+  .inventory-card .ref-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .inventory-card .ref-item-nome { font-weight: 700; color: var(--accent-deep); }
+  .inventory-card .ref-item-desc { font-size: 0.88rem; color: var(--text-dim); white-space: pre-wrap; margin-top: 2px; }
+  .btn-trocar-pc {
+    background: none; border: none; color: var(--text-dim); text-decoration: underline;
+    font-size: 0.8rem; cursor: pointer; font-family: inherit; padding: 0;
+  }
+
+  .player-pc-picker-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px;
+  }
+  .player-pc-picker-box {
+    background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 24px 22px; max-width: 380px; width: 100%; text-align: center;
+  }
+  .player-pc-picker-box h2 { margin: 0 0 6px; color: var(--accent); font-family: "Fredoka", sans-serif; }
+  .player-pc-picker-box p { margin: 0 0 16px; color: var(--text-dim); font-size: 0.9rem; }
+  .player-pc-picker-list { display: flex; flex-direction: column; gap: 8px; }
+  .player-pc-picker-list button {
+    font-family: "Fredoka", sans-serif; font-size: 1rem; padding: 10px 14px;
+    border-radius: var(--radius); border: 2px solid var(--accent-strong); background: #fff;
+    color: var(--accent-deep); cursor: pointer;
+  }
+  .player-pc-picker-list button:hover { background: var(--accent-strong); color: #fff; }
 </style>
 </head>
 <body>
@@ -87,10 +114,21 @@
   </div>
 
   <details class="inventories-section" open>
-    <summary>Inventários das Princesas</summary>
+    <summary>
+      <span class="inventories-section-title">Meu Inventário</span>
+      <button type="button" class="btn-trocar-pc" id="btn-trocar-pc">trocar</button>
+    </summary>
     <div id="inventory-list" class="inventory-grid"></div>
   </details>
 </main>
+
+<div id="player-pc-picker" class="player-pc-picker-overlay" style="display:none;">
+  <div class="player-pc-picker-box">
+    <h2>Quem é você?</h2>
+    <p>Escolha sua Princesa pra ver seu próprio inventário.</p>
+    <div id="player-pc-picker-list" class="player-pc-picker-list"></div>
+  </div>
+</div>
 
 <script src="jogador.js"></script>
 </body>

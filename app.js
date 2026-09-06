@@ -2909,6 +2909,7 @@ formPc.addEventListener("submit", (e) => {
     arma: document.getElementById("pc-arma").value.trim(),
     talentos: parseTags(document.getElementById("pc-talentos").value),
     inventario: parseTags(document.getElementById("pc-inventario").value),
+    compendioRefs: existing ? existing.compendioRefs || [] : [],
     trauma: document.getElementById("pc-trauma").value.trim(),
     maldicaoTipo: document.getElementById("pc-maldicao-tipo").value,
     maldicaoEstagio: Number(document.getElementById("pc-maldicao-estagio").value) || 0,
@@ -2949,6 +2950,19 @@ function togglePcDicePip(id, field, index) {
   pc[usedKey] = pc[usedKey] === index + 1 ? index : index + 1;
   saveState();
   renderPcs();
+}
+
+function pcRefChipHtml(pcId, ref) {
+  const pool = ref.tipo === "documento" ? state.documentos : state.items;
+  const entry = pool.find((x) => x.id === ref.refId);
+  const nome = entry ? entry.nome : "(removido do Compêndio)";
+  const tipoLabel = ref.tipo === "documento" ? "achado" : "item";
+  return `
+    <span class="ref-chip">
+      <span class="ref-chip-type">${tipoLabel}</span> ${escapeHtml(nome)}
+      <button type="button" class="ref-chip-remove" data-remove-pc-ref="${pcId}" data-ref-id="${ref.refId}" data-ref-tipo="${ref.tipo}" aria-label="Remover">&times;</button>
+    </span>
+  `;
 }
 
 function renderPcs() {
@@ -3008,6 +3022,13 @@ function renderPcs() {
       ${p.arma ? `<div class="pc-misc"><b>Arma:</b> ${escapeHtml(p.arma)}</div>` : ""}
       ${p.talentos.length ? `<div class="pc-misc"><b>Talentos:</b> ${p.talentos.map(escapeHtml).join(", ")}</div>` : ""}
       ${p.inventario.length ? `<div class="pc-misc"><b>Minhas coisas:</b> ${p.inventario.map(escapeHtml).join(", ")}</div>` : ""}
+      <div class="pc-misc">
+        <b>Do Compêndio:</b>
+        <div class="ref-chips">
+          ${(p.compendioRefs || []).map((r) => pcRefChipHtml(p.id, r)).join("")}
+          <button type="button" class="btn btn-ghost" style="padding:3px 10px; font-size:0.78rem;" data-add-pc-ref="${p.id}">+ Adicionar</button>
+        </div>
+      </div>
       ${p.trauma ? `<div class="pc-misc"><b>Trauma:</b> ${escapeHtml(p.trauma)}</div>` : ""}
       <div class="pc-card-actions">
         <button class="btn btn-ghost" data-edit-pc="${p.id}">Editar</button>
@@ -3042,6 +3063,20 @@ function renderPcs() {
   );
   list.querySelectorAll("[data-pc-affliction]").forEach((btn) =>
     btn.addEventListener("click", () => togglePcAffliction(btn.dataset.pcAffliction, btn.dataset.key))
+  );
+  list.querySelectorAll("[data-add-pc-ref]").forEach((btn) =>
+    btn.addEventListener("click", () => openInventoryPickerModal(btn.dataset.addPcRef))
+  );
+  list.querySelectorAll("[data-remove-pc-ref]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const pc = state.pcs.find((p) => p.id === btn.dataset.removePcRef);
+      if (!pc) return;
+      pc.compendioRefs = (pc.compendioRefs || []).filter(
+        (r) => !(r.refId === btn.dataset.refId && r.tipo === btn.dataset.refTipo)
+      );
+      saveState();
+      renderPcs();
+    })
   );
   list.querySelectorAll("[data-pc-dice-coracao]").forEach((pip) =>
     pip.addEventListener("click", () => togglePcDicePip(pip.dataset.pcDiceCoracao, "coracao", Number(pip.dataset.index)))
@@ -3236,6 +3271,67 @@ document.getElementById("btn-add-from-pc").addEventListener("click", () => {
   fromPcModal.classList.remove("hidden");
 });
 document.getElementById("btn-cancel-from-pc").addEventListener("click", () => fromPcModal.classList.add("hidden"));
+
+// ==================== Inventário — adicionar do Compêndio ====================
+const inventoryPickerModal = document.getElementById("modal-inventory-picker");
+let inventoryPickerType = "item";
+let inventoryPickerPcId = null;
+
+function renderInventoryPickerList() {
+  const list = document.getElementById("inventory-picker-list");
+  const query = document.getElementById("inventory-picker-search").value.trim().toLowerCase();
+  const pool = inventoryPickerType === "documento" ? state.documentos : state.items;
+  const filtered = pool.filter((x) => !query || x.nome.toLowerCase().includes(query));
+  if (filtered.length === 0) {
+    list.innerHTML = emptyState("search_off", "Nada encontrado. Crie no Compêndio primeiro.");
+    return;
+  }
+  list.innerHTML = filtered
+    .map(
+      (x) => `
+      <div class="from-npc-item">
+        <span>${escapeHtml(x.nome)}</span>
+        <button class="btn btn-secondary" data-add-inventory-ref="${x.id}">+ Adicionar</button>
+      </div>
+    `
+    )
+    .join("");
+  list.querySelectorAll("[data-add-inventory-ref]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const pc = state.pcs.find((p) => p.id === inventoryPickerPcId);
+      if (!pc) return;
+      pc.compendioRefs = pc.compendioRefs || [];
+      const refId = btn.dataset.addInventoryRef;
+      const already = pc.compendioRefs.some((r) => r.refId === refId && r.tipo === inventoryPickerType);
+      if (!already) pc.compendioRefs.push({ tipo: inventoryPickerType, refId });
+      saveState();
+      renderPcs();
+    })
+  );
+}
+
+function openInventoryPickerModal(pcId) {
+  inventoryPickerPcId = pcId;
+  inventoryPickerType = "item";
+  document.querySelectorAll("[data-inventory-picker-type]").forEach((b) =>
+    b.classList.toggle("active", b.dataset.inventoryPickerType === "item")
+  );
+  document.getElementById("inventory-picker-search").value = "";
+  renderInventoryPickerList();
+  inventoryPickerModal.classList.remove("hidden");
+}
+
+document.querySelectorAll("[data-inventory-picker-type]").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    inventoryPickerType = btn.dataset.inventoryPickerType;
+    document.querySelectorAll("[data-inventory-picker-type]").forEach((b) => b.classList.toggle("active", b === btn));
+    renderInventoryPickerList();
+  })
+);
+document.getElementById("inventory-picker-search").addEventListener("input", renderInventoryPickerList);
+document.getElementById("btn-cancel-inventory-picker").addEventListener("click", () =>
+  inventoryPickerModal.classList.add("hidden")
+);
 
 document.getElementById("btn-roll-init").addEventListener("click", () => {
   if (state.combat.combatants.length === 0) return;

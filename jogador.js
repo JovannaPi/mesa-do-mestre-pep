@@ -234,26 +234,88 @@ function renderSharedText(state) {
   box.style.display = "";
 }
 
-// Inventário só é editável pela Mestra (aba Personagens); aqui as jogadoras só consultam
-// o que já têm, sem precisar perguntar ou lembrar de cabeça durante a sessão.
+// Inventário só é editável pela Mestra (aba Personagens); aqui a jogadora só consulta
+// o que já tem, sem precisar perguntar ou lembrar de cabeça durante a sessão. Cada
+// jogadora escolhe "quem é ela" uma vez (guardado só no navegador dela) e daí só vê
+// o próprio inventário, nunca o das colegas.
+const PC_STORAGE_KEY = "mesaJogadoraPcId";
+
+function getSelectedPcId() {
+  try {
+    return localStorage.getItem(PC_STORAGE_KEY);
+  } catch (err) {
+    return null;
+  }
+}
+
+function setSelectedPcId(id) {
+  try {
+    localStorage.setItem(PC_STORAGE_KEY, id);
+  } catch (err) {
+    // sem localStorage disponível — a jogadora só vai precisar escolher de novo se recarregar
+  }
+}
+
+function clearSelectedPcId() {
+  try {
+    localStorage.removeItem(PC_STORAGE_KEY);
+  } catch (err) {}
+}
+
+function renderPlayerPicker(state) {
+  const overlay = document.getElementById("player-pc-picker");
+  const pcs = state.pcs || [];
+  const selectedId = getSelectedPcId();
+  const stillExists = selectedId && pcs.some((p) => p.id === selectedId);
+  if (stillExists || pcs.length === 0) {
+    overlay.style.display = "none";
+    return;
+  }
+  overlay.style.display = "flex";
+  const list = document.getElementById("player-pc-picker-list");
+  list.innerHTML = pcs.map((p) => `<button type="button" data-pick-pc="${p.id}">${escapeHtml(p.nome)}</button>`).join("");
+  list.querySelectorAll("[data-pick-pc]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      setSelectedPcId(btn.dataset.pickPc);
+      renderAll(latestState);
+    })
+  );
+}
+
+function refEntryHtml(state, ref) {
+  const pool = ref.tipo === "documento" ? state.documentos || [] : state.items || [];
+  const entry = pool.find((x) => x.id === ref.refId);
+  if (!entry) return "";
+  const desc = ref.tipo === "documento" ? entry.texto : entry.descricao;
+  return `
+    <div class="ref-item">
+      <div class="ref-item-nome">${escapeHtml(entry.nome)}</div>
+      ${desc ? `<div class="ref-item-desc">${escapeHtml(desc)}</div>` : ""}
+    </div>
+  `;
+}
+
 function renderInventories(state) {
   const list = document.getElementById("inventory-list");
   const pcs = state.pcs || [];
-  if (pcs.length === 0) {
-    list.innerHTML = `<p class="field-hint">Nenhuma Princesa cadastrada ainda.</p>`;
+  const selectedId = getSelectedPcId();
+  const pc = pcs.find((p) => p.id === selectedId);
+  if (!pc) {
+    list.innerHTML = `<p class="field-hint">Escolha quem você é pra ver seu inventário.</p>`;
     return;
   }
-  list.innerHTML = pcs
-    .map((p) => {
-      const itens = p.inventario || [];
-      return `
-        <div class="inventory-card">
-          <h3>${escapeHtml(p.nome)}</h3>
-          ${itens.length ? `<ul>${itens.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>` : `<p class="field-hint">Inventário vazio.</p>`}
-        </div>
-      `;
-    })
-    .join("");
+  const itens = pc.inventario || [];
+  const refs = pc.compendioRefs || [];
+  const refsHtml = refs.map((r) => refEntryHtml(state, r)).join("");
+  const itensHtml = itens.length ? `<ul>${itens.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>` : "";
+  list.innerHTML = `
+    <div class="inventory-card">
+      <h3>${escapeHtml(pc.nome)}</h3>
+      ${itensHtml}
+      ${refsHtml}
+      ${!itensHtml && !refsHtml ? `<p class="field-hint">Inventário vazio.</p>` : ""}
+    </div>
+  `;
 }
 
 function renderAll(state) {
@@ -262,8 +324,14 @@ function renderAll(state) {
   renderHandout(state);
   renderSharedText(state);
   renderMap(state);
+  renderPlayerPicker(state);
   renderInventories(state);
 }
+
+document.getElementById("btn-trocar-pc").addEventListener("click", () => {
+  clearSelectedPcId();
+  if (latestState) renderAll(latestState);
+});
 
 async function start() {
   setStatus("Conectando...");
