@@ -90,6 +90,7 @@ function defaultState() {
     seededAmbientesV2: false,
     seededAmbientesV3: false,
     seededNpcPersonalities: false,
+    seededAreaDeColeta: false,
   };
 }
 
@@ -1986,6 +1987,27 @@ function seedAmbientesV3() {
   });
 }
 
+function seedAreaDeColeta() {
+  if (state.seededAreaDeColeta) return;
+  state.seededAreaDeColeta = true;
+  const titulo = "Área de Coleta (Bosque Emaranhado)";
+  if (state.notes.some((x) => x.titulo === titulo)) return;
+  state.notes.push({
+    id: uid(),
+    titulo,
+    categoria: "ambientes",
+    texto:
+      "Uma clareira mais aberta no meio do Bosque Emaranhado, onde a luz consegue passar pela copa cerrada — um ponto que os moradores de Cervovale usam pra coletar ervas antes da maldição piorar. Silenciosa demais pro tamanho do lugar.\n" +
+      "Piso: musgo macio, terra úmida, folhas caídas cobrindo boa parte do chão.\n\n" +
+      "1. Clareira central — tem: ervas silvestres, pequenos cogumelos comuns espalhados pelo chão\n" +
+      "2. Moitas de frutas — tem: arbustos baixos com frutinhas silvestres\n" +
+      "3. Tronco caído — tem: um grande tronco coberto de musgo, cortando parte da clareira\n" +
+      "   🔎 Se investigarem (d20): sob o tronco, um cogumelo brilhante incomum — raro o bastante pra servir de ingrediente de poção.\n" +
+      "4. Trilha entre as árvores — tem: raízes grossas, vegetação cerrada marcando o limite da clareira\n" +
+      "   🔎 Se investigarem (d20): pegadas estranhas na terra macia, seguindo em direção mais fechada do bosque — é esse o caminho que leva ao Círculo dos Cogumelos, onde Ashkan está preso (ver nota \"Círculo dos Cogumelos (Bosque Emaranhado)\").",
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -2002,6 +2024,7 @@ seedAmbientes();
 seedAmbientesV2();
 seedAmbientesV3();
 seedNpcPersonalities();
+seedAreaDeColeta();
 saveState();
 
 // ---------- Tabs ----------
