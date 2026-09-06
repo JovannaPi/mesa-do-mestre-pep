@@ -52,21 +52,36 @@
   .inventories-section > summary::-webkit-details-marker { display: none; }
   .inventories-section-title::before { content: "▶ "; font-size: 0.8em; }
   .inventories-section[open] .inventories-section-title::before { content: "▼ "; }
-  .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .inventory-grid { display: block; width: 100%; }
   .inventory-card {
     background: var(--bg-card); border: 2px solid var(--border); border-radius: var(--radius);
-    padding: 12px 14px;
+    padding: 14px 16px; width: 100%; box-sizing: border-box;
   }
-  .inventory-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .inventory-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
   .inventory-card h3 { margin: 0; font-size: 1.02rem; color: var(--accent-deep); }
   .inventory-card .field-hint { margin: 0; }
 
-  .inv-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
-  .inv-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .inv-weapon-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+  }
+  .inv-weapon-label {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-dim); flex: none;
+  }
+
+  .inv-entries-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 10px 16px; width: 100%;
+  }
+  .inv-entry {
+    background: var(--parchment-soft, rgba(0,0,0,0.03)); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+  }
   .inv-entry-row { display: flex; align-items: center; gap: 8px; }
   .inv-entry-nome {
     font-family: "Fredoka", sans-serif; font-size: 1.12rem; font-weight: 600;
-    color: var(--accent-deep); flex: 1;
+    color: var(--accent-deep); flex: 1; word-break: break-word;
   }
   .inv-info-btn {
     flex: none; width: 22px; height: 22px; border-radius: 50%;
@@ -80,11 +95,14 @@
     margin-top: 6px; padding-left: 2px; line-height: 1.5;
   }
   .inv-entry-detail.open { display: block; }
-  .item-remove-btn {
+  .item-remove-btn, .item-edit-btn {
     background: none; border: none; color: var(--text-dim); cursor: pointer;
-    font-size: 1.15rem; line-height: 1; padding: 0 2px; font-family: inherit; flex: none;
+    font-size: 1.05rem; line-height: 1; padding: 0 2px; font-family: inherit; flex: none;
   }
   .item-remove-btn:hover { color: var(--danger); }
+  .item-edit-btn:hover { color: var(--accent-deep); }
+  .inv-entry-edit-row { display: flex; gap: 6px; }
+  .inv-entry-edit-row input { flex: 1; }
 
   .inv-menu-wrap { position: relative; flex: none; }
   .inv-menu-btn {

@@ -297,8 +297,9 @@ function renderPlayerPicker(state) {
 }
 
 function resetInventoryUiState() {
-  inventoryRemoveMode = false;
+  inventoryMode = "view";
   inventoryMenuOpen = false;
+  inventoryEditingKey = null;
   inventoryOpenDetails.clear();
 }
 
@@ -338,6 +339,16 @@ function removeFreeformItem(index) {
   renderInventories(latestState);
 }
 
+function editFreeformItem(index, newText) {
+  const pc = currentPc();
+  const trimmed = newText.trim();
+  if (!pc || !trimmed) return;
+  pc.inventario[index] = trimmed;
+  persistPcs();
+  inventoryEditingKey = null;
+  renderInventories(latestState);
+}
+
 function addCompendioRef(tipo, refId) {
   const pc = currentPc();
   if (!pc) return;
@@ -370,7 +381,9 @@ function findMatchingCompendioText(state, nome) {
 }
 
 // Junta itens digitados à mão e itens/achados puxados do Compêndio numa lista só, cada
-// um já com o texto explicativo (se tiver) pronto pro "?".
+// um já com o texto explicativo (se tiver) pronto pro "?". Só os digitados à mão podem
+// ser editados (renomeados) — os puxados do Compêndio são um link pro registro da Mestra,
+// então só dá pra removê-los, não renomeá-los.
 function buildInventoryEntries(state, pc) {
   const entries = [];
   (pc.inventario || []).forEach((texto, idx) => {
@@ -378,7 +391,9 @@ function buildInventoryEntries(state, pc) {
       key: `f-${idx}`,
       nome: texto,
       desc: findMatchingCompendioText(state, texto),
+      editable: true,
       remove: () => removeFreeformItem(idx),
+      save: (novoTexto) => editFreeformItem(idx, novoTexto),
     });
   });
   (pc.compendioRefs || []).forEach((ref) => {
@@ -389,28 +404,59 @@ function buildInventoryEntries(state, pc) {
       key: `r-${ref.tipo}-${ref.refId}`,
       nome: entry.nome,
       desc: (ref.tipo === "documento" ? entry.texto : entry.descricao) || "",
+      editable: false,
       remove: () => removeCompendioRef(ref.tipo, ref.refId),
     });
   });
   return entries;
 }
 
-let inventoryRemoveMode = false;
+let inventoryMode = "view"; // "view" | "edit" | "remove"
 let inventoryMenuOpen = false;
+let inventoryEditingKey = null;
 const inventoryOpenDetails = new Set();
 
 function inventoryEntryHtml(e) {
   const hasInfo = !!e.desc;
   const isOpen = inventoryOpenDetails.has(e.key);
+  if (inventoryEditingKey === e.key) {
+    return `
+      <div class="inv-entry">
+        <div class="inv-entry-edit-row">
+          <input type="text" class="input" id="inv-edit-input" value="${escapeHtml(e.nome)}">
+          <button type="button" class="item-edit-btn" data-save-entry="${e.key}" aria-label="Salvar">✔</button>
+        </div>
+      </div>
+    `;
+  }
   return `
     <div class="inv-entry">
       <div class="inv-entry-row">
         <span class="inv-entry-nome">${escapeHtml(e.nome)}</span>
         ${hasInfo ? `<button type="button" class="inv-info-btn ${isOpen ? "open" : ""}" data-toggle-detail="${e.key}" aria-label="O que é isso?">?</button>` : ""}
-        ${inventoryRemoveMode ? `<button type="button" class="item-remove-btn" data-remove-entry="${e.key}" aria-label="Remover">×</button>` : ""}
+        ${inventoryMode === "edit" && e.editable ? `<button type="button" class="item-edit-btn" data-edit-entry="${e.key}" aria-label="Editar">✎</button>` : ""}
+        ${inventoryMode === "remove" ? `<button type="button" class="item-remove-btn" data-remove-entry="${e.key}" aria-label="Remover">×</button>` : ""}
       </div>
       ${hasInfo ? `<div class="inv-entry-detail ${isOpen ? "open" : ""}" id="detail-${e.key}">${escapeHtml(e.desc)}</div>` : ""}
     </div>
+  `;
+}
+
+// A arma equipada (aba Personagens, campo "Arma") é um campo separado do inventário —
+// mostramos ela aqui também, com "?" se o nome bater com algo do Compêndio, mas quem
+// controla ela continua sendo a Mestra (não dá pra editar/remover por aqui).
+function weaponRowHtml(state, pc) {
+  if (!pc.arma) return "";
+  const key = "weapon";
+  const desc = findMatchingCompendioText(state, pc.arma);
+  const isOpen = inventoryOpenDetails.has(key);
+  return `
+    <div class="inv-weapon-row">
+      <span class="inv-weapon-label">Arma</span>
+      <span class="inv-entry-nome">${escapeHtml(pc.arma)}</span>
+      ${desc ? `<button type="button" class="inv-info-btn ${isOpen ? "open" : ""}" data-toggle-detail="${key}" aria-label="O que é isso?">?</button>` : ""}
+    </div>
+    ${desc ? `<div class="inv-entry-detail ${isOpen ? "open" : ""}" id="detail-${key}" style="margin-bottom:12px;">${escapeHtml(desc)}</div>` : ""}
   `;
 }
 
@@ -423,8 +469,10 @@ function renderInventories(state) {
   }
   const entries = buildInventoryEntries(state, pc);
   const entriesHtml = entries.length
-    ? entries.map(inventoryEntryHtml).join("")
+    ? `<div class="inv-entries-grid">${entries.map(inventoryEntryHtml).join("")}</div>`
     : `<p class="field-hint">Inventário vazio.</p>`;
+  const menuRemoveLabel = inventoryMode === "remove" ? "Concluir remoção" : "Remover item";
+  const menuEditLabel = inventoryMode === "edit" ? "Concluir edição" : "Editar item";
   list.innerHTML = `
     <div class="inventory-card">
       <div class="inventory-card-header">
@@ -433,10 +481,12 @@ function renderInventories(state) {
           <button type="button" class="inv-menu-btn" id="btn-inv-menu" aria-label="Opções">⋮</button>
           <div class="inv-menu-dropdown ${inventoryMenuOpen ? "" : "hidden"}" id="inv-menu-dropdown">
             <button type="button" id="btn-inv-menu-add">+ Adicionar item</button>
-            <button type="button" id="btn-inv-menu-remove">${inventoryRemoveMode ? "Concluir remoção" : "Remover item"}</button>
+            <button type="button" id="btn-inv-menu-edit">${menuEditLabel}</button>
+            <button type="button" id="btn-inv-menu-remove">${menuRemoveLabel}</button>
           </div>
         </div>
       </div>
+      ${weaponRowHtml(state, pc)}
       ${entriesHtml}
     </div>
   `;
@@ -455,6 +505,36 @@ function renderInventories(state) {
       if (entry) entry.remove();
     })
   );
+  list.querySelectorAll("[data-edit-entry]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      inventoryEditingKey = btn.dataset.editEntry;
+      renderInventories(latestState);
+      const input = document.getElementById("inv-edit-input");
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    })
+  );
+  list.querySelectorAll("[data-save-entry]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const entry = entries.find((e) => e.key === btn.dataset.saveEntry);
+      const input = document.getElementById("inv-edit-input");
+      if (entry && input) entry.save(input.value);
+    })
+  );
+  const editInput = document.getElementById("inv-edit-input");
+  if (editInput) {
+    editInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        document.querySelector("[data-save-entry]").click();
+      } else if (e.key === "Escape") {
+        inventoryEditingKey = null;
+        renderInventories(latestState);
+      }
+    });
+  }
   document.getElementById("btn-inv-menu").addEventListener("click", (e) => {
     e.stopPropagation();
     inventoryMenuOpen = !inventoryMenuOpen;
@@ -466,9 +546,16 @@ function renderInventories(state) {
     renderInventories(latestState);
     openItemPicker();
   });
+  document.getElementById("btn-inv-menu-edit").addEventListener("click", (e) => {
+    e.stopPropagation();
+    inventoryMode = inventoryMode === "edit" ? "view" : "edit";
+    inventoryMenuOpen = false;
+    inventoryEditingKey = null;
+    renderInventories(latestState);
+  });
   document.getElementById("btn-inv-menu-remove").addEventListener("click", (e) => {
     e.stopPropagation();
-    inventoryRemoveMode = !inventoryRemoveMode;
+    inventoryMode = inventoryMode === "remove" ? "view" : "remove";
     inventoryMenuOpen = false;
     renderInventories(latestState);
   });
