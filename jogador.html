@@ -57,24 +57,53 @@
     background: var(--bg-card); border: 2px solid var(--border); border-radius: var(--radius);
     padding: 12px 14px;
   }
-  .inventory-card h3 { margin: 0 0 8px; font-size: 1.02rem; color: var(--accent-deep); }
-  .inventory-card ul { margin: 0 0 4px; padding-left: 18px; }
-  .inventory-card li { margin-bottom: 3px; }
+  .inventory-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .inventory-card h3 { margin: 0; font-size: 1.02rem; color: var(--accent-deep); }
   .inventory-card .field-hint { margin: 0; }
-  .inventory-card .ref-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
-  .inventory-card .ref-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-  .inventory-card .ref-item-nome { font-weight: 700; color: var(--accent-deep); }
-  .inventory-card .ref-item-desc { font-size: 0.88rem; color: var(--text-dim); white-space: pre-wrap; margin-top: 2px; }
-  .inventory-card .ref-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
-  .inventory-li { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+
+  .inv-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+  .inv-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .inv-entry-row { display: flex; align-items: center; gap: 8px; }
+  .inv-entry-nome {
+    font-family: "Fredoka", sans-serif; font-size: 1.12rem; font-weight: 600;
+    color: var(--accent-deep); flex: 1;
+  }
+  .inv-info-btn {
+    flex: none; width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--accent-strong); background: #fff; color: var(--accent-strong);
+    font-weight: 700; font-size: 0.85rem; line-height: 1; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .inv-info-btn:hover, .inv-info-btn.open { background: var(--accent-strong); color: #fff; }
+  .inv-entry-detail {
+    display: none; font-size: 0.9rem; color: var(--text-dim); white-space: pre-wrap;
+    margin-top: 6px; padding-left: 2px; line-height: 1.5;
+  }
+  .inv-entry-detail.open { display: block; }
   .item-remove-btn {
     background: none; border: none; color: var(--text-dim); cursor: pointer;
-    font-size: 1.05rem; line-height: 1; padding: 0 2px; font-family: inherit; flex: none;
+    font-size: 1.15rem; line-height: 1; padding: 0 2px; font-family: inherit; flex: none;
   }
   .item-remove-btn:hover { color: var(--danger); }
-  .inventory-add-row { display: flex; gap: 6px; margin-top: 10px; }
-  .inventory-add-row input { flex: 1; }
-  .btn-add-compendio-item { margin-top: 8px; width: 100%; }
+
+  .inv-menu-wrap { position: relative; flex: none; }
+  .inv-menu-btn {
+    background: none; border: none; color: var(--text-dim); cursor: pointer;
+    font-size: 1.3rem; line-height: 1; padding: 2px 8px; font-family: inherit;
+  }
+  .inv-menu-btn:hover { color: var(--accent-deep); }
+  .inv-menu-dropdown {
+    position: absolute; right: 0; top: 100%; z-index: 20; margin-top: 4px;
+    background: #fff; border: 2px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); display: flex; flex-direction: column; min-width: 160px; overflow: hidden;
+  }
+  .inv-menu-dropdown.hidden { display: none; }
+  .inv-menu-dropdown button {
+    background: none; border: none; text-align: left; padding: 10px 14px; cursor: pointer;
+    font-family: inherit; font-size: 0.88rem; color: var(--accent-deep);
+  }
+  .inv-menu-dropdown button:hover { background: var(--parchment); }
+
   .btn-trocar-pc {
     background: none; border: none; color: var(--text-dim); text-decoration: underline;
     font-size: 0.8rem; cursor: pointer; font-family: inherit; padding: 0;
@@ -113,6 +142,9 @@
     align-self: flex-end; background: none; border: none; color: var(--text-dim);
     font-size: 0.85rem; text-decoration: underline; cursor: pointer; font-family: inherit; margin-top: 12px;
   }
+  .player-freeform-row { display: flex; gap: 6px; margin-bottom: 16px; }
+  .player-freeform-row input { flex: 1; }
+  .player-modal-divider { border: none; border-top: 1px solid var(--border); margin: 0 0 14px; }
 </style>
 </head>
 <body>
@@ -159,7 +191,12 @@
 <div id="player-item-picker" class="player-modal-overlay" style="display:none;">
   <div class="player-modal-box">
     <h2>Adicionar item</h2>
-    <p>Itens já cadastrados no Compêndio da Mestra — escolha um pra ver a descrição.</p>
+    <div class="player-freeform-row">
+      <input id="player-item-freeform-input" class="input" type="text" placeholder="Digite um item que não está na lista...">
+      <button type="button" class="btn btn-secondary" id="btn-add-freeform-item">Adicionar</button>
+    </div>
+    <hr class="player-modal-divider">
+    <p>Ou puxe um item já cadastrado no Compêndio da Mestra — escolha um pra ver o que ele faz.</p>
     <input id="player-item-picker-search" class="input" type="text" placeholder="Buscar por nome..." style="margin-bottom:12px;">
     <div id="player-item-picker-list" class="player-modal-list"></div>
     <button type="button" class="btn-close-player-modal" id="btn-close-item-picker">Fechar</button>

@@ -290,9 +290,16 @@ function renderPlayerPicker(state) {
   list.querySelectorAll("[data-pick-pc]").forEach((btn) =>
     btn.addEventListener("click", () => {
       setSelectedPcId(btn.dataset.pickPc);
+      resetInventoryUiState();
       renderAll(latestState);
     })
   );
+}
+
+function resetInventoryUiState() {
+  inventoryRemoveMode = false;
+  inventoryMenuOpen = false;
+  inventoryOpenDetails.clear();
 }
 
 async function persistPcs() {
@@ -349,18 +356,60 @@ function removeCompendioRef(tipo, refId) {
   renderInventories(latestState);
 }
 
-function refEntryHtml(state, ref) {
-  const pool = ref.tipo === "documento" ? state.documentos || [] : state.items || [];
-  const entry = pool.find((x) => x.id === ref.refId);
-  if (!entry) return "";
-  const desc = ref.tipo === "documento" ? entry.texto : entry.descricao;
+// Um item digitado à mão que bate com o nome de algo no Compêndio ganha o "?" também —
+// assim a jogadora não precisa lembrar de puxar do Compêndio pra ver a explicação.
+// IMPORTANTE: só usamos entry.descricao/entry.texto aqui, nunca entry.verdadeMestra —
+// isso é segredo da Mestra e não pode aparecer pro lado da jogadora de jeito nenhum.
+function findMatchingCompendioText(state, nome) {
+  const lower = nome.trim().toLowerCase();
+  const item = (state.items || []).find((i) => i.nome.toLowerCase() === lower);
+  if (item) return item.descricao || "";
+  const doc = (state.documentos || []).find((d) => d.nome.toLowerCase() === lower);
+  if (doc) return doc.texto || "";
+  return null;
+}
+
+// Junta itens digitados à mão e itens/achados puxados do Compêndio numa lista só, cada
+// um já com o texto explicativo (se tiver) pronto pro "?".
+function buildInventoryEntries(state, pc) {
+  const entries = [];
+  (pc.inventario || []).forEach((texto, idx) => {
+    entries.push({
+      key: `f-${idx}`,
+      nome: texto,
+      desc: findMatchingCompendioText(state, texto),
+      remove: () => removeFreeformItem(idx),
+    });
+  });
+  (pc.compendioRefs || []).forEach((ref) => {
+    const pool = ref.tipo === "documento" ? state.documentos || [] : state.items || [];
+    const entry = pool.find((x) => x.id === ref.refId);
+    if (!entry) return;
+    entries.push({
+      key: `r-${ref.tipo}-${ref.refId}`,
+      nome: entry.nome,
+      desc: (ref.tipo === "documento" ? entry.texto : entry.descricao) || "",
+      remove: () => removeCompendioRef(ref.tipo, ref.refId),
+    });
+  });
+  return entries;
+}
+
+let inventoryRemoveMode = false;
+let inventoryMenuOpen = false;
+const inventoryOpenDetails = new Set();
+
+function inventoryEntryHtml(e) {
+  const hasInfo = !!e.desc;
+  const isOpen = inventoryOpenDetails.has(e.key);
   return `
-    <div class="ref-item">
-      <div class="ref-item-header">
-        <div class="ref-item-nome">${escapeHtml(entry.nome)}</div>
-        <button class="item-remove-btn" data-remove-ref-tipo="${ref.tipo}" data-remove-ref-id="${ref.refId}" aria-label="Remover">×</button>
+    <div class="inv-entry">
+      <div class="inv-entry-row">
+        <span class="inv-entry-nome">${escapeHtml(e.nome)}</span>
+        ${hasInfo ? `<button type="button" class="inv-info-btn ${isOpen ? "open" : ""}" data-toggle-detail="${e.key}" aria-label="O que é isso?">?</button>` : ""}
+        ${inventoryRemoveMode ? `<button type="button" class="item-remove-btn" data-remove-entry="${e.key}" aria-label="Remover">×</button>` : ""}
       </div>
-      ${desc ? `<div class="ref-item-desc">${escapeHtml(desc)}</div>` : ""}
+      ${hasInfo ? `<div class="inv-entry-detail ${isOpen ? "open" : ""}" id="detail-${e.key}">${escapeHtml(e.desc)}</div>` : ""}
     </div>
   `;
 }
@@ -372,48 +421,66 @@ function renderInventories(state) {
     list.innerHTML = `<p class="field-hint">Escolha quem você é pra ver seu inventário.</p>`;
     return;
   }
-  const itens = pc.inventario || [];
-  const refs = pc.compendioRefs || [];
-  const refsHtml = refs.map((r) => refEntryHtml(state, r)).join("");
-  const itensHtml = itens.length
-    ? `<ul>${itens
-        .map((i, idx) => `<li class="inventory-li">${escapeHtml(i)} <button class="item-remove-btn" data-remove-freeform="${idx}" aria-label="Remover">×</button></li>`)
-        .join("")}</ul>`
-    : "";
+  const entries = buildInventoryEntries(state, pc);
+  const entriesHtml = entries.length
+    ? entries.map(inventoryEntryHtml).join("")
+    : `<p class="field-hint">Inventário vazio.</p>`;
   list.innerHTML = `
     <div class="inventory-card">
-      <h3>${escapeHtml(pc.nome)}</h3>
-      ${itensHtml}
-      ${refsHtml}
-      ${!itensHtml && !refsHtml ? `<p class="field-hint">Inventário vazio.</p>` : ""}
-      <div class="inventory-add-row">
-        <input id="inventory-add-input" class="input" type="text" placeholder="Adicionar item...">
-        <button type="button" class="btn btn-secondary" id="btn-add-freeform-item">Adicionar</button>
+      <div class="inventory-card-header">
+        <h3>${escapeHtml(pc.nome)}</h3>
+        <div class="inv-menu-wrap">
+          <button type="button" class="inv-menu-btn" id="btn-inv-menu" aria-label="Opções">⋮</button>
+          <div class="inv-menu-dropdown ${inventoryMenuOpen ? "" : "hidden"}" id="inv-menu-dropdown">
+            <button type="button" id="btn-inv-menu-add">+ Adicionar item</button>
+            <button type="button" id="btn-inv-menu-remove">${inventoryRemoveMode ? "Concluir remoção" : "Remover item"}</button>
+          </div>
+        </div>
       </div>
-      <button type="button" class="btn btn-secondary btn-add-compendio-item" id="btn-open-item-picker">+ Item do Compêndio</button>
+      ${entriesHtml}
     </div>
   `;
 
-  list.querySelectorAll("[data-remove-freeform]").forEach((btn) =>
-    btn.addEventListener("click", () => removeFreeformItem(Number(btn.dataset.removeFreeform)))
+  list.querySelectorAll("[data-toggle-detail]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.toggleDetail;
+      if (inventoryOpenDetails.has(key)) inventoryOpenDetails.delete(key);
+      else inventoryOpenDetails.add(key);
+      renderInventories(latestState);
+    })
   );
-  list.querySelectorAll("[data-remove-ref-id]").forEach((btn) =>
-    btn.addEventListener("click", () => removeCompendioRef(btn.dataset.removeRefTipo, btn.dataset.removeRefId))
+  list.querySelectorAll("[data-remove-entry]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const entry = entries.find((e) => e.key === btn.dataset.removeEntry);
+      if (entry) entry.remove();
+    })
   );
-  const addInput = document.getElementById("inventory-add-input");
-  document.getElementById("btn-add-freeform-item").addEventListener("click", () => {
-    addFreeformItem(addInput.value);
-    addInput.value = "";
+  document.getElementById("btn-inv-menu").addEventListener("click", (e) => {
+    e.stopPropagation();
+    inventoryMenuOpen = !inventoryMenuOpen;
+    renderInventories(latestState);
   });
-  addInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addFreeformItem(addInput.value);
-      addInput.value = "";
-    }
+  document.getElementById("btn-inv-menu-add").addEventListener("click", (e) => {
+    e.stopPropagation();
+    inventoryMenuOpen = false;
+    renderInventories(latestState);
+    openItemPicker();
   });
-  document.getElementById("btn-open-item-picker").addEventListener("click", openItemPicker);
+  document.getElementById("btn-inv-menu-remove").addEventListener("click", (e) => {
+    e.stopPropagation();
+    inventoryRemoveMode = !inventoryRemoveMode;
+    inventoryMenuOpen = false;
+    renderInventories(latestState);
+  });
 }
+
+// Fecha o menu de "⋮" se a jogadora clicar em qualquer outro lugar da página.
+document.addEventListener("click", (e) => {
+  if (inventoryMenuOpen && !e.target.closest(".inv-menu-wrap")) {
+    inventoryMenuOpen = false;
+    renderInventories(latestState);
+  }
+});
 
 function renderItemPickerList() {
   const list = document.getElementById("player-item-picker-list");
@@ -445,6 +512,7 @@ function renderItemPickerList() {
 
 function openItemPicker() {
   document.getElementById("player-item-picker-search").value = "";
+  document.getElementById("player-item-freeform-input").value = "";
   renderItemPickerList();
   document.getElementById("player-item-picker").style.display = "flex";
 }
@@ -452,6 +520,18 @@ function openItemPicker() {
 document.getElementById("player-item-picker-search").addEventListener("input", renderItemPickerList);
 document.getElementById("btn-close-item-picker").addEventListener("click", () => {
   document.getElementById("player-item-picker").style.display = "none";
+});
+document.getElementById("btn-add-freeform-item").addEventListener("click", () => {
+  const input = document.getElementById("player-item-freeform-input");
+  addFreeformItem(input.value);
+  input.value = "";
+  document.getElementById("player-item-picker").style.display = "none";
+});
+document.getElementById("player-item-freeform-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    document.getElementById("btn-add-freeform-item").click();
+  }
 });
 
 function renderAll(state) {
@@ -466,6 +546,7 @@ function renderAll(state) {
 
 document.getElementById("btn-trocar-pc").addEventListener("click", () => {
   clearSelectedPcId();
+  resetInventoryUiState();
   if (latestState) renderAll(latestState);
 });
 
