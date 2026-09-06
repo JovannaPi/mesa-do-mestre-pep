@@ -53,11 +53,20 @@ function activeMapFromState(state) {
   return state.maps.find((m) => m.id === state.activeMapId) || null;
 }
 
+// A imagem mostrada pode vir de dois lugares: a aba Imagens (handout comum) ou a foto
+// de um NPC (mostrada direto da ficha dele, sem precisar duplicar em Imagens).
 function renderHandout(state) {
   const box = document.getElementById("handout-box");
   const img = document.getElementById("handout-img");
   const caption = document.getElementById("handout-caption");
-  const handout = state.imagens && state.imagens.find((h) => h.id === state.handoutAtivoId);
+  const tipo = state.handoutAtivoTipo || "imagem";
+  let handout = null;
+  if (tipo === "npc") {
+    const npc = (state.npcs || []).find((n) => n.id === state.handoutAtivoId);
+    if (npc && npc.foto) handout = { imagem: npc.foto, nome: npc.nome };
+  } else {
+    handout = (state.imagens || []).find((h) => h.id === state.handoutAtivoId);
+  }
   if (handout) {
     img.src = handout.imagem;
     caption.textContent = handout.nome;

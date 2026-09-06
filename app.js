@@ -63,6 +63,7 @@ function defaultState() {
     activeMapId: null,
     imagens: [],
     handoutAtivoId: null,
+    handoutAtivoTipo: "imagem",
     mapaVisivelJogadores: true,
     playlists: { combate: [], casual: [], chefe: [] },
     playlistCategorias: [
@@ -2360,6 +2361,7 @@ function rollAttrBtn(entityName, label, value) {
 
 function npcCardHtml(n) {
   const isMonster = n.tipo === "Monstro";
+  const isShowingFoto = n.foto && state.handoutAtivoId === n.id && (state.handoutAtivoTipo || "imagem") === "npc";
   const statBlock = isMonster
     ? `
       <div class="stat-box"><span>Coração</span><b>${n.coracao}</b></div>
@@ -2386,7 +2388,9 @@ function npcCardHtml(n) {
       <div class="npc-stat-grid ${isMonster ? "monster" : ""}">${statBlock}</div>
       ${n.tags.length ? `<div class="npc-tags">${n.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
       ${n.notas ? `<div class="npc-section-label">Ataques &amp; notas</div><div class="npc-notes">${linkifyText(n.notas)}</div>` : ""}
+      ${isShowingFoto ? `<span class="npc-type-badge" style="background:var(--success); color:#0d3a26; border-color:var(--success);">Mostrando aos jogadores</span>` : ""}
       <div class="npc-card-actions">
+        ${n.foto ? `<button class="btn ${isShowingFoto ? "btn-danger" : "btn-ghost"}" data-toggle-npc-handout="${n.id}">${isShowingFoto ? "Esconder" : "Mostrar aparência aos jogadores"}</button>` : ""}
         <button class="btn btn-ghost" data-edit-npc="${n.id}">Editar</button>
         <button class="btn btn-danger" data-delete-npc="${n.id}">Excluir</button>
       </div>
@@ -2417,6 +2421,9 @@ function renderNpcs() {
     );
     list.querySelectorAll("[data-delete-npc]").forEach((btn) =>
       btn.addEventListener("click", () => deleteNpc(btn.dataset.deleteNpc))
+    );
+    list.querySelectorAll("[data-toggle-npc-handout]").forEach((btn) =>
+      btn.addEventListener("click", () => toggleHandoutVisible(btn.dataset.toggleNpcHandout, "npc"))
     );
   });
 }
@@ -2582,10 +2589,16 @@ document.getElementById("handout-upload").addEventListener("change", async () =>
   input.value = "";
 });
 
-function toggleHandoutVisible(id) {
-  state.handoutAtivoId = state.handoutAtivoId === id ? null : id;
+// tipo distingue de onde a imagem vem: "imagem" (aba Imagens) ou "npc" (foto da
+// ficha de um NPC/monstro) — o mesmo handout na tela da jogadora, duas origens.
+function toggleHandoutVisible(id, tipo) {
+  tipo = tipo || "imagem";
+  const isSame = state.handoutAtivoId === id && (state.handoutAtivoTipo || "imagem") === tipo;
+  state.handoutAtivoId = isSame ? null : id;
+  state.handoutAtivoTipo = isSame ? null : tipo;
   saveState();
   renderHandouts();
+  renderNpcs();
 }
 
 function deleteHandout(id) {
@@ -2604,7 +2617,7 @@ function renderHandouts() {
   }
   list.innerHTML = state.imagens
     .map((h) => {
-      const isShowing = state.handoutAtivoId === h.id;
+      const isShowing = state.handoutAtivoId === h.id && (state.handoutAtivoTipo || "imagem") === "imagem";
       return `
     <div class="npc-card">
       <img src="${h.imagem}" alt="${escapeHtml(h.nome)}" style="width:100%; border-radius:12px; object-fit:cover; max-height:220px;">
@@ -2620,7 +2633,7 @@ function renderHandouts() {
     })
     .join("");
   list.querySelectorAll("[data-toggle-handout]").forEach((btn) =>
-    btn.addEventListener("click", () => toggleHandoutVisible(btn.dataset.toggleHandout))
+    btn.addEventListener("click", () => toggleHandoutVisible(btn.dataset.toggleHandout, "imagem"))
   );
   list.querySelectorAll("[data-delete-handout]").forEach((btn) =>
     btn.addEventListener("click", () => deleteHandout(btn.dataset.deleteHandout))
