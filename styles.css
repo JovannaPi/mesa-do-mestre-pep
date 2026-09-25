@@ -48,24 +48,33 @@ body {
   position: relative;
 }
 
-/* Vinha decorativa fixa nas laterais, imitando a moldura ilustrada — só em telas largas
-   o bastante pra sobrar espaço sem cobrir conteúdo. */
+/* Bordas decorativas fixas nas laterais — pinheiros à esquerda, vinha de rosas à
+   direita — imitando a moldura ilustrada. Só em telas largas o bastante pra sobrar
+   espaço sem cobrir conteúdo. */
 body::before,
 body::after {
   content: "";
   position: fixed;
   top: 0;
   bottom: 0;
-  width: 70px;
-  background-image: url("deco-vine.svg");
+  width: 90px;
   background-repeat: repeat-y;
-  background-size: 70px 320px;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.75;
+  opacity: 0.85;
 }
-body::before { left: 0; background-position: left top; }
-body::after { right: 0; transform: scaleX(-1); }
+body::before {
+  left: 0;
+  background-image: url("deco-pines.png");
+  background-size: 90px 273px;
+  background-position: left top;
+}
+body::after {
+  right: 0;
+  background-image: url("deco-vine.svg");
+  background-size: 70px 320px;
+  transform: scaleX(-1);
+}
 @media (max-width: 1300px) {
   body::before, body::after { display: none; }
 }
