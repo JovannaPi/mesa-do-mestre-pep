@@ -533,18 +533,31 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 }
 
 .npc-card {
-  background: var(--bg-card);
-  border: 2px solid var(--border);
+  background: linear-gradient(180deg, var(--bg-card), var(--bg-deep));
+  border: 2px solid var(--border-gold);
   border-radius: var(--radius);
-  padding: 18px;
+  padding: 20px 18px 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
   position: relative;
+  overflow: hidden;
 }
+.npc-card::before,
+.npc-card::after {
+  content: "";
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: url("deco-corner.svg") center / contain no-repeat;
+  pointer-events: none;
+  opacity: 0.9;
+}
+.npc-card::before { top: 4px; left: 4px; }
+.npc-card::after { bottom: 4px; right: 4px; transform: rotate(180deg); }
 .npc-card-header { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
-.npc-card-header h3 { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--accent-deep); }
+.npc-card-header h3 { margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--accent-deep); font-family: "Cinzel", "Fredoka", serif; }
 .npc-type-badge {
   font-size: 0.72rem; padding: 3px 10px; border-radius: 999px; background: var(--bg-deep);
   color: var(--accent-deep); border: 1px solid var(--border-soft); white-space: nowrap;
@@ -602,6 +615,13 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .npc-section-label {
   color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;
   font-weight: 700; margin-top: 2px;
+  display: flex; align-items: center; gap: 8px;
+}
+.npc-section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--royal-gold), transparent);
 }
 .npc-notes { font-size: 0.95rem; color: var(--text); white-space: pre-wrap; max-height: 110px; overflow-y: auto; line-height: 1.5; }
 .documento-secret {
