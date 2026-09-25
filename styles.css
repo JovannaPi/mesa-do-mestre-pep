@@ -689,8 +689,11 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .note-row-chevron { color: var(--text-dim); }
 .note-row:hover { border-color: var(--accent-strong); background: var(--bg-deep); }
 .note-row-actions { display: flex; gap: 2px; padding-right: 8px; flex-shrink: 0; }
-.btn.icon-only { padding: 7px; }
-.btn.icon-only .icon { font-size: 1.05rem; }
+.btn.icon-only {
+  padding: 0; width: 42px; height: 42px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn.icon-only .icon { font-size: 1.15rem; }
 /* Regras: mecânica fria do jogo — tom azulado/acinzentado */
 .note-row-regras { border-left-color: #7a92b8; }
 .note-row-regras .note-row-main .icon:first-child { color: #5d7aa8; }
@@ -825,6 +828,10 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   background: url("deco-crest.svg") center / contain no-repeat;
   opacity: 0.85;
 }
+.empty-state[data-icon="add_photo_alternate"]::before,
+.empty-state[data-icon="map"]::before {
+  background-image: url("deco-crest-map.svg");
+}
 .empty-state-icon {
   display: none;
 }
@@ -951,7 +958,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   min-height: 300px;
   max-height: 80vh;
   margin: 0 auto;
-  border: 2px solid var(--border-soft);
+  border: 2px solid var(--border-gold);
   border-radius: var(--radius);
   background-color: var(--bg-deep);
   background-size: 100% 100%;
@@ -961,6 +968,25 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   cursor: crosshair;
   box-shadow: var(--shadow);
 }
+.map-canvas::before,
+.map-canvas::after {
+  content: "";
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  background: url("deco-corner.svg") center / contain no-repeat;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 5;
+}
+/* Só mostra a moldura decorada enquanto não tem mapa carregado — depois que a Mestra
+   sobe uma imagem de verdade e começa a posicionar tokens, a vinha sairia do caminho. */
+.map-canvas:has(.empty-state)::before,
+.map-canvas:has(.empty-state)::after {
+  opacity: 0.9;
+}
+.map-canvas::before { top: 6px; left: 6px; }
+.map-canvas::after { bottom: 6px; right: 6px; transform: rotate(180deg); }
 .map-canvas .empty-state { padding-top: 30vh; }
 
 #tab-mapa.tab-panel.active,

@@ -15,7 +15,7 @@ async function getCloudModule() {
 }
 
 function emptyState(icon, text) {
-  return `<div class="empty-state"><span class="icon empty-state-icon">${icon}</span><span>${text}</span></div>`;
+  return `<div class="empty-state" data-icon="${icon}"><span class="icon empty-state-icon">${icon}</span><span>${text}</span></div>`;
 }
 
 function uid() {
