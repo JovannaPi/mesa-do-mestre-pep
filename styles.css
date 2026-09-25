@@ -295,6 +295,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .tab-btn:hover { background: rgba(199, 154, 75, 0.14); }
 
 .tab-icon-svg { width: 18px; height: 18px; flex: none; }
+.btn-icon-img { width: 19px; height: 19px; flex: none; object-fit: contain; vertical-align: -4px; }
 
 .tab-btn.active {
   color: #fff;
