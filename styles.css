@@ -113,7 +113,7 @@ h1, h2, h3 {
 
 .app-header {
   background:
-    url("deco-castle.svg") top center / 100% auto no-repeat,
+    url("deco-castle.png") top center / 100% auto no-repeat,
     linear-gradient(180deg, #fdf6ee, #f5e2d6);
   border-bottom: 2px solid var(--royal-gold);
   position: sticky;
