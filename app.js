@@ -91,6 +91,7 @@ function defaultState() {
     seededAmbientesV3: false,
     seededNpcPersonalities: false,
     seededAreaDeColeta: false,
+    seededFinneganAmarisLink: false,
   };
 }
 
@@ -2008,6 +2009,31 @@ function seedAreaDeColeta() {
   });
 }
 
+function seedFinneganAmarisLink() {
+  if (state.seededFinneganAmarisLink) return;
+  state.seededFinneganAmarisLink = true;
+  const atualizacoes = [
+    {
+      nome: "Finnegan",
+      texto:
+        "Interpretação de mesa: é uma criança de verdade se divertindo genuinamente com a peça que aprontou com Ashkan — travessura por diversão, não malícia real.\n" +
+        "É filho da Senhora Amaris (Corte da Lua e das Estrelas, Baile Eterno) — fugiu do Baile pra aprontar sozinho no Bosque Emaranhado. Ela está preocupada procurando por ele.",
+    },
+    {
+      nome: "Senhora Amaris",
+      texto:
+        "É mãe de Finnegan — ele fugiu do Baile Eterno pra aprontar no Bosque Emaranhado (foi ele quem prendeu Ashkan na pedra do Círculo de Cogumelos). Está preocupada procurando o filho.\n" +
+        "Gancho: se as jogadoras mencionarem terem visto ou ajudado Finnegan, ela fica grata — boa chance de ganhar a simpatia (e talvez ajuda) dela no Baile.",
+    },
+  ];
+  atualizacoes.forEach(({ nome, texto }) => {
+    const n = state.npcs.find((x) => x.nome === nome);
+    if (!n) return;
+    if (n.notas.includes(texto)) return;
+    n.notas = texto + (n.notas ? "\n\n" + n.notas : "");
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -2025,6 +2051,7 @@ seedAmbientesV2();
 seedAmbientesV3();
 seedNpcPersonalities();
 seedAreaDeColeta();
+seedFinneganAmarisLink();
 saveState();
 
 // ---------- Tabs ----------
