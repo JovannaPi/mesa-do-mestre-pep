@@ -71,9 +71,8 @@ body::before {
 }
 body::after {
   right: 0;
-  background-image: url("deco-vine.svg");
-  background-size: 70px 320px;
-  transform: scaleX(-1);
+  background-image: url("deco-rosevine.png");
+  background-size: 90px 363px;
 }
 @media (max-width: 1300px) {
   body::before, body::after { display: none; }
