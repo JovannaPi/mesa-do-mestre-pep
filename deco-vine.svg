@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="320" viewBox="0 0 90 320">
+  <g fill="none" stroke="#b6506a" stroke-width="2.4" stroke-linecap="round" opacity="0.55">
+    <path d="M45 0 C20 20, 65 45, 45 70 C25 95, 65 120, 45 145 C25 170, 65 195, 45 220 C25 245, 65 270, 45 295 C30 305, 45 315, 45 320" />
+  </g>
+  <g fill="#c79a4b" opacity="0.5">
+    <path d="M45 0 C20 20, 65 45, 45 70 C25 95, 65 120, 45 145 C25 170, 65 195, 45 220 C25 245, 65 270, 45 295 C30 305, 45 315, 45 320" fill="none" stroke="#c79a4b" stroke-width="0.6" stroke-dasharray="1 5"/>
+  </g>
+  <!-- leaves -->
+  <g fill="#8fae7a" opacity="0.6">
+    <ellipse cx="24" cy="34" rx="10" ry="5" transform="rotate(-35 24 34)"/>
+    <ellipse cx="66" cy="58" rx="10" ry="5" transform="rotate(35 66 58)"/>
+    <ellipse cx="24" cy="108" rx="10" ry="5" transform="rotate(-35 24 108)"/>
+    <ellipse cx="66" cy="132" rx="10" ry="5" transform="rotate(35 66 132)"/>
+    <ellipse cx="24" cy="182" rx="10" ry="5" transform="rotate(-35 24 182)"/>
+    <ellipse cx="66" cy="206" rx="10" ry="5" transform="rotate(35 66 206)"/>
+    <ellipse cx="24" cy="256" rx="10" ry="5" transform="rotate(-35 24 256)"/>
+    <ellipse cx="66" cy="280" rx="10" ry="5" transform="rotate(35 66 280)"/>
+  </g>
+  <!-- roses (simple layered circles) -->
+  <g opacity="0.85">
+    <g transform="translate(45,45)">
+      <circle r="9" fill="#b6506a"/>
+      <circle r="6" fill="#d9738d"/>
+      <circle r="3" fill="#f3c6d2"/>
+    </g>
+    <g transform="translate(45,158)">
+      <circle r="9" fill="#9c3a52"/>
+      <circle r="6" fill="#c05c74"/>
+      <circle r="3" fill="#f0b8c6"/>
+    </g>
+    <g transform="translate(45,270)">
+      <circle r="9" fill="#b6506a"/>
+      <circle r="6" fill="#d9738d"/>
+      <circle r="3" fill="#f3c6d2"/>
+    </g>
+  </g>
+</svg>
