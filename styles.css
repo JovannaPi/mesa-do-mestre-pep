@@ -39,7 +39,7 @@
 
 body {
   margin: 0;
-  font-family: "Quicksand", "Segoe UI", system-ui, sans-serif;
+  font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
   background-color: #fff7f3;
   background-image:
     linear-gradient(160deg, #fff7f3 0%, #f8dce9 45%, #f3d9d2 100%),
@@ -125,12 +125,12 @@ body::after {
 }
 
 h1, h2, h3 {
-  font-family: "Fredoka", "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   letter-spacing: 0.01em;
 }
 
 #campaign-name {
-  font-family: "Cinzel Decorative", "Fredoka", serif;
+  font-family: "Playfair Display", serif;
   font-weight: 700;
   color: var(--accent-deep);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
@@ -187,7 +187,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   border-radius: 999px;
   cursor: pointer;
   font-weight: 700;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
 }
 .subtab-btn.active {
   background: linear-gradient(135deg, var(--accent-strong), var(--accent));
@@ -239,7 +239,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .subtitle {
   margin: 0;
   color: var(--text-dim);
-  font-family: "EB Garamond", "Quicksand", serif;
+  font-family: "Playfair Display", serif;
   font-style: italic;
   font-size: 1rem;
   font-weight: 500;
@@ -282,7 +282,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   padding: 10px 18px;
   cursor: pointer;
   font-size: 1.02rem;
-  font-family: "Cinzel", "Fredoka", serif;
+  font-family: "Playfair Display", serif;
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -361,7 +361,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   border-radius: 999px;
   cursor: pointer;
   font-size: 1rem;
-  font-family: "Cinzel", "Quicksand", sans-serif;
+  font-family: "Playfair Display", serif;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -394,7 +394,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   border-radius: 14px;
   padding: 10px 14px;
   font-size: 1.02rem;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   width: 100%;
 }
 .input:focus, textarea:focus, select:focus, input:focus {
@@ -419,7 +419,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   color: var(--accent-deep);
   margin-bottom: 14px;
   font-size: 1.15rem;
-  font-family: "Cinzel", serif;
+  font-family: "Playfair Display", serif;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -466,7 +466,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .combatant-d20-input {
   width: 60px;
   text-align: center;
-  font-family: "Fredoka", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-weight: 600;
   font-size: 1.2rem;
   padding: 6px 4px;
@@ -526,7 +526,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .combatant-card.is-npc { border-left: 6px solid var(--danger); }
 
 .combatant-init {
-  font-family: "Fredoka", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 1.6rem;
   font-weight: 600;
   color: var(--accent);
@@ -534,7 +534,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   text-align: center;
 }
 
-.combatant-name { font-weight: 700; flex: 1; min-width: 120px; font-family: "Fredoka", sans-serif; font-size: 1.15rem; }
+.combatant-name { font-weight: 700; flex: 1; min-width: 120px; font-family: "Montserrat", sans-serif; font-size: 1.15rem; }
 .combatant-name:has(.expand-caret) { cursor: pointer; }
 
 .hp-control { display: flex; align-items: center; gap: 6px; font-size: 1rem; }
@@ -585,11 +585,11 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .npc-card::before { top: 4px; left: 4px; }
 .npc-card::after { bottom: 4px; right: 4px; transform: rotate(180deg); }
 .npc-card-header { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
-.npc-card-header h3 { margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--accent-deep); font-family: "Cinzel", "Fredoka", serif; }
+.npc-card-header h3 { margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--accent-deep); font-family: "Playfair Display", serif; }
 .npc-type-badge {
   font-size: 0.72rem; padding: 3px 10px; border-radius: 999px; background: var(--bg-deep);
   color: var(--accent-deep); border: 1px solid var(--border-soft); white-space: nowrap;
-  font-family: "Quicksand", sans-serif; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+  font-family: "Montserrat", sans-serif; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
 }
 
 .npc-stat-grid {
@@ -608,9 +608,9 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   gap: 2px;
 }
 .stat-box span { font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.02em; }
-.stat-box b { font-size: 1.05rem; color: var(--accent-deep); font-family: "Fredoka", sans-serif; }
+.stat-box b { font-size: 1.05rem; color: var(--accent-deep); font-family: "Montserrat", sans-serif; }
 .roll-attr {
-  font-size: 1.05rem; color: var(--accent-deep); font-family: "Fredoka", sans-serif;
+  font-size: 1.05rem; color: var(--accent-deep); font-family: "Montserrat", sans-serif;
   background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline dotted;
   text-underline-offset: 3px;
 }
@@ -697,7 +697,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .note-shelves { display: flex; flex-direction: column; gap: 30px; }
 .note-shelf-title {
   display: flex; align-items: center; gap: 8px;
-  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 1.15rem;
+  font-family: "Montserrat", sans-serif; font-weight: 600; font-size: 1.15rem;
   color: var(--accent-deep); margin-bottom: 12px;
   padding-bottom: 6px; border-bottom: 2px solid var(--border-soft);
 }
@@ -807,7 +807,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .location-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
 .location-btn {
   border: 2px solid var(--border-soft); background: var(--bg-card); color: var(--accent-deep);
-  padding: 10px 18px; border-radius: 999px; cursor: pointer; font-weight: 700; font-family: "Quicksand", sans-serif;
+  padding: 10px 18px; border-radius: 999px; cursor: pointer; font-weight: 700; font-family: "Montserrat", sans-serif;
 }
 .location-btn.active { background: linear-gradient(135deg, var(--accent-strong), var(--accent)); color: #fff; border-color: var(--accent); }
 .location-section-title { font-size: 1.15rem; color: var(--accent); font-weight: 700; margin: 22px 0 10px; }
@@ -845,7 +845,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 
 .empty-state {
   color: var(--text-dim); text-align: center; padding: 40px 20px; font-weight: 600;
-  font-family: "Cinzel", "Fredoka", serif;
+  font-family: "Playfair Display", serif;
   border: 2px solid var(--border-gold); border-radius: var(--radius);
   background-color: rgba(253, 246, 238, 0.7);
   background-image:
@@ -875,7 +875,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .affliction-btn {
   border: 2px solid var(--border); background: var(--bg-deep); color: var(--text-dim);
   font-size: 0.8rem; padding: 4px 11px; border-radius: 999px; cursor: pointer;
-  font-family: "Quicksand", sans-serif; font-weight: 600;
+  font-family: "Montserrat", sans-serif; font-weight: 600;
 }
 .affliction-btn.active.cansada { background: var(--warning); border-color: var(--warning); color: #4a2c05; }
 .affliction-btn.active.atordoada { background: var(--danger); border-color: var(--danger); color: #55081f; }
@@ -932,7 +932,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px;
 }
 .objective-row input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--accent-strong); }
-.objective-row span { flex: 1; font-family: "Quicksand", sans-serif; font-weight: 600; font-size: 1.05rem; }
+.objective-row span { flex: 1; font-family: "Montserrat", sans-serif; font-weight: 600; font-size: 1.05rem; }
 .objective-row.done { border-color: var(--success); background: #f2fbf6; }
 .objective-row.done span { text-decoration: line-through; color: var(--text-dim); }
 .objective-row input[type="text"] { border: none; background: transparent; padding: 0; }
@@ -1136,7 +1136,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: "Fredoka", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-weight: 600;
   color: var(--accent);
   margin-bottom: 12px;
@@ -1153,13 +1153,13 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .dice-buttons .btn { padding: 8px; font-size: 0.9rem; }
 .dice-custom-row { display: flex; gap: 6px; margin-bottom: 10px; }
 .dice-result {
-  font-family: "Fredoka", sans-serif; font-size: 2rem; text-align: center; color: var(--accent-deep);
+  font-family: "Montserrat", sans-serif; font-size: 2rem; text-align: center; color: var(--accent-deep);
   min-height: 2.4rem;
 }
 .dice-history { font-size: 0.78rem; color: var(--text-dim); text-align: center; max-height: 60px; overflow-y: auto; }
 
 .timer-display {
-  font-family: "Fredoka", sans-serif; font-size: 2.2rem; text-align: center; color: var(--accent-deep);
+  font-family: "Montserrat", sans-serif; font-size: 2.2rem; text-align: center; color: var(--accent-deep);
   margin-bottom: 8px;
 }
 .timer-display.timer-done { color: var(--danger); animation: timer-pulse 1s infinite; }
@@ -1248,14 +1248,16 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-weight: 700;
   font-size: 0.95rem;
   animation: toast-enter 0.3s ease-out forwards;
 }
 
-.toast.toast-error { border-color: var(--danger); color: var(--danger); }
-.toast.toast-success { border-color: var(--success); color: #0d3a26; }
+.toast.toast-error { background: #fbe1e6; border-color: var(--danger); color: #7a2338; }
+.toast.toast-success { background: #e3f7ec; border-color: var(--success); color: #0d3a26; }
+.toast.toast-warning { background: #fdf1dc; border-color: var(--royal-gold); color: #7a5a1e; }
+.toast.toast-info { background: #f1e9f7; border-color: #9b7fc4; color: #4d3a72; }
 .toast.toast-leave { animation: toast-leave 0.3s ease-in forwards; }
 
 @keyframes toast-enter {
@@ -1330,7 +1332,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   animation: fade-in-up 0.2s ease;
 }
 .tooltip-pop.hidden { display: none; } /* Garante que ela suma quando tiver a classe hidden */
-.tooltip-pop h4 { margin: 0 0 6px; color: var(--accent); font-family: "Fredoka", sans-serif; font-size: 1.15rem; }
+.tooltip-pop h4 { margin: 0 0 6px; color: var(--accent); font-family: "Montserrat", sans-serif; font-size: 1.15rem; }
 .tooltip-pop::after {
   content: ""; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
   border-width: 8px 8px 0; border-style: solid;
