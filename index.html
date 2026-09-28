@@ -23,6 +23,10 @@
       </div>
     </div>
     <div class="header-actions">
+      <div class="global-search-wrap">
+        <input type="text" id="global-search" class="input" placeholder="Buscar em tudo... (NPC, item, local, missão)" autocomplete="off">
+        <div id="global-search-results" class="global-search-results hidden"></div>
+      </div>
       <button id="btn-rename-campaign" class="btn btn-ghost" title="Renomear campanha"><span class="icon">edit</span> Renomear</button>
       <button id="btn-export" class="btn btn-ghost" title="Exportar backup (.json)"><span class="icon">download</span> Backup</button>
       <label class="btn btn-ghost" title="Importar backup (.json)">
@@ -111,6 +115,9 @@
     </div>
 
     <div id="subtab-locais" class="subtab-panel">
+      <div class="panel-toolbar">
+        <button id="btn-add-location" class="btn btn-primary"><span class="icon">add</span> Novo local</button>
+      </div>
       <div id="location-picker" class="location-picker"></div>
       <div id="location-content"></div>
     </div>
@@ -484,6 +491,26 @@
 </div>
 
 <!-- MODAL NOTE -->
+<div id="modal-location" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="location-modal-title">Novo local</h2>
+    <form id="form-location">
+      <input type="hidden" id="location-id">
+      <label>Nome
+        <input type="text" id="location-nome" required placeholder="ex: Cervovale">
+      </label>
+      <label>Descrição (opcional)
+        <textarea id="location-descricao" rows="3" placeholder="Uma linha ou duas sobre o local"></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-location">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="modal-note" class="modal-overlay hidden">
   <div class="modal">
     <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>

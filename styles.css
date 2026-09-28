@@ -258,7 +258,43 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   letter-spacing: 0.01em;
 }
 
-.header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.global-search-wrap { position: relative; }
+.global-search-wrap #global-search { width: 260px; }
+.global-search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 340px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 2px solid var(--border-gold);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  z-index: 50;
+  padding: 6px;
+}
+.global-search-results.hidden { display: none; }
+.gsr-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: "Montserrat", sans-serif;
+  color: var(--text);
+}
+.gsr-item:hover { background: var(--pink-light, #f8dce9); }
+.gsr-item .gsr-type { font-size: 0.72rem; color: var(--accent); font-weight: 700; text-transform: uppercase; flex: none; }
+.gsr-item .gsr-name { font-weight: 600; }
+.gsr-empty { padding: 10px; color: var(--text-dim); font-size: 0.9rem; }
 
 .tabs-wrap { position: relative; padding: 10px 20px 16px; }
 .tabs {
@@ -908,6 +944,14 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 }
 .location-btn.active { background: linear-gradient(135deg, var(--accent-strong), var(--accent)); color: #fff; border-color: var(--accent); }
 .location-section-title { font-size: 1.15rem; color: var(--accent); font-weight: 700; margin: 22px 0 10px; }
+.location-header-row {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  background: var(--bg-card); border: 2px solid var(--border-gold); border-radius: var(--radius);
+  padding: 16px 20px;
+}
+.location-title { margin: 0 0 4px; font-family: "Playfair Display", serif; color: var(--accent-deep); font-size: 1.3rem; }
+.location-descricao { margin: 0; color: var(--text-dim); }
+.location-header-actions { display: flex; gap: 8px; flex: none; }
 .modal h2 { margin-top: 0; color: var(--accent); font-weight: 600; }
 
 .modal form { display: flex; flex-direction: column; gap: 13px; }

@@ -58,6 +58,7 @@ function defaultState() {
     consequences: [],
     items: [],
     documentos: [],
+    locations: [],
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
     activeMapId: null,
@@ -92,6 +93,7 @@ function defaultState() {
     seededNpcPersonalities: false,
     seededAreaDeColeta: false,
     seededFinneganAmarisLink: false,
+    seededLocations: false,
   };
 }
 
@@ -2034,6 +2036,27 @@ function seedFinneganAmarisLink() {
   });
 }
 
+// Antes os locais eram uma lista fixa no código (LOCATIONS, embaixo). Migra pra
+// entidades de verdade em state.locations, preservando a tag de cada um (é o que
+// já liga NPCs/Itens a um local via npc.tags/item.tags), pra não perder nenhum
+// vínculo já cadastrado. Rodando só uma vez — depois disso, Locais vivem 100% em
+// state.locations e podem ser criados/editados pela própria interface.
+function seedLocations() {
+  if (state.seededLocations) return;
+  state.seededLocations = true;
+  const legado = [
+    { tag: "cervovale", nome: "Cervovale" },
+    { tag: "bosque emaranhado", nome: "Bosque Emaranhado" },
+    { tag: "vale das bagas", nome: "Vale das Bagas" },
+    { tag: "baile eterno", nome: "Baile Eterno" },
+    { tag: "torre da bruxa", nome: "Torre da Bruxa" },
+  ];
+  legado.forEach(({ tag, nome }) => {
+    if (state.locations.some((l) => l.tag === tag)) return;
+    state.locations.push({ id: uid(), nome, tag, descricao: "" });
+  });
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -2052,6 +2075,7 @@ seedAmbientesV3();
 seedNpcPersonalities();
 seedAreaDeColeta();
 seedFinneganAmarisLink();
+seedLocations();
 saveState();
 
 // ---------- Tabs ----------
@@ -2850,23 +2874,75 @@ document.getElementById("btn-close-fullscreen-image").addEventListener("click", 
 });
 
 // ==================== Locais (visão cruzada por local) ====================
-const LOCATIONS = [
-  { tag: "cervovale", label: "Cervovale" },
-  { tag: "bosque emaranhado", label: "Bosque Emaranhado" },
-  { tag: "vale das bagas", label: "Vale das Bagas" },
-  { tag: "baile eterno", label: "Baile Eterno" },
-  { tag: "torre da bruxa", label: "Torre da Bruxa" },
-];
-let activeLocation = LOCATIONS[0].tag;
+// Locais viviam como uma lista fixa no código (ver seedLocations, que migrou os 5
+// originais pra state.locations). Agora são uma entidade de verdade: dá pra criar,
+// renomear e descrever um local pela própria interface. O vínculo com NPCs/Itens
+// continua sendo a tag (l.tag) — é simples e já funciona — só que agora a lista de
+// locais em si é dado, não código.
+function slugifyTag(nome) {
+  return nome
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .trim();
+}
+
+let activeLocationId = null;
+
+const locationModal = document.getElementById("modal-location");
+const formLocation = document.getElementById("form-location");
+
+function openLocationModal(loc) {
+  document.getElementById("location-modal-title").textContent = loc ? "Editar local" : "Novo local";
+  document.getElementById("location-id").value = loc ? loc.id : "";
+  document.getElementById("location-nome").value = loc ? loc.nome : "";
+  document.getElementById("location-descricao").value = loc ? loc.descricao || "" : "";
+  locationModal.classList.remove("hidden");
+}
+function closeLocationModal() { locationModal.classList.add("hidden"); formLocation.reset(); }
+
+document.getElementById("btn-add-location").addEventListener("click", () => openLocationModal(null));
+document.getElementById("btn-cancel-location").addEventListener("click", closeLocationModal);
+
+formLocation.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("location-id").value;
+  const nome = document.getElementById("location-nome").value.trim();
+  const descricao = document.getElementById("location-descricao").value.trim();
+  if (id) {
+    const loc = state.locations.find((l) => l.id === id);
+    loc.nome = nome;
+    loc.descricao = descricao;
+  } else {
+    const loc = { id: uid(), nome, tag: slugifyTag(nome), descricao };
+    state.locations.push(loc);
+    activeLocationId = loc.id;
+  }
+  saveState();
+  closeLocationModal();
+  renderLocationPicker();
+  renderLocationView();
+});
+
+function deleteLocation(id) {
+  if (!confirm("Excluir este local? NPCs, itens e notas marcados com a tag dele continuam existindo, só deixam de aparecer aqui.")) return;
+  state.locations = state.locations.filter((l) => l.id !== id);
+  if (activeLocationId === id) activeLocationId = state.locations[0] ? state.locations[0].id : null;
+  saveState();
+  renderLocationPicker();
+  renderLocationView();
+}
 
 function renderLocationPicker() {
+  if (activeLocationId === null && state.locations[0]) activeLocationId = state.locations[0].id;
   const picker = document.getElementById("location-picker");
-  picker.innerHTML = LOCATIONS.map(
-    (l) => `<button class="location-btn ${l.tag === activeLocation ? "active" : ""}" data-loc="${l.tag}">${l.label}</button>`
-  ).join("");
+  picker.innerHTML = state.locations
+    .map(
+      (l) => `<button class="location-btn ${l.id === activeLocationId ? "active" : ""}" data-loc="${l.id}">${escapeHtml(l.nome)}</button>`
+    )
+    .join("");
   picker.querySelectorAll("[data-loc]").forEach((btn) =>
     btn.addEventListener("click", () => {
-      activeLocation = btn.dataset.loc;
+      activeLocationId = btn.dataset.loc;
       renderLocationPicker();
       renderLocationView();
     })
@@ -2875,21 +2951,46 @@ function renderLocationPicker() {
 
 function renderLocationView() {
   const content = document.getElementById("location-content");
-  const npcs = state.npcs.filter((n) => n.tags.includes(activeLocation) && n.tipo !== "Monstro");
-  const monsters = state.npcs.filter((n) => n.tags.includes(activeLocation) && n.tipo === "Monstro");
-  const items = state.items.filter((i) => i.tags.includes(activeLocation));
-  const locationLabel = LOCATIONS.find((l) => l.tag === activeLocation).label;
+  const loc = state.locations.find((l) => l.id === activeLocationId);
+  if (!loc) {
+    content.innerHTML = emptyState("cottage", "Nenhum local cadastrado ainda. Crie o primeiro com \"+ Novo local\".");
+    return;
+  }
+  const tag = loc.tag;
+  const npcs = state.npcs.filter((n) => n.tags.includes(tag) && n.tipo !== "Monstro");
+  const monsters = state.npcs.filter((n) => n.tags.includes(tag) && n.tipo === "Monstro");
+  const items = state.items.filter((i) => i.tags.includes(tag));
+  const documentos = state.documentos.filter((d) => d.tags.includes(tag));
+  const missoes = state.objectives.filter((o) => (o.tags || []).includes(tag));
   const notes = state.notes.filter(
-    (n) => n.titulo.toLowerCase().includes(locationLabel.toLowerCase()) || n.texto.toLowerCase().includes(activeLocation)
+    (n) => n.titulo.toLowerCase().includes(loc.nome.toLowerCase()) || n.texto.toLowerCase().includes(tag)
   );
 
   content.innerHTML = `
+    <div class="location-header-row">
+      <div>
+        <h3 class="location-title">${escapeHtml(loc.nome)}</h3>
+        ${loc.descricao ? `<p class="location-descricao">${escapeHtml(loc.descricao)}</p>` : ""}
+      </div>
+      <div class="location-header-actions">
+        <button class="btn btn-ghost" data-edit-location="${loc.id}"><span class="icon">edit</span> Editar</button>
+        <button class="btn btn-ghost" style="color:var(--danger);" data-delete-location="${loc.id}"><span class="icon">delete</span> Excluir</button>
+      </div>
+    </div>
+    <div class="location-section-title">Missões relacionadas</div>
+    <div class="objective-list">${
+      missoes.length
+        ? missoes.map((o) => `<div class="objective-row ${o.feito ? "done" : ""}"><span>${escapeHtml(o.texto)}</span></div>`).join("")
+        : emptyState("flag", "Nenhuma missão marcada com esse local ainda.")
+    }</div>
     <div class="location-section-title">NPCs &amp; Aliados</div>
     <div class="card-grid">${npcs.length ? npcs.map(npcCardHtml).join("") : emptyState("person_search", "Nenhum NPC marcado com esse local ainda.")}</div>
     <div class="location-section-title">Monstros</div>
     <div class="card-grid">${monsters.length ? monsters.map(npcCardHtml).join("") : emptyState("pest_control", "Nenhum monstro marcado com esse local ainda.")}</div>
     <div class="location-section-title">Itens</div>
     <div class="card-grid">${items.length ? items.map(itemCardHtml).join("") : emptyState("backpack", "Nenhum item marcado com esse local ainda.")}</div>
+    <div class="location-section-title">Documentos &amp; Achados</div>
+    <div class="card-grid">${documentos.length ? documentos.map(documentoCardHtml).join("") : emptyState("description", "Nenhum documento marcado com esse local ainda.")}</div>
     <div class="location-section-title">Notas relacionadas</div>
     <div class="session-list">${
       notes.length
@@ -2909,6 +3010,12 @@ function renderLocationView() {
     }</div>
   `;
 
+  content.querySelectorAll("[data-edit-location]").forEach((btn) =>
+    btn.addEventListener("click", () => openLocationModal(state.locations.find((l) => l.id === btn.dataset.editLocation)))
+  );
+  content.querySelectorAll("[data-delete-location]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteLocation(btn.dataset.deleteLocation))
+  );
   content.querySelectorAll("[data-edit-npc]").forEach((btn) =>
     btn.addEventListener("click", () => openNpcModal(state.npcs.find((n) => n.id === btn.dataset.editNpc)))
   );
@@ -2920,6 +3027,12 @@ function renderLocationView() {
   );
   content.querySelectorAll("[data-delete-item]").forEach((btn) =>
     btn.addEventListener("click", () => { deleteItem(btn.dataset.deleteItem); renderLocationView(); })
+  );
+  content.querySelectorAll("[data-edit-documento]").forEach((btn) =>
+    btn.addEventListener("click", () => openDocumentoModal(state.documentos.find((d) => d.id === btn.dataset.editDocumento)))
+  );
+  content.querySelectorAll("[data-delete-documento]").forEach((btn) =>
+    btn.addEventListener("click", () => { deleteDocumento(btn.dataset.deleteDocumento); renderLocationView(); })
   );
   content.querySelectorAll("[data-open-note]").forEach((btn) =>
     btn.addEventListener("click", () => openNoteModal(state.notes.find((n) => n.id === btn.dataset.openNote)))
@@ -3061,10 +3174,10 @@ function toggleSharedText(tipo, id) {
 
 function goToTagFilter(tag) {
   document.querySelector('[data-tab="compendio"]').click();
-  const isKnownLocation = LOCATIONS.some((l) => l.tag === tag);
-  if (isKnownLocation) {
+  const knownLocation = state.locations.find((l) => l.tag === tag);
+  if (knownLocation) {
     document.querySelector('[data-subtab="locais"]').click();
-    activeLocation = tag;
+    activeLocationId = knownLocation.id;
     renderLocationPicker();
     renderLocationView();
   } else {
@@ -4268,13 +4381,28 @@ function renderMap() {
 
 // ==================== Campanha: objetivos ====================
 document.getElementById("btn-add-objective").addEventListener("click", () => {
-  const texto = prompt("Novo objetivo:");
+  const texto = prompt("Novo objetivo/missão:");
   if (texto && texto.trim()) {
-    state.objectives.push({ id: uid(), texto: texto.trim(), feito: false });
+    state.objectives.push({ id: uid(), texto: texto.trim(), feito: false, tags: [] });
     saveState();
     renderObjectives();
   }
 });
+
+// Liga uma missão a um local (mesma tag usada por NPCs/Itens) — é o que faz ela
+// aparecer na Central do local, em "Missões relacionadas".
+function editObjectiveLocation(id) {
+  const o = state.objectives.find((x) => x.id === id);
+  if (!o) return;
+  const atual = (o.tags && o.tags[0]) || "";
+  const opcoes = state.locations.map((l) => l.nome).join(", ");
+  const escolha = prompt(`Ligar a qual local? (${opcoes || "nenhum local cadastrado ainda"})`, atual ? (state.locations.find((l) => l.tag === atual) || {}).nome || "" : "");
+  if (escolha === null) return;
+  const loc = state.locations.find((l) => l.nome.toLowerCase() === escolha.trim().toLowerCase());
+  o.tags = loc ? [loc.tag] : [];
+  saveState();
+  renderObjectives();
+}
 
 function renderObjectives() {
   const list = document.getElementById("objective-list");
@@ -4283,15 +4411,18 @@ function renderObjectives() {
     return;
   }
   list.innerHTML = state.objectives
-    .map(
-      (o) => `
+    .map((o) => {
+      const loc = state.locations.find((l) => (o.tags || []).includes(l.tag));
+      return `
     <div class="objective-row ${o.feito ? "done" : ""}">
       <input type="checkbox" data-objective-check="${o.id}" ${o.feito ? "checked" : ""}>
       <span>${escapeHtml(o.texto)}</span>
+      ${loc ? `<span class="npc-type-badge">${escapeHtml(loc.nome)}</span>` : ""}
+      <button class="icon-btn" data-objective-location="${o.id}" title="Ligar a um local"><span class="icon">place</span></button>
       <button class="icon-btn" data-objective-delete="${o.id}" title="Remover"><span class="icon">delete</span></button>
     </div>
-  `
-    )
+  `;
+    })
     .join("");
 
   list.querySelectorAll("[data-objective-check]").forEach((cb) =>
@@ -4301,6 +4432,9 @@ function renderObjectives() {
       saveState();
       renderObjectives();
     })
+  );
+  list.querySelectorAll("[data-objective-location]").forEach((btn) =>
+    btn.addEventListener("click", () => editObjectiveLocation(btn.dataset.objectiveLocation))
   );
   list.querySelectorAll("[data-objective-delete]").forEach((btn) =>
     btn.addEventListener("click", () => {
@@ -4955,4 +5089,87 @@ scratchpadEl.addEventListener("input", () => {
 // ==================== Modo Foco ====================
 document.getElementById("btn-toggle-foco").addEventListener("click", () => {
   document.body.classList.toggle("foco-mode");
+});
+
+// ==================== Busca global ====================
+// Uma única caixa de busca que varre NPCs, Itens, Documentos, Locais, Notas e
+// Missões ao mesmo tempo — pra não precisar adivinhar em qual aba/subaba uma
+// informação foi guardada no meio da sessão.
+function clickTab(tab) {
+  const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+  if (btn) btn.click();
+}
+function clickSubtab(subtab) {
+  const btn = document.querySelector(`.subtab-btn[data-subtab="${subtab}"]`);
+  if (btn) btn.click();
+}
+
+function globalSearchResults(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const results = [];
+  state.npcs.forEach((n) => {
+    if (n.nome.toLowerCase().includes(q) || n.tags.some((t) => t.includes(q))) {
+      results.push({ tipo: n.tipo === "Monstro" ? "Monstro" : "NPC", nome: n.nome, go: () => { clickTab("compendio"); clickSubtab(n.tipo === "Monstro" ? "monstros" : "npcs"); openNpcModal(n); } });
+    }
+  });
+  state.items.forEach((i) => {
+    if (i.nome.toLowerCase().includes(q) || i.tags.some((t) => t.includes(q))) {
+      results.push({ tipo: "Item", nome: i.nome, go: () => { clickTab("compendio"); clickSubtab("itens"); openItemModal(i); } });
+    }
+  });
+  state.documentos.forEach((d) => {
+    if (d.nome.toLowerCase().includes(q) || d.tags.some((t) => t.includes(q))) {
+      results.push({ tipo: "Documento", nome: d.nome, go: () => { clickTab("compendio"); clickSubtab("documentos"); openDocumentoModal(d); } });
+    }
+  });
+  state.locations.forEach((l) => {
+    if (l.nome.toLowerCase().includes(q)) {
+      results.push({ tipo: "Local", nome: l.nome, go: () => { clickTab("compendio"); clickSubtab("locais"); activeLocationId = l.id; renderLocationPicker(); renderLocationView(); } });
+    }
+  });
+  state.notes.forEach((n) => {
+    if (n.titulo.toLowerCase().includes(q)) {
+      results.push({ tipo: "Nota", nome: n.titulo, go: () => { clickTab("campanha"); openNoteReadModal(n); } });
+    }
+  });
+  state.objectives.forEach((o) => {
+    if (o.texto.toLowerCase().includes(q)) {
+      results.push({ tipo: "Missão", nome: o.texto, go: () => { clickTab("campanha"); } });
+    }
+  });
+  state.pcs.forEach((p) => {
+    if (p.nome.toLowerCase().includes(q)) {
+      results.push({ tipo: "Princesa", nome: p.nome, go: () => { clickTab("pcs"); openPcModal(p); } });
+    }
+  });
+  return results.slice(0, 20);
+}
+
+const globalSearchInput = document.getElementById("global-search");
+const globalSearchResultsEl = document.getElementById("global-search-results");
+
+function renderGlobalSearchResults(query) {
+  const results = globalSearchResults(query);
+  if (!query.trim()) {
+    globalSearchResultsEl.classList.add("hidden");
+    return;
+  }
+  globalSearchResultsEl.innerHTML = results.length
+    ? results.map((r, i) => `<button type="button" class="gsr-item" data-gsr-idx="${i}"><span class="gsr-type">${escapeHtml(r.tipo)}</span><span class="gsr-name">${escapeHtml(r.nome)}</span></button>`).join("")
+    : `<div class="gsr-empty">Nada encontrado pra "${escapeHtml(query)}"</div>`;
+  globalSearchResultsEl.querySelectorAll("[data-gsr-idx]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      results[Number(btn.dataset.gsrIdx)].go();
+      globalSearchResultsEl.classList.add("hidden");
+      globalSearchInput.value = "";
+    });
+  });
+  globalSearchResultsEl.classList.remove("hidden");
+}
+
+globalSearchInput.addEventListener("input", () => renderGlobalSearchResults(globalSearchInput.value));
+globalSearchInput.addEventListener("focus", () => { if (globalSearchInput.value.trim()) renderGlobalSearchResults(globalSearchInput.value); });
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".global-search-wrap")) globalSearchResultsEl.classList.add("hidden");
 });
