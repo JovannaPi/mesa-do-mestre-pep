@@ -333,7 +333,12 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   gap: 4px;
   flex-wrap: wrap;
   align-items: center;
-  background: var(--bg-card);
+  background-color: var(--bg-card);
+  background-image: url("texture-paper.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-blend-mode: multiply;
   padding: 8px 12px;
   border-radius: 999px;
   border: 2px solid var(--border-gold);
@@ -509,7 +514,12 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 }
 
 .combatant-card {
-  background: var(--bg-card);
+  background-color: var(--bg-card);
+  background-image: url("texture-paper.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-blend-mode: multiply;
   border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 18px;
@@ -629,7 +639,11 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 }
 
 .npc-card {
-  background: linear-gradient(180deg, var(--bg-card), var(--bg-deep));
+  background-image: linear-gradient(180deg, var(--bg-card), var(--bg-deep)), url("texture-paper.png");
+  background-size: auto, cover;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: scroll, fixed;
+  background-blend-mode: normal, multiply;
   border: 2px solid var(--border-gold);
   border-radius: var(--radius);
   padding: 20px 18px 18px;
