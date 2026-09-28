@@ -3705,8 +3705,59 @@ function openCombatantQuickView(c) {
   document.getElementById("modal-combatant-view").classList.remove("hidden");
 }
 
+function renderTurnActionsBar() {
+  const bar = document.getElementById("turn-actions-bar");
+  const current = state.combat.combatants[state.combat.currentIndex];
+  if (!current) {
+    bar.innerHTML = "";
+    return;
+  }
+  bar.innerHTML = `
+    <span class="turn-actions-label">Ações de <strong>${escapeHtml(current.nome)}</strong>:</span>
+    <button class="turn-action-btn" data-turn-action="atacar">⚔️ Atacar</button>
+    <button class="turn-action-btn" data-turn-action="defender">🛡️ Defender</button>
+    <button class="turn-action-btn" data-turn-action="habilidade">✨ Habilidade</button>
+    <button class="turn-action-btn" data-turn-action="mover">👣 Mover</button>
+  `;
+  bar.querySelectorAll("[data-turn-action]").forEach((btn) =>
+    btn.addEventListener("click", () => runTurnAction(current, btn.dataset.turnAction))
+  );
+}
+
+function runTurnAction(combatant, action) {
+  const nomes = { atacar: "Ataque", defender: "Defesa", habilidade: "Habilidade", mover: "Movimento" };
+  if (action === "mover") {
+    showToast(`${combatant.nome} se move.`, "info", "directions_walk");
+    return;
+  }
+  rollFormulaString("1d20");
+  showToast(`${combatant.nome} — ${nomes[action]}: d20`, "info", "casino");
+}
+
+function renderIniciativaPanel() {
+  const panel = document.getElementById("iniciativa-panel");
+  if (!panel) return;
+  if (state.combat.combatants.length === 0) {
+    panel.innerHTML = "";
+    return;
+  }
+  panel.innerHTML = `
+    <h4 class="iniciativa-title">Iniciativa</h4>
+    ${state.combat.combatants
+      .map((c, idx) => `
+        <div class="iniciativa-item ${idx === state.combat.currentIndex ? "current" : ""}">
+          <span class="iniciativa-order">${String(idx + 1).padStart(2, "0")}</span>
+          <span class="iniciativa-name">${escapeHtml(c.nome)}</span>
+        </div>
+      `)
+      .join("")}
+  `;
+}
+
 function renderCombat() {
   document.getElementById("round-number").textContent = state.combat.round;
+  renderTurnActionsBar();
+  renderIniciativaPanel();
   const list = document.getElementById("combat-list");
   if (state.combat.combatants.length === 0) {
     list.innerHTML = emptyState("swords", "Nenhum combatente na mesa. Adicione manualmente ou importe do banco de NPCs/Princesas.");
