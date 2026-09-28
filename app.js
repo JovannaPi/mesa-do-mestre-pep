@@ -3714,9 +3714,9 @@ function renderTurnActionsBar() {
   }
   bar.innerHTML = `
     <span class="turn-actions-label">Ações de <strong>${escapeHtml(current.nome)}</strong>:</span>
-    <button class="turn-action-btn" data-turn-action="atacar">⚔️ Atacar</button>
-    <button class="turn-action-btn" data-turn-action="defender">🛡️ Defender</button>
-    <button class="turn-action-btn" data-turn-action="habilidade">✨ Habilidade</button>
+    <button class="turn-action-btn" data-turn-action="atacar"><img class="btn-icon-img" src="icon-swords.png" alt=""> Atacar</button>
+    <button class="turn-action-btn" data-turn-action="defender"><img class="btn-icon-img" src="icon-shield.png" alt=""> Defender</button>
+    <button class="turn-action-btn" data-turn-action="habilidade"><img class="btn-icon-img" src="icon-book.png" alt=""> Habilidade</button>
     <button class="turn-action-btn" data-turn-action="mover">👣 Mover</button>
   `;
   bar.querySelectorAll("[data-turn-action]").forEach((btn) =>

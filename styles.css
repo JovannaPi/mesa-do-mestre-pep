@@ -458,6 +458,9 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .turn-actions-label { color: var(--text-dim); font-size: 0.9rem; margin-right: 4px; }
 .turn-actions-label strong { color: var(--accent-deep); }
 .turn-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 2px solid var(--border-soft);
   background: var(--pink-light, #f8dce9);
   color: var(--accent-deep);
