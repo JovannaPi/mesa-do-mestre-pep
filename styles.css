@@ -79,32 +79,21 @@ body::after {
   body::before, body::after { display: none; }
 }
 
-/* Pilha de livros com lanterna, ancorada no canto inferior-esquerdo da tela. */
+/* Pilha de livros com lanterna, ancorada no canto inferior-esquerdo da tela —
+   discreta o bastante pra não competir com o conteúdo por cima dela. */
 .deco-corner-books {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 300px;
-  height: 250px;
+  width: 190px;
+  height: 160px;
   background: url("deco-corner-books.png?v=5") bottom left / contain no-repeat;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.9;
-}
-/* Buquê de rosas, ancorado no canto inferior-direito, espelhando os livros. */
-.deco-corner-roses {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 280px;
-  height: 210px;
-  background: url("deco-corner-roses.png?v=1") bottom right / contain no-repeat;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 @media (max-width: 1300px) {
-  .deco-corner-books, .deco-corner-roses { display: none; }
+  .deco-corner-books { display: none; }
 }
 
 /* Material Symbols icon helper */
@@ -149,14 +138,18 @@ h1, h2, h3 {
 }
 
 .app-header {
-  background:
-    url("deco-castle.png?v=4") right -40px top -30px / auto 260px no-repeat,
-    linear-gradient(180deg, #fff7f3, #f8dce9);
+  background: linear-gradient(180deg, #fff7f3, #f8dce9);
   border-bottom: 2px solid var(--royal-gold);
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.header-inner {
+  position: relative;
+  background: url("deco-castle.png?v=4") right -30px top -55px / auto 190px no-repeat;
 }
 
 .btn-foco-toggle {
@@ -1000,8 +993,8 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .empty-state::before {
   content: "";
   width: 90px; height: 90px;
-  background: url("deco-crown.png?v=1") center / contain no-repeat;
-  opacity: 0.9;
+  background: url("deco-crest.svg") center / contain no-repeat;
+  opacity: 0.85;
 }
 .empty-state[data-icon="add_photo_alternate"]::before,
 .empty-state[data-icon="map"]::before {
