@@ -1,24 +1,25 @@
 :root {
-  --bg: #f9ede4;
-  --bg-deep: #f3ded2;
-  --bg-elevated: #fffaf4;
-  --bg-card: #fdf6ee;
-  --parchment: #fff8ec;
-  --parchment-text: #4a2e46;
-  --border: #e6c9a8;
-  --border-soft: #d9a679;
-  --border-gold: #c79a4b;
-  --text: #4a2436;
-  --text-dim: #8a5c63;
-  --accent: #9c3a52;
-  --accent-strong: #b6506a;
-  --accent-deep: #6d2138;
-  --danger: #b33951;
+  --bg: #fff7f3;
+  --bg-deep: #f3d9d2;
+  --bg-elevated: #fffaf7;
+  --bg-card: #fff7f3;
+  --pink-light: #f8dce9;
+  --parchment: #fff7f3;
+  --parchment-text: #68465e;
+  --border: #e9b7d1;
+  --border-soft: #e9b7d1;
+  --border-gold: #d9a441;
+  --text: #68465e;
+  --text-dim: #95657d;
+  --accent: #d6539b;
+  --accent-strong: #9d3e78;
+  --accent-deep: #71334f;
+  --danger: #92304f;
   --success: #5fbf94;
   --warning: #f0ab5e;
-  --royal-gold: #c79a4b;
+  --royal-gold: #d9a441;
   --radius: 18px;
-  --shadow: 0 6px 20px rgba(109, 33, 56, 0.16);
+  --shadow: 0 6px 20px rgba(113, 51, 79, 0.18);
   font-size: 18px;
 }
 
@@ -39,10 +40,10 @@
 body {
   margin: 0;
   font-family: "Quicksand", "Segoe UI", system-ui, sans-serif;
-  background-color: #f9ede4;
+  background-color: #fff7f3;
   background-image:
-    linear-gradient(160deg, #f9ede4 0%, #f3e0e8 45%, #f7e6dc 100%),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 22l2.2 8.8L41 33l-8.8 2.2L30 44l-2.2-8.8L19 33l8.8-2.2z' fill='%23c79a4b' fill-opacity='0.14'/%3E%3C/svg%3E");
+    linear-gradient(160deg, #fff7f3 0%, #f8dce9 45%, #f3d9d2 100%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 22l2.2 8.8L41 33l-8.8 2.2L30 44l-2.2-8.8L19 33l8.8-2.2z' fill='%23d9a441' fill-opacity='0.14'/%3E%3C/svg%3E");
   color: var(--text);
   min-height: 100vh;
   position: relative;
@@ -138,7 +139,7 @@ h1, h2, h3 {
 .app-header {
   background:
     url("deco-castle.png?v=3") top center / 100% auto no-repeat,
-    linear-gradient(180deg, #fdf6ee, #f5e2d6);
+    linear-gradient(180deg, #fff7f3, #f8dce9);
   border-bottom: 2px solid var(--royal-gold);
   position: sticky;
   top: 0;
@@ -292,7 +293,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   gap: 6px;
 }
 
-.tab-btn:hover { background: rgba(199, 154, 75, 0.14); }
+.tab-btn:hover { background: rgba(217, 164, 65, 0.14); }
 
 .tab-icon-svg { width: 18px; height: 18px; flex: none; }
 .btn-icon-img { width: 19px; height: 19px; flex: none; object-fit: contain; vertical-align: -4px; }
@@ -300,7 +301,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .tab-btn.active {
   color: #fff;
   background: linear-gradient(135deg, var(--accent-deep), var(--accent));
-  box-shadow: 0 3px 10px rgba(109, 33, 56, 0.35);
+  box-shadow: 0 3px 10px rgba(113, 51, 79, 0.35);
 }
 
 .app-main {
@@ -374,9 +375,9 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   background: linear-gradient(135deg, var(--accent-deep), var(--accent));
   border-color: var(--accent-deep);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(109, 33, 56, 0.35);
+  box-shadow: 0 4px 12px rgba(113, 51, 79, 0.35);
 }
-.btn-primary:hover { background: linear-gradient(135deg, #7d2842, var(--accent-deep)); }
+.btn-primary:hover { background: linear-gradient(135deg, var(--accent-strong), var(--accent-deep)); }
 
 .btn-secondary { background: var(--bg-deep); }
 
@@ -1103,7 +1104,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   border: 2px solid var(--royal-gold);
   background: linear-gradient(135deg, var(--accent-deep), var(--accent));
   color: #fff;
-  box-shadow: 0 6px 18px rgba(109, 33, 56, 0.45);
+  box-shadow: 0 6px 18px rgba(113, 51, 79, 0.45);
   cursor: pointer;
   font-size: 1.4rem;
   display: flex;
@@ -1112,7 +1113,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 }
 .tools-fab .icon { font-size: 1.5rem; }
 .tools-fab:hover { transform: scale(1.05); }
-.tools-fab.active { box-shadow: 0 0 0 3px var(--royal-gold), 0 6px 18px rgba(109, 33, 56, 0.5); }
+.tools-fab.active { box-shadow: 0 0 0 3px var(--royal-gold), 0 6px 18px rgba(113, 51, 79, 0.5); }
 
 .tools-panel {
   position: fixed;
