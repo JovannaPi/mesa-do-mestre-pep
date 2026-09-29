@@ -64,6 +64,9 @@ function renderHandout(state) {
   if (tipo === "npc") {
     const npc = (state.npcs || []).find((n) => n.id === state.handoutAtivoId);
     if (npc && npc.foto) handout = { imagem: npc.foto, nome: npc.nome };
+  } else if (tipo === "item") {
+    const item = (state.items || []).find((i) => i.id === state.handoutAtivoId);
+    if (item && item.foto) handout = { imagem: item.foto, nome: item.nome };
   } else {
     handout = (state.imagens || []).find((h) => h.id === state.handoutAtivoId);
   }
@@ -234,6 +237,7 @@ function renderSharedText(state) {
   if (tipo === "item") entry = (state.items || []).find((i) => i.id === id);
   else if (tipo === "nota") entry = (state.notes || []).find((n) => n.id === id);
   else if (tipo === "documento") entry = (state.documentos || []).find((d) => d.id === id);
+  else if (tipo === "local") entry = (state.locations || []).find((l) => l.id === id);
   if (!entry) {
     box.style.display = "none";
     return;

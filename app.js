@@ -2651,11 +2651,16 @@ document.getElementById("npc-search").addEventListener("input", renderNpcs);
 // ==================== Itens ====================
 const itemModal = document.getElementById("modal-item");
 const formItem = document.getElementById("form-item");
+let currentItemFoto = null;
+setupPhotoInput("item-foto", "item-foto-preview", (url) => { currentItemFoto = url; });
 
 function openItemModal(item) {
   document.getElementById("item-modal-title").textContent = item ? "Editar item" : "Novo item";
   document.getElementById("item-id").value = item ? item.id : "";
   document.getElementById("item-nome").value = item ? item.nome : "";
+  document.getElementById("item-foto").value = "";
+  currentItemFoto = item ? item.foto || null : null;
+  showPhotoPreview("item-foto-preview", currentItemFoto);
   document.getElementById("item-custo").value = item ? item.custo : "";
   document.getElementById("item-origem").value = item ? item.origem : "";
   document.getElementById("item-descricao").value = item ? item.descricao : "";
@@ -2678,6 +2683,7 @@ formItem.addEventListener("submit", (e) => {
     origem: document.getElementById("item-origem").value.trim(),
     descricao: document.getElementById("item-descricao").value.trim(),
     tags: parseTags(document.getElementById("item-tags").value),
+    foto: currentItemFoto,
   };
   if (id) {
     const idx = state.items.findIndex((i) => i.id === id);
@@ -2698,8 +2704,10 @@ function deleteItem(id) {
 }
 
 function itemCardHtml(i) {
+  const isShowingFoto = i.foto && state.handoutAtivoId === i.id && (state.handoutAtivoTipo || "imagem") === "item";
   return `
     <div class="npc-card">
+      ${i.foto ? `<img src="${i.foto}" alt="${escapeHtml(i.nome)}" style="width:100%; border-radius:12px; object-fit:cover; max-height:180px; margin-bottom:6px;">` : ""}
       <div class="npc-card-header">
         <h3>${escapeHtml(i.nome)}</h3>
         ${i.custo ? `<span class="npc-type-badge">${escapeHtml(i.custo)}</span>` : ""}
@@ -2707,8 +2715,10 @@ function itemCardHtml(i) {
       ${i.origem ? `<div class="npc-notes"><b>Origem:</b> ${escapeHtml(i.origem)}</div>` : ""}
       <div class="npc-notes">${linkifyText(i.descricao)}</div>
       ${i.tags.length ? `<div class="npc-tags">${i.tags.map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("")}</div>` : ""}
+      ${isShowingFoto ? `<span class="npc-type-badge" style="background:var(--success); color:#0d3a26; border-color:var(--success);">Aparência sendo mostrada</span>` : ""}
       <div class="npc-card-actions">
-        <button class="btn btn-ghost" data-share-text="item" data-share-id="${i.id}">${isTextShared("item", i.id) ? "Esconder" : "Mostrar aos jogadores"}</button>
+        <button class="btn btn-ghost" data-share-text="item" data-share-id="${i.id}">${isTextShared("item", i.id) ? "Esconder descrição" : "Mostrar descrição aos jogadores"}</button>
+        ${i.foto ? `<button class="btn ${isShowingFoto ? "btn-danger" : "btn-ghost"}" data-toggle-item-handout="${i.id}">${isShowingFoto ? "Esconder aparência" : "Mostrar aparência aos jogadores"}</button>` : ""}
         <button class="btn btn-ghost" data-give-to-pc="item" data-give-id="${i.id}">→ Dar a uma jogadora</button>
         <button class="btn btn-ghost" data-edit-item="${i.id}">Editar</button>
         <button class="btn btn-danger" data-delete-item="${i.id}">Excluir</button>
@@ -2737,6 +2747,9 @@ function renderItems() {
   );
   list.querySelectorAll("[data-delete-item]").forEach((btn) =>
     btn.addEventListener("click", () => deleteItem(btn.dataset.deleteItem))
+  );
+  list.querySelectorAll("[data-toggle-item-handout]").forEach((btn) =>
+    btn.addEventListener("click", () => toggleHandoutVisible(btn.dataset.toggleItemHandout, "item"))
   );
 }
 
@@ -2817,6 +2830,7 @@ function toggleHandoutVisible(id, tipo) {
   saveState();
   renderHandouts();
   renderNpcs();
+  renderItems();
 }
 
 function deleteHandout(id) {
@@ -5462,11 +5476,13 @@ entityPanelOverlay.addEventListener("click", (e) => { if (e.target === entityPan
 function relatedByTags(tags, excludeTipo, excludeId) {
   const loc = state.locations.find((l) => tags.includes(l.tag));
   const tag = loc ? loc.tag : null;
-  const related = { local: loc || null, npcs: [], itens: [], documentos: [] };
+  const related = { local: loc || null, npcs: [], itens: [], documentos: [], pistas: [], segredos: [] };
   if (!tag) return related;
   related.npcs = state.npcs.filter((n) => n.tags.includes(tag) && !(excludeTipo === "npc" && n.id === excludeId));
   related.itens = state.items.filter((i) => i.tags.includes(tag) && !(excludeTipo === "item" && i.id === excludeId));
   related.documentos = state.documentos.filter((d) => d.tags.includes(tag) && !(excludeTipo === "documento" && d.id === excludeId));
+  related.pistas = state.clues.filter((c) => (c.tags || []).includes(tag) && !(excludeTipo === "clue" && c.id === excludeId));
+  related.segredos = state.secrets.filter((s) => (s.tags || []).includes(tag) && !(excludeTipo === "secret" && s.id === excludeId));
   return related;
 }
 
@@ -5479,31 +5495,29 @@ function entityRelatedSectionHtml(related) {
         <button type="button" class="entity-panel-rel-btn" data-rel-local="${related.local.id}">${escapeHtml(related.local.nome)}</button>
       </div>`);
   }
-  const listSection = (title, items, tipo) =>
+  const listSection = (title, items, tipo, labelKey) =>
     items.length
       ? `
       <div class="entity-panel-section">
         <div class="entity-panel-section-title">${title}</div>
-        <div class="entity-panel-rel-list">${items.map((x) => `<button type="button" class="entity-panel-rel-btn" data-rel-tipo="${tipo}" data-rel-id="${x.id}">${escapeHtml(x.nome)}</button>`).join("")}</div>
+        <div class="entity-panel-rel-list">${items.map((x) => `<button type="button" class="entity-panel-rel-btn" data-rel-tipo="${tipo}" data-rel-id="${x.id}">${escapeHtml(x[labelKey])}</button>`).join("")}</div>
       </div>`
       : "";
-  rows.push(listSection("NPCs no mesmo local", related.npcs, "npc"));
-  rows.push(listSection("Itens no mesmo local", related.itens, "item"));
-  rows.push(listSection("Documentos no mesmo local", related.documentos, "documento"));
+  rows.push(listSection("NPCs no mesmo local", related.npcs, "npc", "nome"));
+  rows.push(listSection("Itens no mesmo local", related.itens, "item", "nome"));
+  rows.push(listSection("Documentos no mesmo local", related.documentos, "documento", "nome"));
+  rows.push(listSection("Pistas no mesmo local", related.pistas, "clue", "titulo"));
+  rows.push(listSection("Segredos no mesmo local", related.segredos, "secret", "titulo"));
   return rows.join("");
 }
 
 function wireEntityPanelRelations() {
+  // Clicar num "relacionado" (Local, NPC, Item, Documento...) fica dentro do
+  // mesmo painel — nunca troca de aba por baixo dos panos. Só "Abrir Central
+  // completa" (dentro do painel de local) navega de verdade, e isso é uma
+  // escolha explícita, não uma consequência de clicar num link qualquer.
   entityPanelContent.querySelectorAll("[data-rel-local]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const loc = state.locations.find((l) => l.id === btn.dataset.relLocal);
-      closeEntityPanel();
-      clickTab("compendio");
-      clickSubtab("locais");
-      activeLocationId = loc.id;
-      renderLocationPicker();
-      renderLocationView();
-    })
+    btn.addEventListener("click", () => openEntityPanel("local", state.locations.find((l) => l.id === btn.dataset.relLocal)))
   );
   entityPanelContent.querySelectorAll("[data-rel-tipo]").forEach((btn) =>
     btn.addEventListener("click", () => {
@@ -5511,8 +5525,21 @@ function wireEntityPanelRelations() {
       if (relTipo === "npc") openEntityPanel("npc", state.npcs.find((n) => n.id === relId));
       if (relTipo === "item") openEntityPanel("item", state.items.find((i) => i.id === relId));
       if (relTipo === "documento") openEntityPanel("documento", state.documentos.find((d) => d.id === relId));
+      if (relTipo === "clue") openEntityPanel("clue", state.clues.find((c) => c.id === relId));
+      if (relTipo === "secret") openEntityPanel("secret", state.secrets.find((s) => s.id === relId));
     })
   );
+}
+
+// Bloco de foto + "mostrar aos jogadores" reaproveitado no painel de NPC e Item —
+// mesma mecânica de handout de tela cheia que já existia só pra NPC.
+function entityPanelFotoHtml(entity, tipoHandout) {
+  if (!entity.foto) return "";
+  const isShowing = state.handoutAtivoId === entity.id && (state.handoutAtivoTipo || "imagem") === tipoHandout;
+  return `
+    <img src="${entity.foto}" alt="${escapeHtml(entity.nome)}" style="width:100%; border-radius:12px; object-fit:cover; max-height:220px; margin-bottom:10px;">
+    <button type="button" class="btn ${isShowing ? "btn-danger" : "btn-ghost"}" data-entity-toggle-foto="${tipoHandout}">${isShowing ? "Esconder aparência" : "Mostrar aparência aos jogadores"}</button>
+  `;
 }
 
 function openEntityPanel(tipo, entity) {
@@ -5523,6 +5550,7 @@ function openEntityPanel(tipo, entity) {
     html = `
       <div class="entity-panel-kicker">${escapeHtml(entity.tipo)}</div>
       <h2>${escapeHtml(entity.nome)}</h2>
+      ${entityPanelFotoHtml(entity, "npc")}
       <div class="npc-stat-grid">
         ${isMonster ? "" : `
         <div class="stat-box"><span>Determinação</span><b>${entity.determinacao}</b></div>
@@ -5540,10 +5568,13 @@ function openEntityPanel(tipo, entity) {
     `;
     entityPanelContent.innerHTML = html;
     entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openNpcModal(entity); });
+    const fotoBtn = entityPanelContent.querySelector("[data-entity-toggle-foto]");
+    if (fotoBtn) fotoBtn.addEventListener("click", () => { toggleHandoutVisible(entity.id, "npc"); openEntityPanel("npc", entity); });
   } else if (tipo === "item") {
     html = `
       <div class="entity-panel-kicker">Item</div>
       <h2>${escapeHtml(entity.nome)}</h2>
+      ${entityPanelFotoHtml(entity, "item")}
       ${entity.custo ? `<p><b>Custo:</b> ${escapeHtml(entity.custo)}</p>` : ""}
       ${entity.origem ? `<p><b>Origem:</b> ${escapeHtml(entity.origem)}</p>` : ""}
       <div class="entity-panel-section">${linkifyText(entity.descricao)}</div>
@@ -5554,6 +5585,80 @@ function openEntityPanel(tipo, entity) {
     `;
     entityPanelContent.innerHTML = html;
     entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openItemModal(entity); });
+    const fotoBtn = entityPanelContent.querySelector("[data-entity-toggle-foto]");
+    if (fotoBtn) fotoBtn.addEventListener("click", () => { toggleHandoutVisible(entity.id, "item"); openEntityPanel("item", entity); });
+  } else if (tipo === "local") {
+    const tag = entity.tag;
+    const npcs = state.npcs.filter((n) => n.tags.includes(tag));
+    const itens = state.items.filter((i) => i.tags.includes(tag));
+    const documentos = state.documentos.filter((d) => d.tags.includes(tag));
+    const pistas = state.clues.filter((c) => (c.tags || []).includes(tag));
+    const segredos = state.secrets.filter((s) => (s.tags || []).includes(tag));
+    const isSharing = isTextShared("local", entity.id);
+    const listSection = (title, items, relTipo, labelKey) =>
+      items.length
+        ? `
+        <div class="entity-panel-section">
+          <div class="entity-panel-section-title">${title} (${items.length})</div>
+          <div class="entity-panel-rel-list">${items.map((x) => `<button type="button" class="entity-panel-rel-btn" data-rel-tipo="${relTipo}" data-rel-id="${x.id}">${escapeHtml(x[labelKey])}</button>`).join("")}</div>
+        </div>`
+        : "";
+    html = `
+      <div class="entity-panel-kicker">Local</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      ${entity.descricao ? `<div class="entity-panel-section">${linkifyText(entity.descricao)}</div>` : `<p style="color:var(--text-dim); font-style:italic;">Sem descrição cadastrada ainda.</p>`}
+      ${entity.descricao ? `<button type="button" class="btn ${isSharing ? "btn-danger" : "btn-ghost"}" data-entity-share-local>${isSharing ? "Esconder descrição" : "Mostrar descrição aos jogadores"}</button>` : ""}
+      ${listSection("NPCs", npcs, "npc", "nome")}
+      ${listSection("Itens", itens, "item", "nome")}
+      ${listSection("Documentos", documentos, "documento", "nome")}
+      ${listSection("Pistas", pistas, "clue", "titulo")}
+      ${listSection("Segredos", segredos, "secret", "titulo")}
+      <div class="entity-panel-actions">
+        <button class="btn btn-ghost" data-entity-edit>Editar local</button>
+        <button class="btn btn-primary" data-entity-open-central>Abrir Central completa</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openLocationModal(entity); });
+    entityPanelContent.querySelector("[data-entity-open-central]").addEventListener("click", () => {
+      closeEntityPanel();
+      clickTab("compendio");
+      clickSubtab("locais");
+      activeLocationId = entity.id;
+      renderLocationPicker();
+      renderLocationView();
+    });
+    const shareBtn = entityPanelContent.querySelector("[data-entity-share-local]");
+    if (shareBtn) shareBtn.addEventListener("click", () => { toggleSharedText("local", entity.id); openEntityPanel("local", entity); });
+  } else if (tipo === "clue") {
+    html = `
+      <div class="entity-panel-kicker">Pista</div>
+      <h2>${escapeHtml(entity.titulo)}</h2>
+      ${entity.levaA ? `<p><b>Leva a:</b> ${escapeHtml(entity.levaA)}</p>` : ""}
+      ${entity.relacionada ? `<p><b>Relacionada a:</b> ${escapeHtml(entity.relacionada)}</p>` : ""}
+      ${entity.revela ? `<div class="entity-panel-section"><div class="entity-panel-section-title">Revela</div>${linkifyText(entity.revela)}</div>` : ""}
+      ${entityRelatedSectionHtml(relatedByTags(entity.tags || [], "clue", entity.id))}
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openClueModal(entity); });
+  } else if (tipo === "secret") {
+    html = `
+      <div class="entity-panel-kicker">🔒 Segredo</div>
+      <h2>${escapeHtml(entity.titulo)}</h2>
+      ${entity.verdade ? `<div class="entity-panel-section"><div class="entity-panel-section-title">Verdade</div>${linkifyText(entity.verdade)}</div>` : ""}
+      ${entity.quemSabe ? `<p><b>Quem sabe:</b> ${escapeHtml(entity.quemSabe)}</p>` : ""}
+      ${entity.quemSuspeita ? `<p><b>Quem suspeita:</b> ${escapeHtml(entity.quemSuspeita)}</p>` : ""}
+      ${entity.comoDescobrir ? `<div class="entity-panel-section"><div class="entity-panel-section-title">Como descobrir</div>${linkifyText(entity.comoDescobrir)}</div>` : ""}
+      ${entityRelatedSectionHtml(relatedByTags(entity.tags || [], "secret", entity.id))}
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openSecretModal(entity); });
   } else if (tipo === "documento") {
     html = `
       <div class="entity-panel-kicker">${escapeHtml(CATEGORIA_LABEL[entity.categoria] || entity.categoria)}</div>
@@ -5644,12 +5749,12 @@ function globalSearchResults(query) {
   });
   state.locations.forEach((l) => {
     if (l.nome.toLowerCase().includes(q) || (l.descricao || "").toLowerCase().includes(q)) {
-      results.push({ tipo: "Local", nome: l.nome, contexto: "", go: () => { clickTab("compendio"); clickSubtab("locais"); activeLocationId = l.id; renderLocationPicker(); renderLocationView(); } });
+      results.push({ tipo: "Local", nome: l.nome, contexto: "", go: () => openEntityPanel("local", l) });
     }
   });
   state.notes.forEach((n) => {
     if (n.titulo.toLowerCase().includes(q) || (n.texto || "").toLowerCase().includes(q)) {
-      results.push({ tipo: "Nota", nome: n.titulo, contexto: "", go: () => { clickTab("campanha"); openNoteReadModal(n); } });
+      results.push({ tipo: "Nota", nome: n.titulo, contexto: "", go: () => openNoteReadModal(n) });
     }
   });
   state.objectives.forEach((o) => {
@@ -5665,14 +5770,26 @@ function globalSearchResults(query) {
   });
   state.clues.forEach((c) => {
     if (c.titulo.toLowerCase().includes(q) || (c.revela || "").toLowerCase().includes(q) || (c.levaA || "").toLowerCase().includes(q)) {
-      results.push({ tipo: "Pista", nome: c.titulo, contexto: locationLabelForTags(c.tags), go: () => { clickTab("campanha"); openClueModal(c); } });
+      results.push({ tipo: "Pista", nome: c.titulo, contexto: locationLabelForTags(c.tags), go: () => openEntityPanel("clue", c) });
     }
   });
   state.secrets.forEach((s) => {
     if (s.titulo.toLowerCase().includes(q) || (s.verdade || "").toLowerCase().includes(q) || (s.quemSabe || "").toLowerCase().includes(q)) {
-      results.push({ tipo: "Segredo", nome: s.titulo, contexto: locationLabelForTags(s.tags), go: () => { clickTab("campanha"); openSecretModal(s); } });
+      results.push({ tipo: "Segredo", nome: s.titulo, contexto: locationLabelForTags(s.tags), go: () => openEntityPanel("secret", s) });
     }
   });
+  // Sem isso, buscar o nome exato de um local (ex: "Cervovale") ficava enterrado
+  // atrás de uma dúzia de NPCs que só têm essa palavra como tag — o nome batendo
+  // de verdade tem que vir primeiro, resto (tag/texto) é desempate.
+  const score = (nome) => {
+    const n = nome.toLowerCase();
+    if (n === q) return 3;
+    if (n.startsWith(q)) return 2;
+    if (n.includes(q)) return 1;
+    return 0;
+  };
+  results.forEach((r) => { r.score = score(r.nome); });
+  results.sort((a, b) => b.score - a.score);
   return results.slice(0, 20);
 }
 
