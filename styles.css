@@ -37,63 +37,20 @@
 }
 ::-webkit-scrollbar-thumb:hover { background-color: var(--accent-strong); background-clip: padding-box; }
 
+/* Cenário único (vinha de rosas, castelos ao fundo, livros+vela/lanterna nos
+   cantos) como moldura fixa de tela inteira, no lugar dos elementos soltos que
+   tinha antes (pinheiros, vinha, canto de livros, castelo do cabeçalho cada um
+   por si). Fixo na viewport pra continuar emoldurando a tela mesmo com scroll. */
 body {
   margin: 0;
   font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
-  background-color: #fff7f3;
-  background-image:
-    linear-gradient(160deg, #fff7f3 0%, #f8dce9 45%, #f3d9d2 100%),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 22l2.2 8.8L41 33l-8.8 2.2L30 44l-2.2-8.8L19 33l8.8-2.2z' fill='%23d9a441' fill-opacity='0.14'/%3E%3C/svg%3E");
+  background: #fff3ee url("bg-scene.jpg") center / cover no-repeat fixed;
   color: var(--text);
   min-height: 100vh;
   position: relative;
 }
-
-/* Bordas decorativas fixas nas laterais — pinheiros à esquerda, vinha de rosas à
-   direita — imitando a moldura ilustrada. Só em telas largas o bastante pra sobrar
-   espaço sem cobrir conteúdo. */
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 90px;
-  background-repeat: repeat-y;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.85;
-}
-body::before {
-  left: 0;
-  background-image: url("deco-pines.png?v=3");
-  background-size: 90px 273px;
-  background-position: left top;
-}
-body::after {
-  right: 0;
-  background-image: url("deco-rosevine.png?v=4");
-  background-size: 90px 135px;
-}
-@media (max-width: 1300px) {
-  body::before, body::after { display: none; }
-}
-
-/* Pilha de livros com lanterna, ancorada no canto inferior-esquerdo da tela —
-   discreta o bastante pra não competir com o conteúdo por cima dela. */
-.deco-corner-books {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 190px;
-  height: 160px;
-  background: url("deco-corner-books.png?v=5") bottom left / contain no-repeat;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.5;
-}
-@media (max-width: 1300px) {
-  .deco-corner-books { display: none; }
+@media (max-width: 900px) {
+  body { background-image: none; }
 }
 
 /* Material Symbols icon helper */
@@ -138,18 +95,14 @@ h1, h2, h3 {
 }
 
 .app-header {
-  background: linear-gradient(180deg, #fff7f3, #f8dce9);
+  background: rgba(255, 247, 243, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-bottom: 2px solid var(--royal-gold);
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.header-inner {
-  position: relative;
-  background: url("deco-castle.png?v=4") right -30px top -55px / auto 190px no-repeat;
 }
 
 .btn-foco-toggle {
