@@ -95,14 +95,10 @@ h1, h2, h3 {
 }
 
 .app-header {
-  background: rgba(255, 247, 243, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border-bottom: 2px solid var(--royal-gold);
+  background: transparent;
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: var(--shadow);
 }
 
 .btn-foco-toggle {
