@@ -2967,6 +2967,8 @@ function renderLocationView() {
   const missoes = state.objectives.filter((o) => (o.tags || []).includes(tag));
   const pistas = state.clues.filter((c) => (c.tags || []).includes(tag));
   const segredos = state.secrets.filter((s) => (s.tags || []).includes(tag));
+  const consequencias = state.consequences.filter((c) => (c.tags || []).includes(tag));
+  const sessoes = state.sessions.filter((s) => (s.tags || []).includes(tag));
   const notes = state.notes.filter(
     (n) => n.titulo.toLowerCase().includes(loc.nome.toLowerCase()) || n.texto.toLowerCase().includes(tag)
   );
@@ -3000,6 +3002,18 @@ function renderLocationView() {
     <div class="objective-list">${pistas.length ? pistas.map(clueRowHtml).join("") : emptyState("search", "Nenhuma pista marcada com esse local ainda.")}</div>
     <div class="location-section-title">Segredos</div>
     <div class="objective-list">${segredos.length ? segredos.map(secretRowHtml).join("") : emptyState("lock", "Nenhum segredo marcado com esse local ainda.")}</div>
+    <div class="location-section-title">Consequências</div>
+    <div class="objective-list">${
+      consequencias.length
+        ? consequencias.map((c) => `<div class="objective-row ${c.feito ? "done" : ""}"><span>${escapeHtml(c.texto)}</span></div>`).join("")
+        : emptyState("history_edu", "Nenhuma consequência marcada com esse local ainda.")
+    }</div>
+    <div class="location-section-title">Sessões em que apareceu</div>
+    <div class="objective-list">${
+      sessoes.length
+        ? sessoes.map((s) => `<div class="objective-row"><span>${escapeHtml(s.titulo)}${s.data ? ` — ${formatDate(s.data)}` : ""}</span></div>`).join("")
+        : emptyState("history_edu", "Esse local ainda não apareceu em nenhuma sessão registrada.")
+    }</div>
     <div class="location-section-title">Notas relacionadas</div>
     <div class="session-list">${
       notes.length
@@ -4479,11 +4493,26 @@ function renderObjectives() {
 document.getElementById("btn-add-consequence").addEventListener("click", () => {
   const texto = prompt("Nova consequência (o que aconteceu, e o que isso muda):");
   if (texto && texto.trim()) {
-    state.consequences.push({ id: uid(), texto: texto.trim(), feito: false });
+    state.consequences.push({ id: uid(), texto: texto.trim(), feito: false, tags: [] });
     saveState();
     renderConsequences();
   }
 });
+
+// Liga uma consequência a um local — mesmo mecanismo de Missões, pra ela
+// aparecer na Central do local ("de onde essa decisão veio").
+function editConsequenceLocation(id) {
+  const c = state.consequences.find((x) => x.id === id);
+  if (!c) return;
+  const atual = (c.tags && c.tags[0]) || "";
+  const opcoes = state.locations.map((l) => l.nome).join(", ");
+  const escolha = prompt(`Ligar a qual local? (${opcoes || "nenhum local cadastrado ainda"})`, atual ? (state.locations.find((l) => l.tag === atual) || {}).nome || "" : "");
+  if (escolha === null) return;
+  const loc = state.locations.find((l) => l.nome.toLowerCase() === escolha.trim().toLowerCase());
+  c.tags = loc ? [loc.tag] : [];
+  saveState();
+  renderConsequences();
+}
 
 function renderConsequences() {
   const list = document.getElementById("consequence-list");
@@ -4492,15 +4521,18 @@ function renderConsequences() {
     return;
   }
   list.innerHTML = state.consequences
-    .map(
-      (o) => `
+    .map((o) => {
+      const loc = state.locations.find((l) => (o.tags || []).includes(l.tag));
+      return `
     <div class="objective-row ${o.feito ? "done" : ""}">
       <input type="checkbox" data-consequence-check="${o.id}" ${o.feito ? "checked" : ""} title="Marcar como resolvida">
       <span>${escapeHtml(o.texto)}</span>
+      ${loc ? `<span class="npc-type-badge">${escapeHtml(loc.nome)}</span>` : ""}
+      <button class="icon-btn" data-consequence-location="${o.id}" title="Ligar a um local"><span class="icon">place</span></button>
       <button class="icon-btn" data-consequence-delete="${o.id}" title="Remover"><span class="icon">delete</span></button>
     </div>
-  `
-    )
+  `;
+    })
     .join("");
 
   list.querySelectorAll("[data-consequence-check]").forEach((cb) =>
@@ -4510,6 +4542,9 @@ function renderConsequences() {
       saveState();
       renderConsequences();
     })
+  );
+  list.querySelectorAll("[data-consequence-location]").forEach((btn) =>
+    btn.addEventListener("click", () => editConsequenceLocation(btn.dataset.consequenceLocation))
   );
   list.querySelectorAll("[data-consequence-delete]").forEach((btn) =>
     btn.addEventListener("click", () => {
@@ -4859,6 +4894,8 @@ function openSessionModal(session) {
   document.getElementById("session-data").value = session ? session.data : new Date().toISOString().slice(0, 10);
   document.getElementById("session-resumo").value = session ? session.resumo : "";
   document.getElementById("session-ganchos").value = session ? session.ganchos : "";
+  document.getElementById("session-locais").value = session ? (session.tags || []).join(", ") : "";
+  document.getElementById("session-npcs").value = session ? (session.npcNomes || []).join(", ") : "";
   sessionModal.classList.remove("hidden");
 }
 
@@ -4876,6 +4913,8 @@ formSession.addEventListener("submit", (e) => {
     data: document.getElementById("session-data").value,
     resumo: document.getElementById("session-resumo").value.trim(),
     ganchos: document.getElementById("session-ganchos").value.trim(),
+    tags: parseTags(document.getElementById("session-locais").value),
+    npcNomes: parseTags(document.getElementById("session-npcs").value),
   };
   if (id) {
     const idx = state.sessions.findIndex((s) => s.id === id);
@@ -4912,6 +4951,14 @@ function renderSessions() {
       </div>
       ${s.resumo ? `<div class="session-section-label">Resumo</div><p class="session-text">${escapeHtml(s.resumo)}</p>` : ""}
       ${s.ganchos ? `<div class="session-section-label">Ganchos / próximos passos</div><p class="session-text">${escapeHtml(s.ganchos)}</p>` : ""}
+      ${
+        (s.tags && s.tags.length) || (s.npcNomes && s.npcNomes.length)
+          ? `<div class="npc-tags">
+              ${(s.tags || []).map((t) => `<button type="button" class="npc-tag" data-tag-filter="${escapeHtml(t)}">📍 ${escapeHtml(t)}</button>`).join("")}
+              ${(s.npcNomes || []).map((n) => `<span class="npc-tag" style="cursor:default;">🧑 ${escapeHtml(n)}</span>`).join("")}
+            </div>`
+          : ""
+      }
       <div class="session-card-actions">
         <button class="btn btn-ghost" data-edit-session="${s.id}">Editar</button>
         <button class="btn btn-danger" data-delete-session="${s.id}">Excluir</button>
