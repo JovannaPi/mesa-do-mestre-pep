@@ -5087,8 +5087,21 @@ scratchpadEl.addEventListener("input", () => {
 });
 
 // ==================== Modo Foco ====================
+// No modo foco o topo (título/ações) some — mas a busca global continua útil no
+// meio da sessão, então em vez de escondê-la junto, ela muda de lugar: sai de
+// perto do "Renomear" e vai pra ponta da barra de abas, do lado de "Sessões".
+const globalSearchWrapEl = document.querySelector(".global-search-wrap");
+const globalSearchHomeParent = globalSearchWrapEl.parentElement;
+const globalSearchHomeNextSibling = globalSearchWrapEl.nextElementSibling;
+const tabsWrapEl = document.querySelector(".tabs-wrap");
+
 document.getElementById("btn-toggle-foco").addEventListener("click", () => {
-  document.body.classList.toggle("foco-mode");
+  const isFoco = document.body.classList.toggle("foco-mode");
+  if (isFoco) {
+    tabsWrapEl.appendChild(globalSearchWrapEl);
+  } else {
+    globalSearchHomeParent.insertBefore(globalSearchWrapEl, globalSearchHomeNextSibling);
+  }
 });
 
 // ==================== Busca global ====================

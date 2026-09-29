@@ -241,7 +241,19 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .gsr-item .gsr-name { font-weight: 600; }
 .gsr-empty { padding: 10px; color: var(--text-dim); font-size: 0.9rem; }
 
-.tabs-wrap { position: relative; padding: 10px 20px 16px; }
+/* Flex (em vez de só centralizar a nav com margin:auto) porque no modo foco a
+   busca global é movida (via JS) pra dentro dessa barra — assim ela fica lado
+   a lado com a nav, coladinha em "Sessões", e as duas continuam centralizadas
+   juntas como um grupo só. */
+.tabs-wrap {
+  position: relative;
+  padding: 10px 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
 .tabs {
   display: flex;
   gap: 6px;
@@ -255,7 +267,6 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   -ms-overflow-style: none;
   width: fit-content;
   max-width: 100%;
-  margin: 0 auto;
 }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs-wrap::after {
