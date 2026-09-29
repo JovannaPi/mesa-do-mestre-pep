@@ -59,6 +59,8 @@ function defaultState() {
     items: [],
     documentos: [],
     locations: [],
+    clues: [],
+    secrets: [],
     cenaAtual: { locationId: null, npcIds: [], objectiveId: null },
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
@@ -5148,22 +5150,29 @@ function renderCenaAtualBar() {
   const missao = state.objectives.find((o) => o.id === state.cenaAtual.objectiveId);
 
   bar.innerHTML = `
+    <h3 class="cena-atual-bar-title">Cena Atual</h3>
     <div class="cena-field">
-      <span class="cena-field-label">Local</span>
+      <div class="cena-field-top">
+        <span class="cena-field-label">Local</span>
+        <button type="button" class="icon-btn" data-cena-edit="local" title="Mudar local"><span class="icon">edit</span></button>
+      </div>
       <span class="cena-field-value ${loc ? "" : "empty"}">${loc ? escapeHtml(loc.nome) : "nenhum"}</span>
-      <button type="button" class="icon-btn" data-cena-edit="local" title="Mudar local"><span class="icon">edit</span></button>
     </div>
     <div class="cena-field">
-      <span class="cena-field-label">NPCs</span>
+      <div class="cena-field-top">
+        <span class="cena-field-label">NPCs presentes</span>
+        <button type="button" class="icon-btn" data-cena-edit="npcs" title="Mudar NPCs presentes"><span class="icon">edit</span></button>
+      </div>
       <span class="cena-field-value ${npcs.length ? "" : "empty"}">${npcs.length ? escapeHtml(npcs.map((n) => n.nome).join(", ")) : "nenhum"}</span>
-      <button type="button" class="icon-btn" data-cena-edit="npcs" title="Mudar NPCs presentes"><span class="icon">edit</span></button>
     </div>
     <div class="cena-field">
-      <span class="cena-field-label">Missão</span>
+      <div class="cena-field-top">
+        <span class="cena-field-label">Missão em jogo</span>
+        <button type="button" class="icon-btn" data-cena-edit="missao" title="Mudar missão em jogo"><span class="icon">edit</span></button>
+      </div>
       <span class="cena-field-value ${missao ? "" : "empty"}">${missao ? escapeHtml(missao.texto) : "nenhuma"}</span>
-      <button type="button" class="icon-btn" data-cena-edit="missao" title="Mudar missão em jogo"><span class="icon">edit</span></button>
     </div>
-    <div class="cena-edit-btn" style="display:flex; gap:8px;">
+    <div class="cena-actions">
       ${loc ? `<button type="button" class="btn btn-ghost" data-cena-go="local">Ver local</button>` : ""}
       <button type="button" class="btn btn-ghost" data-cena-go="combate">Combate</button>
       <button type="button" class="btn btn-ghost" data-cena-go="mapa">Mapa</button>
@@ -5178,6 +5187,11 @@ function renderCenaAtualBar() {
   bar.querySelector('[data-cena-go="combate"]').addEventListener("click", () => clickTab("combate"));
   bar.querySelector('[data-cena-go="mapa"]').addEventListener("click", () => clickTab("mapa"));
 }
+
+document.getElementById("btn-toggle-cena-atual").addEventListener("click", () => {
+  document.getElementById("cena-atual-bar").classList.toggle("open");
+  document.getElementById("btn-toggle-cena-atual").classList.toggle("active");
+});
 
 // ==================== Painel de Entidade (consulta, não edição) ====================
 // Clicar num resultado da busca global durante a sessão deveria deixar você

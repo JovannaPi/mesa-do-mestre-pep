@@ -46,9 +46,11 @@
   <button id="btn-toggle-foco" class="btn-foco-toggle" title="Modo foco (esconde o topo)"><span class="icon">fullscreen</span></button>
 </header>
 
-<!-- CENA ATUAL — onde a mesa está agora, sempre visível, com atalhos pra quem/onde/o quê.
-     Fica salva no estado (sincroniza), então ao reabrir a mesa a cena continua onde parou. -->
-<div id="cena-atual-bar" class="cena-atual-bar"></div>
+<!-- CENA ATUAL — onde a mesa está agora. Vira uma gaveta lateral retrátil (o botão
+     redondo do lado abre/fecha) em vez de ocupar uma faixa fixa da tela. Fica salva
+     no estado (sincroniza), então ao reabrir a mesa a cena continua onde parou. -->
+<button type="button" id="btn-toggle-cena-atual" class="cena-atual-toggle" title="Cena Atual"><span class="icon">theater_comedy</span></button>
+<aside id="cena-atual-bar" class="cena-atual-bar"></aside>
 
 <main class="app-main">
 
@@ -493,6 +495,73 @@
 </div>
 
 <!-- MODAL NOTE -->
+<div id="modal-clue" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="clue-modal-title">Nova pista</h2>
+    <form id="form-clue">
+      <input type="hidden" id="clue-id">
+      <label>Título
+        <input type="text" id="clue-titulo" required placeholder="ex: Carta de Selene">
+      </label>
+      <label>Leva a (NPC, local...)
+        <input type="text" id="clue-leva-a" placeholder="ex: Teodoro Éverson">
+      </label>
+      <label>Relacionada a (item, outra pista...)
+        <input type="text" id="clue-relacionada" placeholder="ex: Espelho Maléfico">
+      </label>
+      <label>O que revela
+        <textarea id="clue-revela" rows="3" placeholder="ex: Selene sabia que havia algo errado."></textarea>
+      </label>
+      <label>Local (tag, opcional)
+        <input type="text" id="clue-tags" placeholder="ex: cervovale">
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="clue-descoberta"> Já descoberta pelas jogadoras
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-clue">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-secret" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="secret-modal-title">Novo segredo</h2>
+    <form id="form-secret">
+      <input type="hidden" id="secret-id">
+      <label>Título
+        <input type="text" id="secret-titulo" required placeholder="ex: O segredo de Teodoro">
+      </label>
+      <label>Verdade (o que realmente aconteceu)
+        <textarea id="secret-verdade" rows="3"></textarea>
+      </label>
+      <label>Quem sabe
+        <input type="text" id="secret-quem-sabe" placeholder="ex: Teodoro">
+      </label>
+      <label>Quem suspeita
+        <input type="text" id="secret-quem-suspeita" placeholder="ex: Maya">
+      </label>
+      <label>Como descobrir
+        <textarea id="secret-como-descobrir" rows="3" placeholder="ex: Carta de Selene, investigação do quarto..."></textarea>
+      </label>
+      <label>Local (tag, opcional)
+        <input type="text" id="secret-tags" placeholder="ex: cervovale">
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="secret-revelado"> Já revelado às jogadoras
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-secret">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="modal-location" class="modal-overlay hidden">
   <div class="modal">
     <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>

@@ -891,30 +891,62 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .entity-panel-rel-btn:hover { color: var(--accent); text-decoration: underline; }
 .entity-panel-actions { display: flex; gap: 8px; margin-top: 20px; }
 
-/* Barra "Cena Atual" — onde a mesa está agora, sempre visível */
-.cena-atual-bar {
-  position: sticky;
-  top: 0;
-  z-index: 9;
-  margin: 0 20px;
-  padding: 10px 16px;
-  background: var(--bg-card);
+/* "Cena Atual" — gaveta lateral retrátil (fica fora da tela até clicar no botão
+   redondo), pra não ocupar espaço fixo o tempo todo nem brigar com o cenário de
+   fundo como uma faixa opaca esticada. */
+.cena-atual-toggle {
+  position: fixed;
+  top: 130px;
+  right: 0;
+  z-index: 21;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px 0 0 999px;
   border: 2px solid var(--border-gold);
-  border-radius: 14px;
-  box-shadow: var(--shadow);
+  border-right: none;
+  background: var(--accent-deep);
+  color: #fff;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  font-family: "Montserrat", sans-serif;
+  justify-content: center;
+  box-shadow: var(--shadow);
 }
-.cena-atual-bar:empty { display: none; }
-.cena-field { display: flex; align-items: baseline; gap: 6px; }
+.cena-atual-toggle:hover { background: var(--accent); }
+.cena-atual-toggle.active { background: var(--accent); }
+
+.cena-atual-bar {
+  position: fixed;
+  top: 100px;
+  right: -340px;
+  width: 300px;
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  z-index: 20;
+  padding: 18px 18px 20px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-gold);
+  border-right: none;
+  border-radius: 16px 0 0 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: "Montserrat", sans-serif;
+  transition: right 0.25s ease;
+}
+.cena-atual-bar.open { right: 0; }
+.cena-atual-bar-title { font-family: "Playfair Display", serif; color: var(--accent-deep); font-size: 1.1rem; margin: 0; }
+.cena-field { display: flex; flex-direction: column; gap: 4px; }
+.cena-field-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .cena-field-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700; }
 .cena-field-value { color: var(--accent-deep); font-weight: 700; }
 .cena-field-value.empty { color: var(--text-dim); font-weight: 500; font-style: italic; }
 .cena-atual-bar .btn { padding: 5px 12px; font-size: 0.85rem; }
-.cena-edit-btn { margin-left: auto; }
+.cena-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--border); }
+@media (max-width: 700px) {
+  .cena-atual-bar { width: calc(100vw - 40px); }
+}
 
 /* Modal */
 .modal-overlay {
@@ -971,6 +1003,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 
 .modal form { display: flex; flex-direction: column; gap: 13px; }
 .modal label { display: flex; flex-direction: column; gap: 5px; font-size: 0.92rem; color: var(--text-dim); font-weight: 600; }
+.modal label.checkbox-label { flex-direction: row; align-items: center; gap: 8px; }
 .field-label-block { display: flex; flex-direction: column; gap: 5px; }
 .field-label-text { font-size: 0.92rem; color: var(--text-dim); font-weight: 600; }
 
