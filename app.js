@@ -2965,6 +2965,8 @@ function renderLocationView() {
   const items = state.items.filter((i) => i.tags.includes(tag));
   const documentos = state.documentos.filter((d) => d.tags.includes(tag));
   const missoes = state.objectives.filter((o) => (o.tags || []).includes(tag));
+  const pistas = state.clues.filter((c) => (c.tags || []).includes(tag));
+  const segredos = state.secrets.filter((s) => (s.tags || []).includes(tag));
   const notes = state.notes.filter(
     (n) => n.titulo.toLowerCase().includes(loc.nome.toLowerCase()) || n.texto.toLowerCase().includes(tag)
   );
@@ -2994,6 +2996,10 @@ function renderLocationView() {
     <div class="card-grid">${items.length ? items.map(itemCardHtml).join("") : emptyState("backpack", "Nenhum item marcado com esse local ainda.")}</div>
     <div class="location-section-title">Documentos &amp; Achados</div>
     <div class="card-grid">${documentos.length ? documentos.map(documentoCardHtml).join("") : emptyState("description", "Nenhum documento marcado com esse local ainda.")}</div>
+    <div class="location-section-title">Pistas</div>
+    <div class="objective-list">${pistas.length ? pistas.map(clueRowHtml).join("") : emptyState("search", "Nenhuma pista marcada com esse local ainda.")}</div>
+    <div class="location-section-title">Segredos</div>
+    <div class="objective-list">${segredos.length ? segredos.map(secretRowHtml).join("") : emptyState("lock", "Nenhum segredo marcado com esse local ainda.")}</div>
     <div class="location-section-title">Notas relacionadas</div>
     <div class="session-list">${
       notes.length
@@ -3039,6 +3045,24 @@ function renderLocationView() {
   );
   content.querySelectorAll("[data-open-note]").forEach((btn) =>
     btn.addEventListener("click", () => openNoteModal(state.notes.find((n) => n.id === btn.dataset.openNote)))
+  );
+  content.querySelectorAll("[data-clue-check]").forEach((cb) =>
+    cb.addEventListener("change", () => { state.clues.find((c) => c.id === cb.dataset.clueCheck).descoberta = cb.checked; saveState(); renderLocationView(); })
+  );
+  content.querySelectorAll("[data-clue-edit]").forEach((btn) =>
+    btn.addEventListener("click", () => openClueModal(state.clues.find((c) => c.id === btn.dataset.clueEdit)))
+  );
+  content.querySelectorAll("[data-clue-delete]").forEach((btn) =>
+    btn.addEventListener("click", () => { deleteClue(btn.dataset.clueDelete); renderLocationView(); })
+  );
+  content.querySelectorAll("[data-secret-check]").forEach((cb) =>
+    cb.addEventListener("change", () => { state.secrets.find((s) => s.id === cb.dataset.secretCheck).revelado = cb.checked; saveState(); renderLocationView(); })
+  );
+  content.querySelectorAll("[data-secret-edit]").forEach((btn) =>
+    btn.addEventListener("click", () => openSecretModal(state.secrets.find((s) => s.id === btn.dataset.secretEdit)))
+  );
+  content.querySelectorAll("[data-secret-delete]").forEach((btn) =>
+    btn.addEventListener("click", () => { deleteSecret(btn.dataset.secretDelete); renderLocationView(); })
   );
 }
 
@@ -4496,6 +4520,182 @@ function renderConsequences() {
   );
 }
 
+// ==================== Campanha: pistas ====================
+// Diferente de um Documento (que é o objeto físico que a jogadora acha), uma
+// Pista é o FATO narrativo que ele revela — pode vir de mais de um documento,
+// de um interrogatório, de uma investigação. Ter isso separado permite marcar
+// "isso já foi descoberto" independente de qual documento específico revelou.
+const clueModal = document.getElementById("modal-clue");
+const formClue = document.getElementById("form-clue");
+
+function openClueModal(clue) {
+  document.getElementById("clue-modal-title").textContent = clue ? "Editar pista" : "Nova pista";
+  document.getElementById("clue-id").value = clue ? clue.id : "";
+  document.getElementById("clue-titulo").value = clue ? clue.titulo : "";
+  document.getElementById("clue-leva-a").value = clue ? clue.levaA : "";
+  document.getElementById("clue-relacionada").value = clue ? clue.relacionada : "";
+  document.getElementById("clue-revela").value = clue ? clue.revela : "";
+  document.getElementById("clue-tags").value = clue ? clue.tags.join(", ") : "";
+  document.getElementById("clue-descoberta").checked = clue ? clue.descoberta : false;
+  clueModal.classList.remove("hidden");
+}
+function closeClueModal() { clueModal.classList.add("hidden"); formClue.reset(); }
+
+document.getElementById("btn-add-clue").addEventListener("click", () => openClueModal(null));
+document.getElementById("btn-cancel-clue").addEventListener("click", closeClueModal);
+
+formClue.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("clue-id").value;
+  const data = {
+    id: id || uid(),
+    titulo: document.getElementById("clue-titulo").value.trim(),
+    levaA: document.getElementById("clue-leva-a").value.trim(),
+    relacionada: document.getElementById("clue-relacionada").value.trim(),
+    revela: document.getElementById("clue-revela").value.trim(),
+    tags: parseTags(document.getElementById("clue-tags").value),
+    descoberta: document.getElementById("clue-descoberta").checked,
+  };
+  if (id) {
+    const idx = state.clues.findIndex((c) => c.id === id);
+    state.clues[idx] = data;
+  } else {
+    state.clues.push(data);
+  }
+  saveState();
+  closeClueModal();
+  renderClues();
+});
+
+function deleteClue(id) {
+  if (!confirm("Excluir esta pista?")) return;
+  state.clues = state.clues.filter((c) => c.id !== id);
+  saveState();
+  renderClues();
+}
+
+function clueRowHtml(c) {
+  return `
+    <div class="objective-row ${c.descoberta ? "done" : ""}">
+      <input type="checkbox" data-clue-check="${c.id}" ${c.descoberta ? "checked" : ""} title="Já descoberta pelas jogadoras">
+      <span>${escapeHtml(c.titulo)}${c.levaA ? ` <span class="npc-type-badge">→ ${escapeHtml(c.levaA)}</span>` : ""}</span>
+      <button class="icon-btn" data-clue-edit="${c.id}" title="Editar"><span class="icon">edit</span></button>
+      <button class="icon-btn" data-clue-delete="${c.id}" title="Remover"><span class="icon">delete</span></button>
+    </div>
+  `;
+}
+
+function renderClues() {
+  const list = document.getElementById("clue-list");
+  if (state.clues.length === 0) {
+    list.innerHTML = emptyState("search", "Nenhuma pista cadastrada ainda.");
+    return;
+  }
+  list.innerHTML = state.clues.map(clueRowHtml).join("");
+  list.querySelectorAll("[data-clue-check]").forEach((cb) =>
+    cb.addEventListener("change", () => {
+      const c = state.clues.find((x) => x.id === cb.dataset.clueCheck);
+      c.descoberta = cb.checked;
+      saveState();
+      renderClues();
+    })
+  );
+  list.querySelectorAll("[data-clue-edit]").forEach((btn) =>
+    btn.addEventListener("click", () => openClueModal(state.clues.find((c) => c.id === btn.dataset.clueEdit)))
+  );
+  list.querySelectorAll("[data-clue-delete]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteClue(btn.dataset.clueDelete))
+  );
+}
+
+// ==================== Campanha: segredos ====================
+// A "verdade" e o "como descobrir" ficam só no seu lado (Mestra) — não têm botão
+// de "mostrar aos jogadores" como Documentos/Notas têm. É pra ficar de cola sua.
+const secretModal = document.getElementById("modal-secret");
+const formSecret = document.getElementById("form-secret");
+
+function openSecretModal(secret) {
+  document.getElementById("secret-modal-title").textContent = secret ? "Editar segredo" : "Novo segredo";
+  document.getElementById("secret-id").value = secret ? secret.id : "";
+  document.getElementById("secret-titulo").value = secret ? secret.titulo : "";
+  document.getElementById("secret-verdade").value = secret ? secret.verdade : "";
+  document.getElementById("secret-quem-sabe").value = secret ? secret.quemSabe : "";
+  document.getElementById("secret-quem-suspeita").value = secret ? secret.quemSuspeita : "";
+  document.getElementById("secret-como-descobrir").value = secret ? secret.comoDescobrir : "";
+  document.getElementById("secret-tags").value = secret ? secret.tags.join(", ") : "";
+  document.getElementById("secret-revelado").checked = secret ? secret.revelado : false;
+  secretModal.classList.remove("hidden");
+}
+function closeSecretModal() { secretModal.classList.add("hidden"); formSecret.reset(); }
+
+document.getElementById("btn-add-secret").addEventListener("click", () => openSecretModal(null));
+document.getElementById("btn-cancel-secret").addEventListener("click", closeSecretModal);
+
+formSecret.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("secret-id").value;
+  const data = {
+    id: id || uid(),
+    titulo: document.getElementById("secret-titulo").value.trim(),
+    verdade: document.getElementById("secret-verdade").value.trim(),
+    quemSabe: document.getElementById("secret-quem-sabe").value.trim(),
+    quemSuspeita: document.getElementById("secret-quem-suspeita").value.trim(),
+    comoDescobrir: document.getElementById("secret-como-descobrir").value.trim(),
+    tags: parseTags(document.getElementById("secret-tags").value),
+    revelado: document.getElementById("secret-revelado").checked,
+  };
+  if (id) {
+    const idx = state.secrets.findIndex((s) => s.id === id);
+    state.secrets[idx] = data;
+  } else {
+    state.secrets.push(data);
+  }
+  saveState();
+  closeSecretModal();
+  renderSecrets();
+});
+
+function deleteSecret(id) {
+  if (!confirm("Excluir este segredo?")) return;
+  state.secrets = state.secrets.filter((s) => s.id !== id);
+  saveState();
+  renderSecrets();
+}
+
+function secretRowHtml(s) {
+  return `
+    <div class="objective-row ${s.revelado ? "done" : ""}">
+      <input type="checkbox" data-secret-check="${s.id}" ${s.revelado ? "checked" : ""} title="Já revelado às jogadoras">
+      <span>🔒 ${escapeHtml(s.titulo)}</span>
+      <button class="icon-btn" data-secret-edit="${s.id}" title="Editar"><span class="icon">edit</span></button>
+      <button class="icon-btn" data-secret-delete="${s.id}" title="Remover"><span class="icon">delete</span></button>
+    </div>
+  `;
+}
+
+function renderSecrets() {
+  const list = document.getElementById("secret-list");
+  if (state.secrets.length === 0) {
+    list.innerHTML = emptyState("lock", "Nenhum segredo cadastrado ainda.");
+    return;
+  }
+  list.innerHTML = state.secrets.map(secretRowHtml).join("");
+  list.querySelectorAll("[data-secret-check]").forEach((cb) =>
+    cb.addEventListener("change", () => {
+      const s = state.secrets.find((x) => x.id === cb.dataset.secretCheck);
+      s.revelado = cb.checked;
+      saveState();
+      renderSecrets();
+    })
+  );
+  list.querySelectorAll("[data-secret-edit]").forEach((btn) =>
+    btn.addEventListener("click", () => openSecretModal(state.secrets.find((s) => s.id === btn.dataset.secretEdit)))
+  );
+  list.querySelectorAll("[data-secret-delete]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteSecret(btn.dataset.secretDelete))
+  );
+}
+
 // ==================== Campanha: notas ====================
 const noteModal = document.getElementById("modal-note");
 const formNote = document.getElementById("form-note");
@@ -4740,6 +4940,8 @@ function renderAll() {
   renderMap();
   renderObjectives();
   renderConsequences();
+  renderClues();
+  renderSecrets();
   renderNotes();
   renderSessions();
   renderCenaAtualBar();
@@ -5412,6 +5614,16 @@ function globalSearchResults(query) {
   state.pcs.forEach((p) => {
     if (p.nome.toLowerCase().includes(q)) {
       results.push({ tipo: "Princesa", nome: p.nome, contexto: "", go: () => openEntityPanel("pc", p) });
+    }
+  });
+  state.clues.forEach((c) => {
+    if (c.titulo.toLowerCase().includes(q) || (c.revela || "").toLowerCase().includes(q) || (c.levaA || "").toLowerCase().includes(q)) {
+      results.push({ tipo: "Pista", nome: c.titulo, contexto: locationLabelForTags(c.tags), go: () => { clickTab("campanha"); openClueModal(c); } });
+    }
+  });
+  state.secrets.forEach((s) => {
+    if (s.titulo.toLowerCase().includes(q) || (s.verdade || "").toLowerCase().includes(q) || (s.quemSabe || "").toLowerCase().includes(q)) {
+      results.push({ tipo: "Segredo", nome: s.titulo, contexto: locationLabelForTags(s.tags), go: () => { clickTab("campanha"); openSecretModal(s); } });
     }
   });
   return results.slice(0, 20);
