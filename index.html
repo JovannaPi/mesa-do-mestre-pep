@@ -46,6 +46,10 @@
   <button id="btn-toggle-foco" class="btn-foco-toggle" title="Modo foco (esconde o topo)"><span class="icon">fullscreen</span></button>
 </header>
 
+<!-- CENA ATUAL — onde a mesa está agora, sempre visível, com atalhos pra quem/onde/o quê.
+     Fica salva no estado (sincroniza), então ao reabrir a mesa a cena continua onde parou. -->
+<div id="cena-atual-bar" class="cena-atual-bar"></div>
+
 <main class="app-main">
 
   <!-- COMBATE -->
@@ -535,6 +539,15 @@
       </div>
     </form>
   </div>
+</div>
+
+<!-- PAINEL DE ENTIDADE — consulta rápida (não edição) de um NPC/Item/Documento/Princesa,
+     usado pela busca global. "Editar" continua abrindo o modal de edição normal. -->
+<div id="entity-panel-overlay" class="entity-panel-overlay hidden">
+  <aside id="entity-panel" class="entity-panel">
+    <button type="button" id="btn-close-entity-panel" class="btn-close-modal" aria-label="Fechar">&times;</button>
+    <div id="entity-panel-content"></div>
+  </aside>
 </div>
 
 <!-- FERRAMENTAS DE MESA (um botão por ferramenta, empilhados na lateral) -->

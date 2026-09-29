@@ -59,6 +59,7 @@ function defaultState() {
     items: [],
     documentos: [],
     locations: [],
+    cenaAtual: { locationId: null, npcIds: [], objectiveId: null },
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
     activeMapId: null,
@@ -4739,6 +4740,7 @@ function renderAll() {
   renderConsequences();
   renderNotes();
   renderSessions();
+  renderCenaAtualBar();
 }
 
 renderAll();
@@ -5104,6 +5106,229 @@ document.getElementById("btn-toggle-foco").addEventListener("click", () => {
   }
 });
 
+// ==================== Cena Atual ====================
+// Onde a mesa está agora — local, quem está presente, qual missão está em jogo.
+// Fica salva no estado (sincroniza pra quem reabrir a mesa) e sempre visível,
+// pra não precisar reconstruir esse contexto de memória toda vez.
+function editCenaLocal() {
+  const opcoes = state.locations.map((l) => l.nome).join(", ");
+  const atual = state.locations.find((l) => l.id === state.cenaAtual.locationId);
+  const escolha = prompt(`Cena agora em qual local? (${opcoes || "nenhum local cadastrado ainda"})`, atual ? atual.nome : "");
+  if (escolha === null) return;
+  const loc = state.locations.find((l) => l.nome.toLowerCase() === escolha.trim().toLowerCase());
+  state.cenaAtual.locationId = loc ? loc.id : null;
+  saveState();
+  renderCenaAtualBar();
+}
+
+function editCenaNpcs() {
+  const atuais = state.npcs.filter((n) => state.cenaAtual.npcIds.includes(n.id)).map((n) => n.nome).join(", ");
+  const escolha = prompt("NPCs presentes na cena agora (nomes separados por vírgula):", atuais);
+  if (escolha === null) return;
+  const nomes = escolha.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  state.cenaAtual.npcIds = state.npcs.filter((n) => nomes.includes(n.nome.toLowerCase())).map((n) => n.id);
+  saveState();
+  renderCenaAtualBar();
+}
+
+function editCenaMissao() {
+  const lista = state.objectives.map((o, i) => `${i + 1}. ${o.texto}`).join("\n");
+  const escolha = prompt(`Qual missão está em jogo agora? Digite o número da lista, ou deixe em branco pra tirar:\n${lista}`, "");
+  if (escolha === null) return;
+  const idx = Number(escolha) - 1;
+  state.cenaAtual.objectiveId = state.objectives[idx] ? state.objectives[idx].id : null;
+  saveState();
+  renderCenaAtualBar();
+}
+
+function renderCenaAtualBar() {
+  const bar = document.getElementById("cena-atual-bar");
+  const loc = state.locations.find((l) => l.id === state.cenaAtual.locationId);
+  const npcs = state.npcs.filter((n) => state.cenaAtual.npcIds.includes(n.id));
+  const missao = state.objectives.find((o) => o.id === state.cenaAtual.objectiveId);
+
+  bar.innerHTML = `
+    <div class="cena-field">
+      <span class="cena-field-label">Local</span>
+      <span class="cena-field-value ${loc ? "" : "empty"}">${loc ? escapeHtml(loc.nome) : "nenhum"}</span>
+      <button type="button" class="icon-btn" data-cena-edit="local" title="Mudar local"><span class="icon">edit</span></button>
+    </div>
+    <div class="cena-field">
+      <span class="cena-field-label">NPCs</span>
+      <span class="cena-field-value ${npcs.length ? "" : "empty"}">${npcs.length ? escapeHtml(npcs.map((n) => n.nome).join(", ")) : "nenhum"}</span>
+      <button type="button" class="icon-btn" data-cena-edit="npcs" title="Mudar NPCs presentes"><span class="icon">edit</span></button>
+    </div>
+    <div class="cena-field">
+      <span class="cena-field-label">Missão</span>
+      <span class="cena-field-value ${missao ? "" : "empty"}">${missao ? escapeHtml(missao.texto) : "nenhuma"}</span>
+      <button type="button" class="icon-btn" data-cena-edit="missao" title="Mudar missão em jogo"><span class="icon">edit</span></button>
+    </div>
+    <div class="cena-edit-btn" style="display:flex; gap:8px;">
+      ${loc ? `<button type="button" class="btn btn-ghost" data-cena-go="local">Ver local</button>` : ""}
+      <button type="button" class="btn btn-ghost" data-cena-go="combate">Combate</button>
+      <button type="button" class="btn btn-ghost" data-cena-go="mapa">Mapa</button>
+    </div>
+  `;
+
+  bar.querySelector('[data-cena-edit="local"]').addEventListener("click", editCenaLocal);
+  bar.querySelector('[data-cena-edit="npcs"]').addEventListener("click", editCenaNpcs);
+  bar.querySelector('[data-cena-edit="missao"]').addEventListener("click", editCenaMissao);
+  const goLocalBtn = bar.querySelector('[data-cena-go="local"]');
+  if (goLocalBtn) goLocalBtn.addEventListener("click", () => { clickTab("compendio"); clickSubtab("locais"); activeLocationId = loc.id; renderLocationPicker(); renderLocationView(); });
+  bar.querySelector('[data-cena-go="combate"]').addEventListener("click", () => clickTab("combate"));
+  bar.querySelector('[data-cena-go="mapa"]').addEventListener("click", () => clickTab("mapa"));
+}
+
+// ==================== Painel de Entidade (consulta, não edição) ====================
+// Clicar num resultado da busca global durante a sessão deveria deixar você
+// CONSULTAR a entidade (ficha, relações) sem cair sem querer no modo de edição.
+// "Editar" continua existindo, só que como uma ação separada dentro do painel.
+const entityPanelOverlay = document.getElementById("entity-panel-overlay");
+const entityPanelContent = document.getElementById("entity-panel-content");
+
+function closeEntityPanel() {
+  entityPanelOverlay.classList.add("hidden");
+  entityPanelContent.innerHTML = "";
+}
+document.getElementById("btn-close-entity-panel").addEventListener("click", closeEntityPanel);
+entityPanelOverlay.addEventListener("click", (e) => { if (e.target === entityPanelOverlay) closeEntityPanel(); });
+
+// Dado um conjunto de tags (normalmente as de um NPC/Item/Documento), acha o
+// Local correspondente e tudo mais que compartilha essa mesma tag — é o que já
+// alimenta a Central do Local, reaproveitado aqui pra achar "relacionados".
+function relatedByTags(tags, excludeTipo, excludeId) {
+  const loc = state.locations.find((l) => tags.includes(l.tag));
+  const tag = loc ? loc.tag : null;
+  const related = { local: loc || null, npcs: [], itens: [], documentos: [] };
+  if (!tag) return related;
+  related.npcs = state.npcs.filter((n) => n.tags.includes(tag) && !(excludeTipo === "npc" && n.id === excludeId));
+  related.itens = state.items.filter((i) => i.tags.includes(tag) && !(excludeTipo === "item" && i.id === excludeId));
+  related.documentos = state.documentos.filter((d) => d.tags.includes(tag) && !(excludeTipo === "documento" && d.id === excludeId));
+  return related;
+}
+
+function entityRelatedSectionHtml(related) {
+  const rows = [];
+  if (related.local) {
+    rows.push(`
+      <div class="entity-panel-section">
+        <div class="entity-panel-section-title">Local</div>
+        <button type="button" class="entity-panel-rel-btn" data-rel-local="${related.local.id}">${escapeHtml(related.local.nome)}</button>
+      </div>`);
+  }
+  const listSection = (title, items, tipo) =>
+    items.length
+      ? `
+      <div class="entity-panel-section">
+        <div class="entity-panel-section-title">${title}</div>
+        <div class="entity-panel-rel-list">${items.map((x) => `<button type="button" class="entity-panel-rel-btn" data-rel-tipo="${tipo}" data-rel-id="${x.id}">${escapeHtml(x.nome)}</button>`).join("")}</div>
+      </div>`
+      : "";
+  rows.push(listSection("NPCs no mesmo local", related.npcs, "npc"));
+  rows.push(listSection("Itens no mesmo local", related.itens, "item"));
+  rows.push(listSection("Documentos no mesmo local", related.documentos, "documento"));
+  return rows.join("");
+}
+
+function wireEntityPanelRelations() {
+  entityPanelContent.querySelectorAll("[data-rel-local]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const loc = state.locations.find((l) => l.id === btn.dataset.relLocal);
+      closeEntityPanel();
+      clickTab("compendio");
+      clickSubtab("locais");
+      activeLocationId = loc.id;
+      renderLocationPicker();
+      renderLocationView();
+    })
+  );
+  entityPanelContent.querySelectorAll("[data-rel-tipo]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const { relTipo, relId } = btn.dataset;
+      if (relTipo === "npc") openEntityPanel("npc", state.npcs.find((n) => n.id === relId));
+      if (relTipo === "item") openEntityPanel("item", state.items.find((i) => i.id === relId));
+      if (relTipo === "documento") openEntityPanel("documento", state.documentos.find((d) => d.id === relId));
+    })
+  );
+}
+
+function openEntityPanel(tipo, entity) {
+  if (!entity) return;
+  let html = "";
+  if (tipo === "npc") {
+    const isMonster = entity.tipo === "Monstro";
+    html = `
+      <div class="entity-panel-kicker">${escapeHtml(entity.tipo)}</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      <div class="npc-stat-grid">
+        ${isMonster ? "" : `
+        <div class="stat-box"><span>Determinação</span><b>${entity.determinacao}</b></div>
+        <div class="stat-box"><span>Graça</span><b>${entity.graca}</b></div>
+        <div class="stat-box"><span>Astúcia</span><b>${entity.astucia}</b></div>`}
+        <div class="stat-box"><span>Coração</span><b>${entity.coracao}</b></div>
+        <div class="stat-box"><span>Salvamento</span><b>${entity.salvamento}</b></div>
+        <div class="stat-box"><span>Armadura</span><b>${entity.armadura}</b></div>
+      </div>
+      ${entity.notas ? `<div class="entity-panel-section"><div class="entity-panel-section-title">Notas</div>${linkifyText(entity.notas)}</div>` : ""}
+      ${entityRelatedSectionHtml(relatedByTags(entity.tags, "npc", entity.id))}
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openNpcModal(entity); });
+  } else if (tipo === "item") {
+    html = `
+      <div class="entity-panel-kicker">Item</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      ${entity.custo ? `<p><b>Custo:</b> ${escapeHtml(entity.custo)}</p>` : ""}
+      ${entity.origem ? `<p><b>Origem:</b> ${escapeHtml(entity.origem)}</p>` : ""}
+      <div class="entity-panel-section">${linkifyText(entity.descricao)}</div>
+      ${entityRelatedSectionHtml(relatedByTags(entity.tags, "item", entity.id))}
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openItemModal(entity); });
+  } else if (tipo === "documento") {
+    html = `
+      <div class="entity-panel-kicker">${escapeHtml(CATEGORIA_LABEL[entity.categoria] || entity.categoria)}</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      ${entity.autor ? `<p><b>Quem escreveu:</b> ${escapeHtml(entity.autor)}</p>` : ""}
+      <div class="entity-panel-section">${linkifyText(entity.texto)}</div>
+      ${entity.verdadeMestra ? `<div class="entity-panel-section documento-secret"><div class="entity-panel-section-title">🔒 Verdade da Mestra</div>${linkifyText(entity.verdadeMestra)}</div>` : ""}
+      ${entity.pistaRelacionada ? `<div class="entity-panel-section"><div class="entity-panel-section-title">🧩 Conecta com</div>${escapeHtml(entity.pistaRelacionada)}</div>` : ""}
+      ${entityRelatedSectionHtml(relatedByTags(entity.tags, "documento", entity.id))}
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openDocumentoModal(entity); });
+  } else if (tipo === "pc") {
+    html = `
+      <div class="entity-panel-kicker">Princesa</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      <div class="npc-stat-grid">
+        <div class="stat-box"><span>Determinação</span><b>${entity.determinacao}</b></div>
+        <div class="stat-box"><span>Graça</span><b>${entity.graca}</b></div>
+        <div class="stat-box"><span>Astúcia</span><b>${entity.astucia}</b></div>
+        <div class="stat-box"><span>Coração</span><b>${entity.coracaoAtual}/${entity.coracaoMax}</b></div>
+        <div class="stat-box"><span>Armadura</span><b>${entity.armadura}</b></div>
+      </div>
+      ${entity.domNome ? `<div class="entity-panel-section"><div class="entity-panel-section-title">Dom</div><b>${escapeHtml(entity.domNome)}</b></div>` : ""}
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openPcModal(entity); });
+  }
+  wireEntityPanelRelations();
+  entityPanelOverlay.classList.remove("hidden");
+}
+
 // ==================== Busca global ====================
 // Uma única caixa de busca que varre NPCs, Itens, Documentos, Locais, Notas e
 // Missões ao mesmo tempo — pra não precisar adivinhar em qual aba/subaba uma
@@ -5117,43 +5342,62 @@ function clickSubtab(subtab) {
   if (btn) btn.click();
 }
 
+// Acha o nome do local de uma entidade pelas tags — usado só pra mostrar
+// contexto ("NPC · Cervovale") no resultado da busca, não muda o filtro.
+function locationLabelForTags(tags) {
+  const loc = state.locations.find((l) => (tags || []).includes(l.tag));
+  return loc ? loc.nome : "";
+}
+
 function globalSearchResults(query) {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const results = [];
   state.npcs.forEach((n) => {
-    if (n.nome.toLowerCase().includes(q) || n.tags.some((t) => t.includes(q))) {
-      results.push({ tipo: n.tipo === "Monstro" ? "Monstro" : "NPC", nome: n.nome, go: () => { clickTab("compendio"); clickSubtab(n.tipo === "Monstro" ? "monstros" : "npcs"); openNpcModal(n); } });
+    if (n.nome.toLowerCase().includes(q) || n.tags.some((t) => t.includes(q)) || (n.notas || "").toLowerCase().includes(q)) {
+      results.push({
+        tipo: n.tipo === "Monstro" ? "Monstro" : "NPC",
+        nome: n.nome,
+        contexto: locationLabelForTags(n.tags),
+        go: () => openEntityPanel("npc", n),
+      });
     }
   });
   state.items.forEach((i) => {
-    if (i.nome.toLowerCase().includes(q) || i.tags.some((t) => t.includes(q))) {
-      results.push({ tipo: "Item", nome: i.nome, go: () => { clickTab("compendio"); clickSubtab("itens"); openItemModal(i); } });
+    if (i.nome.toLowerCase().includes(q) || i.tags.some((t) => t.includes(q)) || (i.descricao || "").toLowerCase().includes(q)) {
+      results.push({ tipo: "Item", nome: i.nome, contexto: locationLabelForTags(i.tags), go: () => openEntityPanel("item", i) });
     }
   });
   state.documentos.forEach((d) => {
-    if (d.nome.toLowerCase().includes(q) || d.tags.some((t) => t.includes(q))) {
-      results.push({ tipo: "Documento", nome: d.nome, go: () => { clickTab("compendio"); clickSubtab("documentos"); openDocumentoModal(d); } });
+    if (
+      d.nome.toLowerCase().includes(q) ||
+      d.tags.some((t) => t.includes(q)) ||
+      (d.texto || "").toLowerCase().includes(q) ||
+      (d.pistaRelacionada || "").toLowerCase().includes(q) ||
+      (d.verdadeMestra || "").toLowerCase().includes(q)
+    ) {
+      results.push({ tipo: "Documento", nome: d.nome, contexto: locationLabelForTags(d.tags), go: () => openEntityPanel("documento", d) });
     }
   });
   state.locations.forEach((l) => {
-    if (l.nome.toLowerCase().includes(q)) {
-      results.push({ tipo: "Local", nome: l.nome, go: () => { clickTab("compendio"); clickSubtab("locais"); activeLocationId = l.id; renderLocationPicker(); renderLocationView(); } });
+    if (l.nome.toLowerCase().includes(q) || (l.descricao || "").toLowerCase().includes(q)) {
+      results.push({ tipo: "Local", nome: l.nome, contexto: "", go: () => { clickTab("compendio"); clickSubtab("locais"); activeLocationId = l.id; renderLocationPicker(); renderLocationView(); } });
     }
   });
   state.notes.forEach((n) => {
-    if (n.titulo.toLowerCase().includes(q)) {
-      results.push({ tipo: "Nota", nome: n.titulo, go: () => { clickTab("campanha"); openNoteReadModal(n); } });
+    if (n.titulo.toLowerCase().includes(q) || (n.texto || "").toLowerCase().includes(q)) {
+      results.push({ tipo: "Nota", nome: n.titulo, contexto: "", go: () => { clickTab("campanha"); openNoteReadModal(n); } });
     }
   });
   state.objectives.forEach((o) => {
     if (o.texto.toLowerCase().includes(q)) {
-      results.push({ tipo: "Missão", nome: o.texto, go: () => { clickTab("campanha"); } });
+      const loc = state.locations.find((l) => (o.tags || []).includes(l.tag));
+      results.push({ tipo: "Missão", nome: o.texto, contexto: loc ? loc.nome : "", go: () => { clickTab("campanha"); } });
     }
   });
   state.pcs.forEach((p) => {
     if (p.nome.toLowerCase().includes(q)) {
-      results.push({ tipo: "Princesa", nome: p.nome, go: () => { clickTab("pcs"); openPcModal(p); } });
+      results.push({ tipo: "Princesa", nome: p.nome, contexto: "", go: () => openEntityPanel("pc", p) });
     }
   });
   return results.slice(0, 20);
@@ -5169,7 +5413,16 @@ function renderGlobalSearchResults(query) {
     return;
   }
   globalSearchResultsEl.innerHTML = results.length
-    ? results.map((r, i) => `<button type="button" class="gsr-item" data-gsr-idx="${i}"><span class="gsr-type">${escapeHtml(r.tipo)}</span><span class="gsr-name">${escapeHtml(r.nome)}</span></button>`).join("")
+    ? results
+        .map(
+          (r, i) => `
+      <button type="button" class="gsr-item" data-gsr-idx="${i}">
+        <span class="gsr-type">${escapeHtml(r.tipo)}</span>
+        <span class="gsr-name">${escapeHtml(r.nome)}</span>
+        ${r.contexto ? `<span class="gsr-context">· ${escapeHtml(r.contexto)}</span>` : ""}
+      </button>`
+        )
+        .join("")
     : `<div class="gsr-empty">Nada encontrado pra "${escapeHtml(query)}"</div>`;
   globalSearchResultsEl.querySelectorAll("[data-gsr-idx]").forEach((btn) => {
     btn.addEventListener("click", () => {

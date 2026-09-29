@@ -239,6 +239,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .gsr-item:hover { background: var(--pink-light, #f8dce9); }
 .gsr-item .gsr-type { font-size: 0.72rem; color: var(--accent); font-weight: 700; text-transform: uppercase; flex: none; }
 .gsr-item .gsr-name { font-weight: 600; }
+.gsr-item .gsr-context { color: var(--text-dim); font-size: 0.82rem; }
 .gsr-empty { padding: 10px; color: var(--text-dim); font-size: 0.9rem; }
 
 /* Flex (em vez de só centralizar a nav com margin:auto) porque no modo foco a
@@ -856,6 +857,64 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   max-height: 60vh;
   overflow-y: auto;
 }
+
+/* Painel de Entidade — consulta lateral (NPC/Item/Documento/Princesa) */
+.entity-panel-overlay {
+  position: fixed; inset: 0; background: rgba(90, 58, 86, 0.25);
+  z-index: 110; display: flex; justify-content: flex-end;
+}
+.entity-panel-overlay.hidden { display: none; }
+.entity-panel {
+  width: min(420px, 100%);
+  height: 100%;
+  background: var(--bg-card);
+  border-left: 3px solid var(--border-gold);
+  box-shadow: -10px 0 30px rgba(90, 58, 86, 0.25);
+  padding: 24px 22px;
+  overflow-y: auto;
+  position: relative;
+  animation: entity-panel-in 0.2s ease-out;
+}
+@keyframes entity-panel-in {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.entity-panel-kicker { color: var(--accent); font-weight: 700; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.04em; }
+.entity-panel h2 { margin: 2px 0 14px; font-family: "Playfair Display", serif; color: var(--accent-deep); }
+.entity-panel-section { margin-top: 18px; }
+.entity-panel-section-title { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.entity-panel-rel-list { display: flex; flex-direction: column; gap: 4px; }
+.entity-panel-rel-btn {
+  text-align: left; background: none; border: none; color: var(--accent-deep); font-weight: 600;
+  padding: 4px 0; cursor: pointer; font-family: "Montserrat", sans-serif;
+}
+.entity-panel-rel-btn:hover { color: var(--accent); text-decoration: underline; }
+.entity-panel-actions { display: flex; gap: 8px; margin-top: 20px; }
+
+/* Barra "Cena Atual" — onde a mesa está agora, sempre visível */
+.cena-atual-bar {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  margin: 0 20px;
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-gold);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  font-family: "Montserrat", sans-serif;
+}
+.cena-atual-bar:empty { display: none; }
+.cena-field { display: flex; align-items: baseline; gap: 6px; }
+.cena-field-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700; }
+.cena-field-value { color: var(--accent-deep); font-weight: 700; }
+.cena-field-value.empty { color: var(--text-dim); font-weight: 500; font-style: italic; }
+.cena-atual-bar .btn { padding: 5px 12px; font-size: 0.85rem; }
+.cena-edit-btn { margin-left: auto; }
 
 /* Modal */
 .modal-overlay {
