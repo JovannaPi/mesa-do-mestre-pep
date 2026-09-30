@@ -59,9 +59,10 @@ function defaultState() {
     items: [],
     documentos: [],
     locations: [],
+    ambientes: [],
     clues: [],
     secrets: [],
-    cenaAtual: { locationId: null, npcIds: [], objectiveId: null },
+    cenaAtual: { locationId: null, ambienteId: null, npcIds: [], objectiveId: null },
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
     activeMapId: null,
@@ -97,6 +98,7 @@ function defaultState() {
     seededAreaDeColeta: false,
     seededFinneganAmarisLink: false,
     seededLocations: false,
+    seededAmbienteEntities: false,
   };
 }
 
@@ -2060,6 +2062,27 @@ function seedLocations() {
   });
 }
 
+// As descrições de ambiente (uma nota por cômodo/área, com dicas de d20 pra
+// investigar) viviam como notas soltas na prateleira "Ambientes & Mapas",
+// identificadas só pelo título "Nome (Local)". Migra pra entidades de verdade
+// em state.ambientes, ligadas ao Local por locationId de verdade — a primeira
+// relação por ID do sistema, em vez de tag — e remove as notas antigas pra não
+// duplicar a mesma informação em dois lugares.
+function seedAmbienteEntities() {
+  if (state.seededAmbienteEntities) return;
+  state.seededAmbienteEntities = true;
+  const notasAmbiente = state.notes.filter((n) => n.categoria === "ambientes");
+  notasAmbiente.forEach((n) => {
+    const m = n.titulo.match(/^(.*) \(([^)]+)\)$/);
+    if (!m) return;
+    const [, nome, localNome] = m;
+    const loc = state.locations.find((l) => l.nome === localNome);
+    if (!loc) return;
+    state.ambientes.push({ id: uid(), locationId: loc.id, nome, descricao: n.texto });
+  });
+  state.notes = state.notes.filter((n) => n.categoria !== "ambientes");
+}
+
 seedCampaignData();
 seedRulesReference();
 seedItems();
@@ -2079,6 +2102,7 @@ seedNpcPersonalities();
 seedAreaDeColeta();
 seedFinneganAmarisLink();
 seedLocations();
+seedAmbienteEntities();
 saveState();
 
 // ---------- Tabs ----------
@@ -2949,6 +2973,54 @@ function deleteLocation(id) {
   renderLocationView();
 }
 
+// ==================== Ambientes (cômodos/áreas dentro de um Local) ====================
+// Ligado ao Local por locationId de verdade (não por tag) — o ambiente pertence
+// a exatamente um local, então uma relação por ID direta faz mais sentido aqui
+// do que o esquema de tags usado pro resto (que serve bem quando uma coisa pode
+// estar em qualquer lugar, mas não quando ela só pode estar em UM lugar).
+const ambienteModal = document.getElementById("modal-ambiente");
+const formAmbiente = document.getElementById("form-ambiente");
+
+function openAmbienteModal(ambiente, locationId) {
+  document.getElementById("ambiente-modal-title").textContent = ambiente ? "Editar ambiente" : "Novo ambiente";
+  document.getElementById("ambiente-id").value = ambiente ? ambiente.id : "";
+  document.getElementById("ambiente-location-id").value = ambiente ? ambiente.locationId : locationId;
+  document.getElementById("ambiente-nome").value = ambiente ? ambiente.nome : "";
+  document.getElementById("ambiente-descricao").value = ambiente ? ambiente.descricao : "";
+  ambienteModal.classList.remove("hidden");
+}
+function closeAmbienteModal() { ambienteModal.classList.add("hidden"); formAmbiente.reset(); }
+document.getElementById("btn-cancel-ambiente").addEventListener("click", closeAmbienteModal);
+
+formAmbiente.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("ambiente-id").value;
+  const data = {
+    id: id || uid(),
+    locationId: document.getElementById("ambiente-location-id").value,
+    nome: document.getElementById("ambiente-nome").value.trim(),
+    descricao: document.getElementById("ambiente-descricao").value.trim(),
+  };
+  if (id) {
+    const idx = state.ambientes.findIndex((a) => a.id === id);
+    state.ambientes[idx] = data;
+  } else {
+    state.ambientes.push(data);
+  }
+  saveState();
+  closeAmbienteModal();
+  renderLocationView();
+});
+
+function deleteAmbiente(id) {
+  if (!confirm("Excluir este ambiente?")) return;
+  state.ambientes = state.ambientes.filter((a) => a.id !== id);
+  if (state.cenaAtual.ambienteId === id) state.cenaAtual.ambienteId = null;
+  saveState();
+  renderLocationView();
+  renderCenaAtualBar();
+}
+
 function renderLocationPicker() {
   if (activeLocationId === null && state.locations[0]) activeLocationId = state.locations[0].id;
   const picker = document.getElementById("location-picker");
@@ -2986,6 +3058,7 @@ function renderLocationView() {
   const notes = state.notes.filter(
     (n) => n.titulo.toLowerCase().includes(loc.nome.toLowerCase()) || n.texto.toLowerCase().includes(tag)
   );
+  const ambientes = state.ambientes.filter((a) => a.locationId === loc.id);
 
   content.innerHTML = `
     <div class="location-header-row">
@@ -2997,6 +3070,17 @@ function renderLocationView() {
         <button class="btn btn-ghost" data-edit-location="${loc.id}"><span class="icon">edit</span> Editar</button>
         <button class="btn btn-ghost" style="color:var(--danger);" data-delete-location="${loc.id}"><span class="icon">delete</span> Excluir</button>
       </div>
+    </div>
+    <div class="location-section-title">Ambientes</div>
+    <div class="ambiente-list">
+      ${ambientes.map((a) => `
+        <div class="ambiente-row">
+          <button type="button" class="entity-panel-rel-btn" data-open-ambiente="${a.id}">${escapeHtml(a.nome)}</button>
+          <button class="icon-btn" data-edit-ambiente="${a.id}" title="Editar"><span class="icon">edit</span></button>
+          <button class="icon-btn" data-delete-ambiente="${a.id}" title="Remover"><span class="icon">delete</span></button>
+        </div>
+      `).join("") || `<p style="color:var(--text-dim); font-style:italic;">Nenhum ambiente cadastrado ainda.</p>`}
+      <button type="button" class="btn btn-ghost" data-add-ambiente="${loc.id}"><span class="icon">add</span> Novo ambiente</button>
     </div>
     <div class="location-section-title">Missões relacionadas</div>
     <div class="objective-list">${
@@ -3091,6 +3175,18 @@ function renderLocationView() {
   );
   content.querySelectorAll("[data-secret-delete]").forEach((btn) =>
     btn.addEventListener("click", () => { deleteSecret(btn.dataset.secretDelete); renderLocationView(); })
+  );
+  content.querySelectorAll("[data-open-ambiente]").forEach((btn) =>
+    btn.addEventListener("click", () => openEntityPanel("ambiente", state.ambientes.find((a) => a.id === btn.dataset.openAmbiente)))
+  );
+  content.querySelectorAll("[data-edit-ambiente]").forEach((btn) =>
+    btn.addEventListener("click", () => openAmbienteModal(state.ambientes.find((a) => a.id === btn.dataset.editAmbiente)))
+  );
+  content.querySelectorAll("[data-delete-ambiente]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteAmbiente(btn.dataset.deleteAmbiente))
+  );
+  content.querySelectorAll("[data-add-ambiente]").forEach((btn) =>
+    btn.addEventListener("click", () => openAmbienteModal(null, btn.dataset.addAmbiente))
   );
 }
 
@@ -4799,7 +4895,6 @@ const NOTE_SHELVES = [
   { key: "regras", label: "Regras rápidas", icon: "gavel" },
   { key: "lore", label: "Lore & Mundo", icon: "auto_stories" },
   { key: "achados", label: "Achados", icon: "diamond" },
-  { key: "ambientes", label: "Ambientes & Mapas", icon: "meeting_room" },
 ];
 
 
@@ -5381,7 +5476,21 @@ function editCenaLocal() {
   const escolha = prompt(`Cena agora em qual local? (${opcoes || "nenhum local cadastrado ainda"})`, atual ? atual.nome : "");
   if (escolha === null) return;
   const loc = state.locations.find((l) => l.nome.toLowerCase() === escolha.trim().toLowerCase());
+  if (!loc || loc.id !== state.cenaAtual.locationId) state.cenaAtual.ambienteId = null;
   state.cenaAtual.locationId = loc ? loc.id : null;
+  saveState();
+  renderCenaAtualBar();
+}
+
+function editCenaAmbiente() {
+  if (!state.cenaAtual.locationId) { alert("Escolha um local pra cena primeiro."); return; }
+  const ambientesDoLocal = state.ambientes.filter((a) => a.locationId === state.cenaAtual.locationId);
+  const opcoes = ambientesDoLocal.map((a) => a.nome).join(", ");
+  const atual = ambientesDoLocal.find((a) => a.id === state.cenaAtual.ambienteId);
+  const escolha = prompt(`Em qual ambiente desse local? (${opcoes || "nenhum ambiente cadastrado ainda pra esse local"})`, atual ? atual.nome : "");
+  if (escolha === null) return;
+  const amb = ambientesDoLocal.find((a) => a.nome.toLowerCase() === escolha.trim().toLowerCase());
+  state.cenaAtual.ambienteId = amb ? amb.id : null;
   saveState();
   renderCenaAtualBar();
 }
@@ -5409,6 +5518,7 @@ function editCenaMissao() {
 function renderCenaAtualBar() {
   const bar = document.getElementById("cena-atual-bar");
   const loc = state.locations.find((l) => l.id === state.cenaAtual.locationId);
+  const ambiente = state.ambientes.find((a) => a.id === state.cenaAtual.ambienteId);
   const npcs = state.npcs.filter((n) => state.cenaAtual.npcIds.includes(n.id));
   const missao = state.objectives.find((o) => o.id === state.cenaAtual.objectiveId);
 
@@ -5420,6 +5530,14 @@ function renderCenaAtualBar() {
         <button type="button" class="icon-btn" data-cena-edit="local" title="Mudar local"><span class="icon">edit</span></button>
       </div>
       <span class="cena-field-value ${loc ? "" : "empty"}">${loc ? escapeHtml(loc.nome) : "nenhum"}</span>
+    </div>
+    <div class="cena-field">
+      <div class="cena-field-top">
+        <span class="cena-field-label">Ambiente</span>
+        <button type="button" class="icon-btn" data-cena-edit="ambiente" title="Mudar ambiente"><span class="icon">edit</span></button>
+      </div>
+      <span class="cena-field-value ${ambiente ? "" : "empty"}">${ambiente ? escapeHtml(ambiente.nome) : "nenhum"}</span>
+      ${ambiente && ambiente.descricao ? `<p class="cena-ambiente-descricao">${escapeHtml(ambiente.descricao)}</p>` : ""}
     </div>
     <div class="cena-field">
       <div class="cena-field-top">
@@ -5443,6 +5561,7 @@ function renderCenaAtualBar() {
   `;
 
   bar.querySelector('[data-cena-edit="local"]').addEventListener("click", editCenaLocal);
+  bar.querySelector('[data-cena-edit="ambiente"]').addEventListener("click", editCenaAmbiente);
   bar.querySelector('[data-cena-edit="npcs"]').addEventListener("click", editCenaNpcs);
   bar.querySelector('[data-cena-edit="missao"]').addEventListener("click", editCenaMissao);
   const goLocalBtn = bar.querySelector('[data-cena-go="local"]');
@@ -5527,6 +5646,7 @@ function wireEntityPanelRelations() {
       if (relTipo === "documento") openEntityPanel("documento", state.documentos.find((d) => d.id === relId));
       if (relTipo === "clue") openEntityPanel("clue", state.clues.find((c) => c.id === relId));
       if (relTipo === "secret") openEntityPanel("secret", state.secrets.find((s) => s.id === relId));
+      if (relTipo === "ambiente") openEntityPanel("ambiente", state.ambientes.find((a) => a.id === relId));
     })
   );
 }
@@ -5589,6 +5709,7 @@ function openEntityPanel(tipo, entity) {
     if (fotoBtn) fotoBtn.addEventListener("click", () => { toggleHandoutVisible(entity.id, "item"); openEntityPanel("item", entity); });
   } else if (tipo === "local") {
     const tag = entity.tag;
+    const ambientesDoLocal = state.ambientes.filter((a) => a.locationId === entity.id);
     const npcs = state.npcs.filter((n) => n.tags.includes(tag));
     const itens = state.items.filter((i) => i.tags.includes(tag));
     const documentos = state.documentos.filter((d) => d.tags.includes(tag));
@@ -5608,6 +5729,7 @@ function openEntityPanel(tipo, entity) {
       <h2>${escapeHtml(entity.nome)}</h2>
       ${entity.descricao ? `<div class="entity-panel-section">${linkifyText(entity.descricao)}</div>` : `<p style="color:var(--text-dim); font-style:italic;">Sem descrição cadastrada ainda.</p>`}
       ${entity.descricao ? `<button type="button" class="btn ${isSharing ? "btn-danger" : "btn-ghost"}" data-entity-share-local>${isSharing ? "Esconder descrição" : "Mostrar descrição aos jogadores"}</button>` : ""}
+      ${listSection("Ambientes", ambientesDoLocal, "ambiente", "nome")}
       ${listSection("NPCs", npcs, "npc", "nome")}
       ${listSection("Itens", itens, "item", "nome")}
       ${listSection("Documentos", documentos, "documento", "nome")}
@@ -5630,6 +5752,23 @@ function openEntityPanel(tipo, entity) {
     });
     const shareBtn = entityPanelContent.querySelector("[data-entity-share-local]");
     if (shareBtn) shareBtn.addEventListener("click", () => { toggleSharedText("local", entity.id); openEntityPanel("local", entity); });
+  } else if (tipo === "ambiente") {
+    const loc = state.locations.find((l) => l.id === entity.locationId);
+    const isSharingAmb = isTextShared("ambiente", entity.id);
+    html = `
+      <div class="entity-panel-kicker">Ambiente</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      ${loc ? `<button type="button" class="entity-panel-rel-btn" data-rel-local="${loc.id}">${escapeHtml(loc.nome)}</button>` : ""}
+      ${entity.descricao ? `<div class="entity-panel-section">${linkifyText(entity.descricao)}</div>` : `<p style="color:var(--text-dim); font-style:italic;">Sem descrição cadastrada ainda.</p>`}
+      ${entity.descricao ? `<button type="button" class="btn ${isSharingAmb ? "btn-danger" : "btn-ghost"}" data-entity-share-ambiente>${isSharingAmb ? "Esconder descrição" : "Mostrar descrição aos jogadores"}</button>` : ""}
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openAmbienteModal(entity, entity.locationId); });
+    const shareAmbBtn = entityPanelContent.querySelector("[data-entity-share-ambiente]");
+    if (shareAmbBtn) shareAmbBtn.addEventListener("click", () => { toggleSharedText("ambiente", entity.id); openEntityPanel("ambiente", entity); });
   } else if (tipo === "clue") {
     html = `
       <div class="entity-panel-kicker">Pista</div>
@@ -5766,6 +5905,12 @@ function globalSearchResults(query) {
   state.pcs.forEach((p) => {
     if (p.nome.toLowerCase().includes(q)) {
       results.push({ tipo: "Princesa", nome: p.nome, contexto: "", go: () => openEntityPanel("pc", p) });
+    }
+  });
+  state.ambientes.forEach((a) => {
+    if (a.nome.toLowerCase().includes(q) || (a.descricao || "").toLowerCase().includes(q)) {
+      const loc = state.locations.find((l) => l.id === a.locationId);
+      results.push({ tipo: "Ambiente", nome: a.nome, contexto: loc ? loc.nome : "", go: () => openEntityPanel("ambiente", a) });
     }
   });
   state.clues.forEach((c) => {

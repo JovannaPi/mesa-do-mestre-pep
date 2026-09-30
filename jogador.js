@@ -238,6 +238,7 @@ function renderSharedText(state) {
   else if (tipo === "nota") entry = (state.notes || []).find((n) => n.id === id);
   else if (tipo === "documento") entry = (state.documentos || []).find((d) => d.id === id);
   else if (tipo === "local") entry = (state.locations || []).find((l) => l.id === id);
+  else if (tipo === "ambiente") entry = (state.ambientes || []).find((a) => a.id === id);
   if (!entry) {
     box.style.display = "none";
     return;

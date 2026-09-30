@@ -513,6 +513,27 @@
 </div>
 
 <!-- MODAL NOTE -->
+<div id="modal-ambiente" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="ambiente-modal-title">Novo ambiente</h2>
+    <form id="form-ambiente">
+      <input type="hidden" id="ambiente-id">
+      <input type="hidden" id="ambiente-location-id">
+      <label>Nome
+        <input type="text" id="ambiente-nome" required placeholder="ex: Gabinete de Teodoro">
+      </label>
+      <label>Descrição
+        <textarea id="ambiente-descricao" rows="8" placeholder="O que tem no cômodo, pistas, dicas de investigação..."></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-ambiente">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="modal-clue" class="modal-overlay hidden">
   <div class="modal">
     <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
