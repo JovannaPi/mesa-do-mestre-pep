@@ -1052,7 +1052,7 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .empty-state::before {
   content: "";
   width: 90px; height: 90px;
-  background: url("deco-crest.svg") center / contain no-repeat;
+  background: url("deco-crest.svg?v=2") center / contain no-repeat;
   opacity: 0.85;
 }
 .empty-state[data-icon="add_photo_alternate"]::before,
