@@ -248,6 +248,139 @@ function renderSharedText(state) {
   box.style.display = "";
 }
 
+// Mostra a ordem de turno e quem está na mesa, mas sem vazar informação da
+// Mestra: só Princesas mostram Coração; NPCs/Monstros aparecem só pelo nome,
+// sem HP nem qualquer outro dado. A Mestra pode esconder a caixa inteira (ex:
+// pra não entregar que um combate está prestes a começar) com um botão na
+// aba de Combate dela.
+function renderCombatBox(state) {
+  const box = document.getElementById("combat-box");
+  const combat = state.combat;
+  const visivel = state.combateVisivelJogadores !== false;
+  if (!visivel || !combat || !combat.combatants || combat.combatants.length === 0) {
+    box.style.display = "none";
+    return;
+  }
+  const rows = combat.combatants
+    .map((c, idx) => {
+      const isCurrent = idx === combat.currentIndex;
+      if (c.isPc) {
+        const hpPct = c.coracaoMax > 0 ? (c.coracaoAtual / c.coracaoMax) * 100 : 0;
+        const hpClass = hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : "";
+        return `
+        <div class="combat-row ${isCurrent ? "current" : ""}">
+          <span class="combat-row-name">${isCurrent ? "▶ " : ""}${escapeHtml(c.nome)}</span>
+          <span class="combat-row-hp">${c.coracaoAtual}/${c.coracaoMax}</span>
+          <div class="combat-row-hp-bar-wrap"><div class="combat-row-hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
+        </div>`;
+      }
+      return `
+      <div class="combat-row ${isCurrent ? "current" : ""}">
+        <span class="combat-row-name">${isCurrent ? "▶ " : ""}${escapeHtml(c.nome)}</span>
+      </div>`;
+    })
+    .join("");
+  box.innerHTML = `<h2 class="combat-box-title">⚔️ Combate — Rodada <span class="round">${combat.round}</span></h2>${rows}`;
+  box.style.display = "";
+}
+
+// Fica visível só pra própria dona da ficha (a jogadora escolhe sua Princesa
+// uma vez, guardado no navegador dela) — nunca mostra Coração/stats de outra
+// jogadora nem de NPCs/monstros.
+function renderPcStats(state) {
+  const box = document.getElementById("pc-stats-box");
+  const pcId = getSelectedPcId();
+  const pc = pcId && (state.pcs || []).find((p) => p.id === pcId);
+  if (!pc) {
+    box.style.display = "none";
+    return;
+  }
+  const hpPct = pc.coracaoMax > 0 ? (pc.coracaoAtual / pc.coracaoMax) * 100 : 0;
+  const hpClass = hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : "";
+  box.innerHTML = `
+    <h2 class="pc-stats-title">${escapeHtml(pc.nome)}</h2>
+    <div class="pc-stats-grid">
+      <div class="stat-box"><span>Determinação</span><b>${pc.determinacao}</b></div>
+      <div class="stat-box"><span>Graça</span><b>${pc.graca}</b></div>
+      <div class="stat-box"><span>Astúcia</span><b>${pc.astucia}</b></div>
+      <div class="stat-box"><span>Armadura</span><b>${pc.armadura}</b></div>
+      <div class="stat-box"><span>Coração</span><b>${pc.coracaoAtual}/${pc.coracaoMax}</b></div>
+      <div class="pc-hp-bar-wrap"><div class="pc-hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
+    </div>
+  `;
+  box.style.display = "";
+}
+
+// ==================== Aviso de atualização nova ====================
+// Quando a Mestra mostra uma imagem ou texto novo, toca um som curto e pisca
+// o título da aba — útil se a jogadora estiver numa aba em segundo plano e
+// não perceber que algo apareceu na tela.
+let lastNotifySignature = null;
+let titleFlashInterval = null;
+const originalTitle = document.title;
+
+function playNotifyBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+    osc.onended = () => ctx.close();
+  } catch (err) {
+    // navegador sem suporte a Web Audio — sem som, sem problema
+  }
+}
+
+function flashTitle() {
+  if (titleFlashInterval) return;
+  let on = false;
+  titleFlashInterval = setInterval(() => {
+    document.title = on ? originalTitle : "🔔 Nova atualização!";
+    on = !on;
+  }, 1000);
+}
+
+function stopTitleFlash() {
+  if (titleFlashInterval) {
+    clearInterval(titleFlashInterval);
+    titleFlashInterval = null;
+  }
+  document.title = originalTitle;
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) stopTitleFlash();
+});
+
+function notifyIfNewContent(state) {
+  const sig = JSON.stringify({
+    h: (state.handoutAtivoTipo || "imagem") + ":" + state.handoutAtivoId,
+    t: state.textoCompartilhadoTipo + ":" + state.textoCompartilhadoId,
+  });
+  const isFirstRender = lastNotifySignature === null;
+  const changed = !isFirstRender && sig !== lastNotifySignature;
+  lastNotifySignature = sig;
+  if (!changed) return;
+  const hasContent = state.handoutAtivoId || state.textoCompartilhadoId;
+  if (!hasContent) return;
+  playNotifyBeep();
+  if (document.hidden) flashTitle();
+  [document.getElementById("handout-box"), document.getElementById("shared-text-box")].forEach((el) => {
+    if (el && el.style.display !== "none") {
+      el.classList.remove("player-notify-flash");
+      void el.offsetWidth;
+      el.classList.add("player-notify-flash");
+    }
+  });
+}
+
 // Cada jogadora escolhe "quem é ela" uma vez (guardado só no navegador dela) e daí só vê
 // e edita o próprio inventário, nunca o das colegas. Ela pode digitar um item qualquer
 // ou puxar um item já cadastrado no Compêndio da Mestra (com a descrição junto). As
@@ -640,9 +773,12 @@ function renderAll(state) {
   document.getElementById("player-campaign-name").textContent = state.campaignName || "Mesa do Mestre";
   renderHandout(state);
   renderSharedText(state);
+  renderCombatBox(state);
+  renderPcStats(state);
   renderMap(state);
   renderPlayerPicker(state);
   renderInventories(state);
+  notifyIfNewContent(state);
 }
 
 document.getElementById("btn-trocar-pc").addEventListener("click", () => {

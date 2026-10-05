@@ -70,6 +70,7 @@ function defaultState() {
     handoutAtivoId: null,
     handoutAtivoTipo: "imagem",
     mapaVisivelJogadores: true,
+    combateVisivelJogadores: true,
     playlists: { combate: [], casual: [], chefe: [] },
     playlistCategorias: [
       { key: "combate", label: "Combate" },
@@ -4018,8 +4019,22 @@ function renderIniciativaPanel() {
   `;
 }
 
+function renderCombatVisibilityToggle() {
+  const btn = document.getElementById("btn-toggle-combat-visible");
+  const visivel = state.combateVisivelJogadores !== false;
+  btn.innerHTML = visivel ? `<span class="icon">visibility_off</span> Esconder das jogadoras` : `<span class="icon">visibility</span> Mostrar às jogadoras`;
+  btn.classList.toggle("btn-ghost", visivel);
+  btn.classList.toggle("btn-secondary", !visivel);
+}
+document.getElementById("btn-toggle-combat-visible").addEventListener("click", () => {
+  state.combateVisivelJogadores = state.combateVisivelJogadores === false;
+  saveState(true);
+  renderCombatVisibilityToggle();
+});
+
 function renderCombat() {
   document.getElementById("round-number").textContent = state.combat.round;
+  renderCombatVisibilityToggle();
   renderTurnActionsBar();
   renderIniciativaPanel();
   const list = document.getElementById("combat-list");
