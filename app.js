@@ -2309,13 +2309,29 @@ const GLOSSARY = {
 const GLOSSARY_KEYS_SORTED = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 
 // ==================== O NOVO SUPER LINKIFIER (Poderes e NPCs) ====================
+// Monta a lista de tudo que pode virar link automático dentro de um texto —
+// NPC, Local, Item, Documento, Ambiente, Pista, Segredo, Princesa — pelo nome
+// exato. Ordenado do nome mais longo pro mais curto, pra "Maya Élis" ganhar
+// de "Maya" e não cortar o nome no meio.
+function linkifiableEntities() {
+  const out = [];
+  state.npcs.forEach((n) => out.push({ name: n.nome, tipo: "npc", id: n.id }));
+  state.locations.forEach((l) => out.push({ name: l.nome, tipo: "local", id: l.id }));
+  state.items.forEach((i) => out.push({ name: i.nome, tipo: "item", id: i.id }));
+  state.documentos.forEach((d) => out.push({ name: d.nome, tipo: "documento", id: d.id }));
+  state.ambientes.forEach((a) => out.push({ name: a.nome, tipo: "ambiente", id: a.id }));
+  state.clues.forEach((c) => out.push({ name: c.titulo, tipo: "clue", id: c.id }));
+  state.secrets.forEach((s) => out.push({ name: s.titulo, tipo: "secret", id: s.id }));
+  state.pcs.forEach((p) => out.push({ name: p.nome, tipo: "pc", id: p.id }));
+  return out.filter((e) => e.name && e.name.length > 2).sort((a, b) => b.name.length - a.name.length);
+}
+
 function linkifyText(rawText) {
   if (!rawText) return "";
   let result = "";
   let i = 0;
-  // Ordena poderes e NPCs do maior nome pro menor, pra não bugar palavras compostas
-  const npcNames = state.npcs.map(n => n.nome).sort((a,b) => b.length - a.length);
-  
+  const entities = linkifiableEntities();
+
   outer: while (i < rawText.length) {
     // 1. Checa se é uma notação de dado (ex: d6, 2d6, 1d4+1) — clicável, rola na hora
     const boundaryBefore = i === 0 || !/[a-zà-úA-ZÀ-Ú0-9]/.test(rawText[i - 1]);
@@ -2339,12 +2355,18 @@ function linkifyText(rawText) {
         continue outer;
       }
     }
-    // 3. Checa se é o nome de um NPC ou Monstro
-    for (const name of npcNames) {
-      if (name.length > 2 && rawText.startsWith(name, i)) {
-        result += `<span class="npc-link" data-npc="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
-        i += name.length;
-        continue outer;
+    // 3. Checa se é o nome de alguma entidade cadastrada (NPC, Local, Item...)
+    if (boundaryBefore) {
+      for (const ent of entities) {
+        if (rawText.startsWith(ent.name, i)) {
+          const afterChar = rawText[i + ent.name.length];
+          const boundaryAfter = !afterChar || !/[a-zà-úA-ZÀ-Ú0-9]/.test(afterChar);
+          if (boundaryAfter) {
+            result += `<span class="entity-link" data-entity-tipo="${ent.tipo}" data-entity-id="${escapeHtml(ent.id)}">${escapeHtml(ent.name)}</span>`;
+            i += ent.name.length;
+            continue outer;
+          }
+        }
       }
     }
     // 4. Letra normal
@@ -2419,19 +2441,19 @@ document.addEventListener("mouseout", (e) => {
   }
 });
 
-// Clicar no nome de um Personagem para pular pra ficha dele
+// Clicar no nome de uma entidade dentro de um texto abre o Painel de
+// Entidade pra consultar — sem trocar de aba nem sair de onde você está.
 document.addEventListener("click", (e) => {
-  const npcLink = e.target.closest(".npc-link");
-  if (npcLink) {
-    const name = npcLink.dataset.npc;
-    // Pula para a aba Compêndio
-    document.querySelector('[data-tab="compendio"]').click();
-    // Pula para a sub-aba de NPCs
-    document.querySelector('[data-subtab="npcs"]').click();
-    // Escreve o nome dele na busca e renderiza
-    document.getElementById("npc-search").value = name;
-    renderNpcs();
-  }
+  const link = e.target.closest(".entity-link");
+  if (!link) return;
+  const { entityTipo, entityId } = link.dataset;
+  const collections = {
+    npc: state.npcs, local: state.locations, item: state.items,
+    documento: state.documentos, ambiente: state.ambientes,
+    clue: state.clues, secret: state.secrets, pc: state.pcs,
+  };
+  const obj = (collections[entityTipo] || []).find((x) => x.id === entityId);
+  if (obj) openEntityPanel(entityTipo, obj);
 });
 
 function formatDate(iso) {
@@ -2563,6 +2585,22 @@ function closeNpcModal() { npcModal.classList.add("hidden"); formNpc.reset(); }
 document.getElementById("btn-add-npc").addEventListener("click", () => openNpcModal(null));
 document.getElementById("btn-add-monster").addEventListener("click", () => openNpcModal(null, "Monstro"));
 document.getElementById("btn-cancel-npc").addEventListener("click", closeNpcModal);
+
+// Modelo rápido — só preenche prompts se as notas ainda estiverem vazias, pra
+// nunca sobrescrever o que já foi escrito.
+document.getElementById("btn-npc-modelo").addEventListener("click", () => {
+  const field = document.getElementById("npc-notas");
+  if (field.value.trim()) {
+    if (!confirm("Já tem texto nas notas. Substituir pelo modelo?")) return;
+  }
+  field.value =
+    "Aparência: \n" +
+    "Motivação: \n" +
+    "Segredo: \n" +
+    "Relação com outros personagens: \n" +
+    "Como age em conversa: ";
+  field.focus();
+});
 
 formNpc.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -2939,6 +2977,11 @@ function openLocationModal(loc) {
   document.getElementById("location-id").value = loc ? loc.id : "";
   document.getElementById("location-nome").value = loc ? loc.nome : "";
   document.getElementById("location-descricao").value = loc ? loc.descricao || "" : "";
+  const playlistSelect = document.getElementById("location-playlist");
+  playlistSelect.innerHTML =
+    `<option value="">Nenhuma</option>` +
+    state.playlistCategorias.map((p) => `<option value="${escapeHtml(p.key)}">${escapeHtml(p.label)}</option>`).join("");
+  playlistSelect.value = loc ? loc.playlist || "" : "";
   locationModal.classList.remove("hidden");
 }
 function closeLocationModal() { locationModal.classList.add("hidden"); formLocation.reset(); }
@@ -2951,12 +2994,14 @@ formLocation.addEventListener("submit", (e) => {
   const id = document.getElementById("location-id").value;
   const nome = document.getElementById("location-nome").value.trim();
   const descricao = document.getElementById("location-descricao").value.trim();
+  const playlist = document.getElementById("location-playlist").value;
   if (id) {
     const loc = state.locations.find((l) => l.id === id);
     loc.nome = nome;
     loc.descricao = descricao;
+    loc.playlist = playlist;
   } else {
-    const loc = { id: uid(), nome, tag: slugifyTag(nome), descricao };
+    const loc = { id: uid(), nome, tag: slugifyTag(nome), descricao, playlist };
     state.locations.push(loc);
     activeLocationId = loc.id;
   }
@@ -4619,9 +4664,10 @@ function renderObjectives() {
 document.getElementById("btn-add-consequence").addEventListener("click", () => {
   const texto = prompt("Nova consequência (o que aconteceu, e o que isso muda):");
   if (texto && texto.trim()) {
-    state.consequences.push({ id: uid(), texto: texto.trim(), feito: false, tags: [] });
+    state.consequences.push({ id: uid(), texto: texto.trim(), feito: false, tags: [], criadoEm: Date.now() });
     saveState();
     renderConsequences();
+    renderTimeline();
   }
 });
 
@@ -5059,7 +5105,40 @@ function deleteSession(id) {
   renderSessions();
 }
 
+// Cruza Sessões (pela data que você escolhe) e Consequências (pela hora em
+// que foram criadas) numa linha do tempo só, mais fácil de ver a campanha
+// como uma sequência de acontecimentos em vez de duas listas separadas.
+function renderTimeline() {
+  const list = document.getElementById("timeline-list");
+  if (!list) return;
+  const entries = [];
+  state.sessions.forEach((s) => {
+    if (!s.data) return;
+    entries.push({ tipo: "sessao", ts: new Date(s.data + "T12:00:00").getTime(), titulo: s.titulo, texto: s.resumo });
+  });
+  state.consequences.forEach((c) => {
+    if (!c.criadoEm) return;
+    entries.push({ tipo: "consequencia", ts: c.criadoEm, titulo: c.texto, texto: "" });
+  });
+  entries.sort((a, b) => a.ts - b.ts);
+  list.innerHTML = entries.length
+    ? entries
+        .map(
+          (e) => `
+      <div class="timeline-row tipo-${e.tipo}">
+        <span class="timeline-date">${new Date(e.ts).toLocaleDateString("pt-BR")}</span>
+        <div>
+          <div class="timeline-body-title">${e.tipo === "consequencia" ? "⚡ " : "📖 "}${escapeHtml(e.titulo)}</div>
+          ${e.texto ? `<div class="timeline-body-text">${escapeHtml(e.texto)}</div>` : ""}
+        </div>
+      </div>`
+        )
+        .join("")
+    : `<p style="color:var(--text-dim); font-size:0.9rem;">Nenhuma sessão com data, ou consequência criada depois dessa atualização, ainda.</p>`;
+}
+
 function renderSessions() {
+  renderTimeline();
   const list = document.getElementById("session-list");
   if (state.sessions.length === 0) {
     list.innerHTML = emptyState("history_edu", "Nenhuma sessão registrada ainda.");
@@ -5130,6 +5209,7 @@ const TOOL_PANELS = {
   timer: "panel-timer",
   music: "panel-music",
   scratchpad: "panel-scratchpad",
+  sorteio: "panel-sorteio",
 };
 
 function toggleToolPanel(key) {
@@ -5576,6 +5656,11 @@ function renderCenaAtualBar() {
       <button type="button" class="btn btn-ghost" data-cena-go="combate">Combate</button>
       <button type="button" class="btn btn-ghost" data-cena-go="mapa">Mapa</button>
     </div>
+    ${
+      loc && loc.playlist && state.playlistCategorias.some((p) => p.key === loc.playlist)
+        ? `<button type="button" class="btn btn-ghost" data-cena-go="playlist" style="margin-top:6px;">🎵 Tocar "${escapeHtml(state.playlistCategorias.find((p) => p.key === loc.playlist).label)}"</button>`
+        : ""
+    }
   `;
 
   bar.querySelector('[data-cena-edit="local"]').addEventListener("click", editCenaLocal);
@@ -5586,6 +5671,13 @@ function renderCenaAtualBar() {
   if (goLocalBtn) goLocalBtn.addEventListener("click", () => { clickTab("compendio"); clickSubtab("locais"); activeLocationId = loc.id; renderLocationPicker(); renderLocationView(); });
   bar.querySelector('[data-cena-go="combate"]').addEventListener("click", () => clickTab("combate"));
   bar.querySelector('[data-cena-go="mapa"]').addEventListener("click", () => clickTab("mapa"));
+  const playlistBtn = bar.querySelector('[data-cena-go="playlist"]');
+  if (playlistBtn) playlistBtn.addEventListener("click", () => {
+    activePlaylist = loc.playlist;
+    renderPlaylistPicker();
+    renderMusicTrackList();
+    openToolPanel("music");
+  });
 }
 
 document.getElementById("btn-toggle-cena-atual").addEventListener("click", () => {
@@ -6267,3 +6359,54 @@ function renderMuralAddList(query) {
   );
 }
 muralAddSearch.addEventListener("input", () => renderMuralAddList(muralAddSearch.value));
+
+// ==================== Sorteador ====================
+// Três sorteios rápidos pra quando a sessão pede improviso: um NPC novo (nome
+// + traço, gerado na hora — não existe ainda no seu banco), um encontro vindo
+// dos próprios Monstros já cadastrados, e um item vindo do próprio Compêndio.
+const SORTEIO_NOMES = [
+  "Rosalinda", "Dulce", "Amêndoa", "Florzinha", "Mel", "Canela", "Avelina",
+  "Ginger", "Clarabela", "Marmelo", "Açucena", "Pralina", "Suzete", "Belinda",
+  "Theodora", "Geraldina", "Oswaldo", "Baltazar", "Elmo", "Ferdinando",
+  "Crispim", "Bartolomeu", "Edmundo", "Rufino", "Alistair",
+];
+const SORTEIO_SOBRENOMES = [
+  "da Vila", "do Moinho", "das Bagas", "Doce-Vento", "Açúcar-Fiado",
+  "Pé-de-Mel", "da Encruzilhada", "do Poço Velho", "das Sete Colheres",
+  "Caramelo", "Fio-de-Mel", "da Estrada Torta", "Barba-de-Algodão",
+];
+const SORTEIO_TRACOS = [
+  "sempre com as mãos sujas de farinha", "fala baixinho com os próprios botões",
+  "guarda um segredo grande demais pra ele", "desconfia de qualquer coisa doce",
+  "não para de contar as próprias moedas", "sorri demais pra quem acabou de conhecer",
+  "cheira a canela mesmo sem motivo", "nunca olha ninguém nos olhos",
+  "repete a última palavra de quem fala com ele", "coleciona botões de todo mundo que conhece",
+  "troca de assunto toda vez que perguntam da família", "anda sempre um passo atrás dos outros",
+];
+function rollSorteioNpc() {
+  const nome = SORTEIO_NOMES[Math.floor(Math.random() * SORTEIO_NOMES.length)];
+  const sobrenome = SORTEIO_SOBRENOMES[Math.floor(Math.random() * SORTEIO_SOBRENOMES.length)];
+  const traco = SORTEIO_TRACOS[Math.floor(Math.random() * SORTEIO_TRACOS.length)];
+  return `<h4>${escapeHtml(nome)} ${escapeHtml(sobrenome)}</h4><p>${escapeHtml(traco.charAt(0).toUpperCase() + traco.slice(1))}.</p>`;
+}
+function rollSorteioEncontro() {
+  const monstros = state.npcs.filter((n) => n.tipo === "Monstro");
+  if (monstros.length === 0) return `<p style="color:var(--text-dim);">Nenhum monstro cadastrado ainda no Compêndio.</p>`;
+  const m = monstros[Math.floor(Math.random() * monstros.length)];
+  const qtd = Math.random() < 0.3 ? (Math.random() < 0.5 ? 2 : 3) : 1;
+  return `<h4>${qtd > 1 ? qtd + "x " : ""}${escapeHtml(m.nome)}</h4><p>Coração ${m.coracao} · Armadura ${m.armadura}</p>`;
+}
+function rollSorteioItem() {
+  if (state.items.length === 0) return `<p style="color:var(--text-dim);">Nenhum item cadastrado ainda no Compêndio.</p>`;
+  const it = state.items[Math.floor(Math.random() * state.items.length)];
+  return `<h4>${escapeHtml(it.nome)}</h4><p>${linkifyText(it.descricao)}</p>`;
+}
+document.getElementById("btn-sortear-npc").addEventListener("click", () => {
+  document.getElementById("sorteio-result").innerHTML = rollSorteioNpc();
+});
+document.getElementById("btn-sortear-encontro").addEventListener("click", () => {
+  document.getElementById("sorteio-result").innerHTML = rollSorteioEncontro();
+});
+document.getElementById("btn-sortear-item").addEventListener("click", () => {
+  document.getElementById("sorteio-result").innerHTML = rollSorteioItem();
+});

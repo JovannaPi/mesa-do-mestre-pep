@@ -258,6 +258,10 @@
     <div class="panel-toolbar">
       <button id="btn-add-session" class="btn btn-primary"><span class="icon">add</span> Nova sessão</button>
     </div>
+    <details class="timeline-section">
+      <summary class="timeline-summary">Linha do Tempo</summary>
+      <div id="timeline-list" class="timeline-list"></div>
+    </details>
     <div id="session-list" class="session-list"></div>
   </section>
 
@@ -312,6 +316,7 @@
       <label>Descrição / ataques / dons / anotações
         <textarea id="npc-notas" rows="4" placeholder="Aparência, personalidade, ataques, suscetibilidades, táticas..."></textarea>
       </label>
+      <button type="button" id="btn-npc-modelo" class="btn btn-ghost" style="align-self:flex-start;"><span class="icon">auto_fix_high</span> Usar modelo rápido</button>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-npc">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
@@ -652,6 +657,11 @@
       <label>Descrição (opcional)
         <textarea id="location-descricao" rows="3" placeholder="Uma linha ou duas sobre o local"></textarea>
       </label>
+      <label>Trilha sonora sugerida (opcional)
+        <select id="location-playlist">
+          <option value="">Nenhuma</option>
+        </select>
+      </label>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-location">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
@@ -703,6 +713,20 @@
   <button id="btn-toggle-music" class="tools-fab" title="Trilha sonora"><span class="icon">music_note</span></button>
   <button id="btn-toggle-timer" class="tools-fab" title="Cronômetro"><span class="icon">timer</span></button>
   <button id="btn-toggle-dice" class="tools-fab" title="Dados"><span class="icon">casino</span></button>
+  <button id="btn-toggle-sorteio" class="tools-fab" title="Sorteador"><span class="icon">shuffle</span></button>
+</div>
+
+<div id="panel-sorteio" class="tools-panel hidden">
+  <div class="tools-panel-header">
+    <span>Sorteador</span>
+    <button type="button" class="btn-close-modal js-close-tool-panel" aria-label="Fechar" style="position:static;">&times;</button>
+  </div>
+  <div class="sorteio-buttons">
+    <button class="btn btn-secondary" id="btn-sortear-npc">NPC aleatório</button>
+    <button class="btn btn-secondary" id="btn-sortear-encontro">Encontro aleatório</button>
+    <button class="btn btn-secondary" id="btn-sortear-item">Item aleatório</button>
+  </div>
+  <div id="sorteio-result" class="sorteio-result"></div>
 </div>
 
 <div id="panel-dice" class="tools-panel hidden">

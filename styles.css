@@ -1351,6 +1351,54 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 }
 .dice-history { font-size: 0.78rem; color: var(--text-dim); text-align: center; max-height: 60px; overflow-y: auto; }
 
+.sorteio-buttons { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.sorteio-result { min-height: 40px; }
+.sorteio-result h4 { margin: 4px 0 2px; color: var(--accent-deep); font-family: "Playfair Display", serif; }
+.sorteio-result p { margin: 0; font-size: 0.9rem; color: var(--text-dim); }
+
+.timeline-section {
+  margin-bottom: 18px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-gold);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+}
+.timeline-summary {
+  cursor: pointer;
+  font-family: "Playfair Display", serif;
+  font-size: 1.1rem;
+  color: var(--accent-deep);
+  list-style: none;
+}
+.timeline-summary::-webkit-details-marker { display: none; }
+.timeline-summary::before { content: "▶ "; font-size: 0.75em; }
+.timeline-section[open] .timeline-summary::before { content: "▼ "; }
+.timeline-list { margin-top: 14px; display: flex; flex-direction: column; gap: 2px; }
+.timeline-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-left: 2px solid var(--border-gold);
+  padding-left: 16px;
+  position: relative;
+}
+.timeline-row::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-card);
+}
+.timeline-row.tipo-consequencia::before { background: var(--royal-gold); }
+.timeline-date { flex: none; width: 76px; font-size: 0.78rem; color: var(--text-dim); font-weight: 700; padding-top: 2px; }
+.timeline-body-title { font-weight: 700; color: var(--accent-deep); }
+.timeline-body-text { font-size: 0.88rem; color: var(--text-dim); margin-top: 2px; }
+
+
 .timer-display {
   font-family: "Montserrat", sans-serif; font-size: 2.2rem; text-align: center; color: var(--accent-deep);
   margin-bottom: 8px;
@@ -1558,15 +1606,15 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
-/* Link dos Personagens na História */
-.npc-link {
-  color: #c0392b;
+/* Link automático de entidades dentro de qualquer texto (NPC, Local, Item...) */
+.entity-link {
+  color: var(--accent);
   font-weight: 700;
   cursor: pointer;
-  border-bottom: 2px dotted #e74c3c;
+  border-bottom: 2px dotted var(--accent);
   transition: color 0.2s;
 }
-.npc-link:hover { color: #e74c3c; background: rgba(231, 76, 60, 0.1); border-radius: 4px; padding: 0 2px; }
+.entity-link:hover { color: var(--accent-deep); background: var(--pink-light, #f8dce9); border-radius: 4px; padding: 0 2px; }
 
 /* =========================================================
    Mural — quadro livre tipo Miro, com cards arrastáveis
