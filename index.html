@@ -40,6 +40,7 @@
       <button class="tab-btn" data-tab="compendio"><svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2Z"/><path d="M5 4v14a2 2 0 0 0 2 2h11" /><path d="M14 4v6l-2-1.4L10 10V4"/></svg> Compêndio</button>
       <button class="tab-btn" data-tab="mapa"><svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg> Mapa</button>
       <button class="tab-btn" data-tab="campanha"><svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.5-1.2-3.6-1.8-6-1.8v13.6c2.4 0 4.5.6 6 1.8"/><path d="M12 6c1.5-1.2 3.6-1.8 6-1.8v13.6c-2.4 0-4.5.6-6 1.8Z"/></svg> Campanha</button>
+      <button class="tab-btn" data-tab="mural"><svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="7" r="2.3"/><circle cx="7" cy="18" r="2.3"/><circle cx="17" cy="17" r="2.3"/><path d="M8 7.3 L16 7 M7.8 8 L7.1 15.8 M8.9 17.6 L15.1 16.8 M17.5 9 L17.2 14.7"/></svg> Mural</button>
       <button class="tab-btn" data-tab="sessoes"><svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="1.5"/><path d="M4 10h16M8 3.5v3M16 3.5v3"/><circle cx="9" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1" fill="currentColor" stroke="none"/></svg> Sessões</button>
     </nav>
   </div>
@@ -220,6 +221,34 @@
           </div>
         </div>
         <div id="note-list" class="note-shelves"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MURAL — quadro livre pra organizar visualmente a campanha, com cards
+       arrastáveis que já vêm ligados por linha quando compartilham um local. -->
+  <section id="tab-mural" class="tab-panel">
+    <div id="mural-sumario" class="mural-sumario"></div>
+    <div class="toolbar-card">
+      <div class="toolbar-group">
+        <button id="btn-add-mural-card" class="btn btn-primary"><span class="icon">add</span> Adicionar card</button>
+        <button id="btn-mural-clear" class="btn btn-ghost" style="color:var(--danger);"><span class="icon">delete_sweep</span> Limpar quadro</button>
+      </div>
+      <div class="toolbar-group">
+        <button id="btn-mural-zoom-out" class="btn btn-ghost icon-only" title="Afastar"><span class="icon">remove</span></button>
+        <span id="mural-zoom-label" class="mural-zoom-label">100%</span>
+        <button id="btn-mural-zoom-in" class="btn btn-ghost icon-only" title="Aproximar"><span class="icon">add</span></button>
+        <button id="btn-mural-reset-view" class="btn btn-ghost" title="Centralizar a vista"><span class="icon">center_focus_strong</span></button>
+      </div>
+    </div>
+    <div id="mural-viewport" class="mural-viewport">
+      <div id="mural-content" class="mural-content">
+        <svg id="mural-lines" class="mural-lines"></svg>
+        <div id="mural-cards" class="mural-cards"></div>
+      </div>
+      <div id="mural-empty" class="mural-empty">
+        <span class="icon" style="font-size:2.5rem; opacity:0.4;">hub</span>
+        <p>Quadro vazio. Clique em "+ Adicionar card" pra trazer um NPC, Local, Missão, Pista ou Segredo pra cá.</p>
       </div>
     </div>
   </section>
@@ -514,6 +543,15 @@
 </div>
 
 <!-- MODAL NOTE -->
+<div id="modal-mural-add" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2>Adicionar ao Mural</h2>
+    <input id="mural-add-search" class="input" type="text" placeholder="Buscar NPC, Local, Item, Missão, Pista..." style="margin-bottom:12px;" autocomplete="off">
+    <div id="mural-add-list" class="mural-add-list"></div>
+  </div>
+</div>
+
 <div id="modal-ambiente" class="modal-overlay hidden">
   <div class="modal">
     <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>

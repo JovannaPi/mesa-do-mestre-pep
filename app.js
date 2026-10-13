@@ -63,6 +63,7 @@ function defaultState() {
     clues: [],
     secrets: [],
     cenaAtual: { locationId: null, ambienteId: null, npcIds: [], objectiveId: null },
+    mural: { cards: [], zoom: 1, panX: 0, panY: 0 },
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
     activeMapId: null,
@@ -5116,6 +5117,8 @@ function renderAll() {
   renderNotes();
   renderSessions();
   renderCenaAtualBar();
+  renderMuralSumario();
+  renderMural();
 }
 
 renderAll();
@@ -5989,3 +5992,278 @@ globalSearchInput.addEventListener("focus", () => { if (globalSearchInput.value.
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".global-search-wrap")) globalSearchResultsEl.classList.add("hidden");
 });
+
+// ==================== Mural (quadro livre tipo Miro) ====================
+// Lista de todas as entidades "colocáveis" num card, numa tabela só — cada
+// coleção do estado + como mostrar e achar de volta. É o que alimenta tanto
+// o Sumário quanto o seletor de "+ Adicionar card".
+function muralCollections() {
+  return [
+    { tipo: "npc", label: "NPCs", singular: "NPC", icon: "person", list: () => state.npcs.filter((n) => n.tipo !== "Monstro"), nome: (x) => x.nome },
+    { tipo: "monstro", label: "Monstros", singular: "Monstro", icon: "pest_control", list: () => state.npcs.filter((n) => n.tipo === "Monstro"), nome: (x) => x.nome },
+    { tipo: "item", label: "Itens", singular: "Item", icon: "backpack", list: () => state.items, nome: (x) => x.nome },
+    { tipo: "documento", label: "Documentos", singular: "Documento", icon: "description", list: () => state.documentos, nome: (x) => x.nome },
+    { tipo: "local", label: "Locais", singular: "Local", icon: "cottage", list: () => state.locations, nome: (x) => x.nome },
+    { tipo: "ambiente", label: "Ambientes", singular: "Ambiente", icon: "meeting_room", list: () => state.ambientes, nome: (x) => x.nome },
+    { tipo: "missao", label: "Missões", singular: "Missão", icon: "flag", list: () => state.objectives, nome: (x) => x.texto },
+    { tipo: "clue", label: "Pistas", singular: "Pista", icon: "search", list: () => state.clues, nome: (x) => x.titulo },
+    { tipo: "secret", label: "Segredos", singular: "Segredo", icon: "lock", list: () => state.secrets, nome: (x) => x.titulo },
+    { tipo: "pc", label: "Princesas", singular: "Princesa", icon: "auto_awesome", list: () => state.pcs, nome: (x) => x.nome },
+  ];
+}
+
+function muralFindEntity(tipo, refId) {
+  const col = muralCollections().find((c) => c.tipo === tipo);
+  if (!col) return null;
+  const obj = col.list().find((x) => x.id === refId);
+  return obj ? { obj, nome: col.nome(obj), label: col.singular } : null;
+}
+
+// Tags relevantes de uma entidade, pra computar quais cards do Mural devem
+// ficar ligados por linha (mesma ideia de "mesmo local" já usada na Central
+// do Local e no Painel de Entidade, só que aplicada a qualquer par de cards).
+function muralEntityTags(tipo, obj) {
+  if (tipo === "local") return [obj.tag];
+  if (tipo === "ambiente") {
+    const loc = state.locations.find((l) => l.id === obj.locationId);
+    return loc ? [loc.tag] : [];
+  }
+  if (tipo === "npc" || tipo === "monstro" || tipo === "item" || tipo === "documento" || tipo === "missao" || tipo === "clue" || tipo === "secret") {
+    return obj.tags || [];
+  }
+  return [];
+}
+
+function openMuralEntityPanel(tipo, obj) {
+  if (tipo === "monstro") openEntityPanel("npc", obj);
+  else openEntityPanel(tipo, obj);
+}
+
+function renderMuralSumario() {
+  const wrap = document.getElementById("mural-sumario");
+  wrap.innerHTML = muralCollections()
+    .map((c) => `<button type="button" class="mural-sumario-chip" data-sumario-chip="${c.tipo}"><span class="icon">${c.icon}</span> ${c.label} <span class="count">${c.list().length}</span></button>`)
+    .join("");
+  wrap.querySelectorAll("[data-sumario-chip]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const existing = wrap.querySelector(".mural-sumario-chip-list");
+      if (existing) existing.remove();
+      const col = muralCollections().find((c) => c.tipo === btn.dataset.sumarioChip);
+      const items = col.list();
+      const dropdown = document.createElement("div");
+      dropdown.className = "mural-sumario-chip-list";
+      dropdown.innerHTML = items.length
+        ? items.map((x) => `<button type="button" data-sumario-open="${x.id}">${escapeHtml(col.nome(x))}</button>`).join("")
+        : `<div style="padding:8px 10px; color:var(--text-dim); font-size:0.9rem;">Nada cadastrado ainda.</div>`;
+      btn.insertAdjacentElement("afterend", dropdown);
+      dropdown.style.left = btn.offsetLeft + "px";
+      dropdown.style.top = btn.offsetTop + btn.offsetHeight + 6 + "px";
+      dropdown.querySelectorAll("[data-sumario-open]").forEach((item) =>
+        item.addEventListener("click", () => {
+          dropdown.remove();
+          openMuralEntityPanel(col.tipo, items.find((x) => x.id === item.dataset.sumarioOpen));
+        })
+      );
+    });
+  });
+}
+document.addEventListener("click", () => {
+  const dd = document.querySelector(".mural-sumario-chip-list");
+  if (dd) dd.remove();
+});
+
+function addMuralCard(tipo, refId) {
+  const n = state.mural.cards.length;
+  state.mural.cards.push({
+    id: uid(),
+    tipo,
+    refId,
+    x: 120 + (n % 6) * 170,
+    y: 100 + Math.floor(n / 6) * 130,
+  });
+  saveState();
+  renderMural();
+}
+
+function removeMuralCard(cardId) {
+  state.mural.cards = state.mural.cards.filter((c) => c.id !== cardId);
+  saveState();
+  renderMural();
+}
+
+function renderMuralTransform() {
+  const content = document.getElementById("mural-content");
+  content.style.transform = `translate(${state.mural.panX}px, ${state.mural.panY}px) scale(${state.mural.zoom})`;
+  document.getElementById("mural-zoom-label").textContent = Math.round(state.mural.zoom * 100) + "%";
+}
+
+function renderMural() {
+  const cardsWrap = document.getElementById("mural-cards");
+  const linesWrap = document.getElementById("mural-lines");
+  const empty = document.getElementById("mural-empty");
+  const cards = state.mural.cards
+    .map((c) => {
+      const found = muralFindEntity(c.tipo, c.refId);
+      return found ? { ...c, nome: found.nome, label: found.label, obj: found.obj } : null;
+    })
+    .filter(Boolean);
+
+  empty.style.display = cards.length ? "none" : "flex";
+
+  cardsWrap.innerHTML = cards
+    .map(
+      (c) => `
+    <div class="mural-card" data-mural-card="${c.id}" style="left:${c.x}px; top:${c.y}px;">
+      <button type="button" class="mural-card-remove" data-mural-remove="${c.id}" title="Tirar do quadro">&times;</button>
+      <div class="mural-card-tipo">${escapeHtml(c.label)}</div>
+      <div class="mural-card-nome">${escapeHtml(c.nome)}</div>
+    </div>
+  `
+    )
+    .join("");
+
+  // Liga por linha qualquer par de cards cujas entidades compartilhem uma tag
+  // (geralmente o mesmo local) — sem precisar desenhar a conexão na mão.
+  const linesSvg = [];
+  for (let i = 0; i < cards.length; i++) {
+    for (let j = i + 1; j < cards.length; j++) {
+      const tagsA = muralEntityTags(cards[i].tipo, cards[i].obj);
+      const tagsB = muralEntityTags(cards[j].tipo, cards[j].obj);
+      if (tagsA.some((t) => tagsB.includes(t))) {
+        const x1 = cards[i].x + 75, y1 = cards[i].y + 30;
+        const x2 = cards[j].x + 75, y2 = cards[j].y + 30;
+        linesSvg.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d9a441" stroke-width="2" opacity="0.55"/>`);
+      }
+    }
+  }
+  linesWrap.innerHTML = linesSvg.join("");
+
+  cardsWrap.querySelectorAll("[data-mural-remove]").forEach((btn) =>
+    btn.addEventListener("click", (e) => { e.stopPropagation(); removeMuralCard(btn.dataset.muralRemove); })
+  );
+  cardsWrap.querySelectorAll("[data-mural-card]").forEach((el) => attachMuralCardDrag(el, cards.find((c) => c.id === el.dataset.muralCard)));
+
+  renderMuralTransform();
+}
+
+function attachMuralCardDrag(el, cardData) {
+  let dragging = false;
+  let moved = false;
+  let startClientX = 0, startClientY = 0, startX = 0, startY = 0;
+  el.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+    dragging = true;
+    moved = false;
+    startClientX = e.clientX;
+    startClientY = e.clientY;
+    startX = cardData.x;
+    startY = cardData.y;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const dx = (e.clientX - startClientX) / state.mural.zoom;
+    const dy = (e.clientY - startClientY) / state.mural.zoom;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+    el.style.left = startX + dx + "px";
+    el.style.top = startY + dy + "px";
+  });
+  el.addEventListener("pointerup", (e) => {
+    if (!dragging) return;
+    dragging = false;
+    if (moved) {
+      const card = state.mural.cards.find((c) => c.id === cardData.id);
+      card.x = startX + (e.clientX - startClientX) / state.mural.zoom;
+      card.y = startY + (e.clientY - startClientY) / state.mural.zoom;
+      saveState();
+      renderMural();
+    } else {
+      openMuralEntityPanel(cardData.tipo, cardData.obj);
+    }
+  });
+}
+
+// Arrastar o fundo do quadro move a vista (pan); arrastar um card move o card.
+const muralViewport = document.getElementById("mural-viewport");
+let muralPanning = false;
+let muralPanStartX = 0, muralPanStartY = 0, muralPanOrigX = 0, muralPanOrigY = 0;
+muralViewport.addEventListener("pointerdown", (e) => {
+  if (e.target.closest(".mural-card")) return;
+  muralPanning = true;
+  muralViewport.classList.add("panning");
+  muralPanStartX = e.clientX;
+  muralPanStartY = e.clientY;
+  muralPanOrigX = state.mural.panX;
+  muralPanOrigY = state.mural.panY;
+  muralViewport.setPointerCapture(e.pointerId);
+});
+muralViewport.addEventListener("pointermove", (e) => {
+  if (!muralPanning) return;
+  state.mural.panX = muralPanOrigX + (e.clientX - muralPanStartX);
+  state.mural.panY = muralPanOrigY + (e.clientY - muralPanStartY);
+  renderMuralTransform();
+});
+muralViewport.addEventListener("pointerup", () => {
+  if (!muralPanning) return;
+  muralPanning = false;
+  muralViewport.classList.remove("panning");
+  saveState();
+});
+
+document.getElementById("btn-mural-zoom-in").addEventListener("click", () => {
+  state.mural.zoom = Math.min(2, Math.round((state.mural.zoom + 0.15) * 100) / 100);
+  saveState();
+  renderMuralTransform();
+});
+document.getElementById("btn-mural-zoom-out").addEventListener("click", () => {
+  state.mural.zoom = Math.max(0.4, Math.round((state.mural.zoom - 0.15) * 100) / 100);
+  saveState();
+  renderMuralTransform();
+});
+document.getElementById("btn-mural-reset-view").addEventListener("click", () => {
+  state.mural.zoom = 1;
+  state.mural.panX = 0;
+  state.mural.panY = 0;
+  saveState();
+  renderMuralTransform();
+});
+document.getElementById("btn-mural-clear").addEventListener("click", () => {
+  if (!confirm("Tirar todos os cards do quadro? (as entidades em si não são excluídas)")) return;
+  state.mural.cards = [];
+  saveState();
+  renderMural();
+});
+
+const muralAddModal = document.getElementById("modal-mural-add");
+const muralAddSearch = document.getElementById("mural-add-search");
+document.getElementById("btn-add-mural-card").addEventListener("click", () => {
+  muralAddModal.classList.remove("hidden");
+  muralAddSearch.value = "";
+  muralAddSearch.focus();
+  renderMuralAddList("");
+});
+function renderMuralAddList(query) {
+  const list = document.getElementById("mural-add-list");
+  const q = query.trim().toLowerCase();
+  const results = [];
+  muralCollections().forEach((col) => {
+    col.list().forEach((obj) => {
+      const nome = col.nome(obj);
+      if (!q || nome.toLowerCase().includes(q)) {
+        results.push({ tipo: col.tipo, label: col.singular, id: obj.id, nome });
+      }
+    });
+  });
+  list.innerHTML = results
+    .slice(0, 60)
+    .map((r) => `<button type="button" class="mural-add-item" data-mural-add-tipo="${r.tipo}" data-mural-add-id="${r.id}"><span class="gsr-type">${escapeHtml(r.label)}</span><span class="gsr-name">${escapeHtml(r.nome)}</span></button>`)
+    .join("") || `<div style="padding:10px; color:var(--text-dim);">Nada encontrado.</div>`;
+  list.querySelectorAll("[data-mural-add-tipo]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      addMuralCard(btn.dataset.muralAddTipo, btn.dataset.muralAddId);
+      muralAddModal.classList.add("hidden");
+    })
+  );
+}
+muralAddSearch.addEventListener("input", () => renderMuralAddList(muralAddSearch.value));
