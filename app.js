@@ -18,6 +18,17 @@ function emptyState(icon, text) {
   return `<div class="empty-state" data-icon="${icon}"><span class="icon empty-state-icon">${icon}</span><span>${text}</span></div>`;
 }
 
+// Versão compacta pra estados vazios que ficam no meio de uma tela já cheia
+// de controles (ex. combate) — menos espaço ocupado, com uma ação direta em
+// vez de só uma mensagem.
+function emptyStateCompact(icon, text, ctaLabel, ctaTargetId) {
+  return `<div class="empty-state compact" data-icon="${icon}">
+    <span class="icon empty-state-icon">${icon}</span>
+    <p>${text}</p>
+    ${ctaLabel ? `<button type="button" class="btn btn-primary" data-empty-cta="${ctaTargetId}">${ctaLabel}</button>` : ""}
+  </div>`;
+}
+
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -4085,7 +4096,8 @@ function renderCombat() {
   renderIniciativaPanel();
   const list = document.getElementById("combat-list");
   if (state.combat.combatants.length === 0) {
-    list.innerHTML = emptyState("swords", "Nenhum combatente na mesa. Adicione manualmente ou importe do banco de NPCs/Princesas.");
+    list.innerHTML = emptyStateCompact("swords", "Nenhum combatente na mesa.", "+ Adicionar combatente", "btn-add-combatant");
+    list.querySelector("[data-empty-cta]")?.addEventListener("click", () => document.getElementById("btn-add-combatant").click());
     return;
   }
   list.innerHTML = state.combat.combatants
