@@ -63,7 +63,7 @@ function defaultState() {
     clues: [],
     secrets: [],
     cenaAtual: { locationId: null, ambienteId: null, npcIds: [], objectiveId: null },
-    mural: { cards: [], zoom: 1, panX: 0, panY: 0 },
+    mural: { cards: [], zoom: 1, panX: 0, panY: 0, hiddenTipos: [] },
     combat: { round: 1, currentIndex: 0, combatants: [] },
     maps: [],
     activeMapId: null,
@@ -5197,6 +5197,7 @@ function renderAll() {
   renderSessions();
   renderCenaAtualBar();
   renderMuralSumario();
+  renderMuralFiltros();
   renderMural();
 }
 
@@ -6131,6 +6132,30 @@ function openMuralEntityPanel(tipo, obj) {
   else openEntityPanel(tipo, obj);
 }
 
+// Filtro por tipo: esconde (sem remover do quadro) os cards de um tipo, pra
+// achar mais fácil o que importa quando o quadro já tem muita coisa.
+function renderMuralFiltros() {
+  const wrap = document.getElementById("mural-filtros");
+  if (!state.mural.hiddenTipos) state.mural.hiddenTipos = [];
+  wrap.innerHTML = muralCollections()
+    .map((c) => {
+      const hidden = state.mural.hiddenTipos.includes(c.tipo);
+      return `<button type="button" class="mural-filtro-chip ${hidden ? "off" : ""}" data-filtro-tipo="${c.tipo}"><span class="icon">${c.icon}</span> ${c.label}</button>`;
+    })
+    .join("");
+  wrap.querySelectorAll("[data-filtro-tipo]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tipo = btn.dataset.filtroTipo;
+      const i = state.mural.hiddenTipos.indexOf(tipo);
+      if (i === -1) state.mural.hiddenTipos.push(tipo);
+      else state.mural.hiddenTipos.splice(i, 1);
+      saveState();
+      renderMuralFiltros();
+      renderMural();
+    });
+  });
+}
+
 function renderMuralSumario() {
   const wrap = document.getElementById("mural-sumario");
   wrap.innerHTML = muralCollections()
@@ -6194,25 +6219,41 @@ function renderMural() {
   const cardsWrap = document.getElementById("mural-cards");
   const linesWrap = document.getElementById("mural-lines");
   const empty = document.getElementById("mural-empty");
+  const hiddenTipos = state.mural.hiddenTipos || [];
   const cards = state.mural.cards
     .map((c) => {
       const found = muralFindEntity(c.tipo, c.refId);
       return found ? { ...c, nome: found.nome, label: found.label, obj: found.obj } : null;
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((c) => !hiddenTipos.includes(c.tipo));
 
   empty.style.display = cards.length ? "none" : "flex";
 
   cardsWrap.innerHTML = cards
-    .map(
-      (c) => `
-    <div class="mural-card" data-mural-card="${c.id}" style="left:${c.x}px; top:${c.y}px;">
+    .map((c) => {
+      // Pista e segredo precisam ser distinguíveis de relance no quadro: uma
+      // pista já descoberta pelas jogadoras não é segredo nenhum, enquanto uma
+      // pista ainda oculta e um segredo da mestra merecem o mesmo alerta visual
+      // de "cuidado pra não mostrar na tela compartilhada".
+      let statusClass = "";
+      let statusTag = "";
+      if (c.tipo === "clue") {
+        statusClass = c.obj.descoberta ? "clue-descoberta" : "clue-oculta";
+        statusTag = c.obj.descoberta ? '<span class="mural-card-status">descoberta</span>' : '<span class="mural-card-status">oculta</span>';
+      } else if (c.tipo === "secret") {
+        statusClass = "mural-card-segredo";
+        statusTag = '<span class="mural-card-status">🔒 só a mestra</span>';
+      }
+      return `
+    <div class="mural-card ${statusClass}" data-mural-card="${c.id}" style="left:${c.x}px; top:${c.y}px;">
       <button type="button" class="mural-card-remove" data-mural-remove="${c.id}" title="Tirar do quadro">&times;</button>
       <div class="mural-card-tipo">${escapeHtml(c.label)}</div>
       <div class="mural-card-nome">${escapeHtml(c.nome)}</div>
+      ${statusTag}
     </div>
-  `
-    )
+  `;
+    })
     .join("");
 
   // Liga por linha qualquer par de cards cujas entidades compartilhem uma tag
@@ -6225,7 +6266,7 @@ function renderMural() {
       if (tagsA.some((t) => tagsB.includes(t))) {
         const x1 = cards[i].x + 75, y1 = cards[i].y + 30;
         const x2 = cards[j].x + 75, y2 = cards[j].y + 30;
-        linesSvg.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d9a441" stroke-width="2" opacity="0.55"/>`);
+        linesSvg.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#a3792f" stroke-width="2" opacity="0.55"/>`);
       }
     }
   }
