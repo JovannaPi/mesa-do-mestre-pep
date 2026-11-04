@@ -5528,6 +5528,146 @@ function renderSecrets() {
   );
 }
 
+// ==================== Campanha: equipes ====================
+// Núcleo da plataforma (não é regra de sistema) — grupos/facções, usados do
+// mesmo jeito em qualquer Mesa, seja ela P&P, D&D ou outro sistema.
+const equipeModal = document.getElementById("modal-equipe");
+const formEquipe = document.getElementById("form-equipe");
+
+function openEquipeModal(equipe) {
+  document.getElementById("equipe-modal-title").textContent = equipe ? "Editar equipe" : "Nova equipe";
+  document.getElementById("equipe-id").value = equipe ? equipe.id : "";
+  document.getElementById("equipe-nome").value = equipe ? equipe.nome : "";
+  document.getElementById("equipe-descricao").value = equipe ? equipe.descricao : "";
+  document.getElementById("equipe-tags").value = equipe ? equipe.tags.join(", ") : "";
+  equipeModal.classList.remove("hidden");
+}
+function closeEquipeModal() { equipeModal.classList.add("hidden"); formEquipe.reset(); }
+
+document.getElementById("btn-add-equipe").addEventListener("click", () => openEquipeModal(null));
+document.getElementById("btn-cancel-equipe").addEventListener("click", closeEquipeModal);
+
+formEquipe.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("equipe-id").value;
+  const data = {
+    id: id || uid(),
+    nome: document.getElementById("equipe-nome").value.trim(),
+    descricao: document.getElementById("equipe-descricao").value.trim(),
+    tags: parseTags(document.getElementById("equipe-tags").value),
+  };
+  if (id) {
+    const idx = state.equipes.findIndex((x) => x.id === id);
+    state.equipes[idx] = data;
+  } else {
+    state.equipes.push(data);
+  }
+  saveState();
+  closeEquipeModal();
+  renderEquipes();
+});
+
+function deleteEquipe(id) {
+  if (!confirm("Excluir esta equipe?")) return;
+  state.equipes = state.equipes.filter((x) => x.id !== id);
+  saveState();
+  renderEquipes();
+}
+
+function renderEquipes() {
+  const list = document.getElementById("equipe-list");
+  if (state.equipes.length === 0) {
+    list.innerHTML = emptyState("groups", "Nenhuma equipe cadastrada ainda.");
+    return;
+  }
+  list.innerHTML = state.equipes
+    .map(
+      (eq) => `
+    <div class="objective-row">
+      <span>${escapeHtml(eq.nome)}</span>
+      <button class="icon-btn" data-equipe-edit="${eq.id}" title="Editar"><span class="icon">edit</span></button>
+      <button class="icon-btn" data-equipe-delete="${eq.id}" title="Remover"><span class="icon">delete</span></button>
+    </div>
+  `
+    )
+    .join("");
+  list.querySelectorAll("[data-equipe-edit]").forEach((btn) =>
+    btn.addEventListener("click", () => openEquipeModal(state.equipes.find((x) => x.id === btn.dataset.equipeEdit)))
+  );
+  list.querySelectorAll("[data-equipe-delete]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteEquipe(btn.dataset.equipeDelete))
+  );
+}
+
+// ==================== Campanha: construções ====================
+const construcaoModal = document.getElementById("modal-construcao");
+const formConstrucao = document.getElementById("form-construcao");
+
+function openConstrucaoModal(construcao) {
+  document.getElementById("construcao-modal-title").textContent = construcao ? "Editar construção" : "Nova construção";
+  document.getElementById("construcao-id").value = construcao ? construcao.id : "";
+  document.getElementById("construcao-nome").value = construcao ? construcao.nome : "";
+  document.getElementById("construcao-descricao").value = construcao ? construcao.descricao : "";
+  document.getElementById("construcao-tags").value = construcao ? construcao.tags.join(", ") : "";
+  construcaoModal.classList.remove("hidden");
+}
+function closeConstrucaoModal() { construcaoModal.classList.add("hidden"); formConstrucao.reset(); }
+
+document.getElementById("btn-add-construcao").addEventListener("click", () => openConstrucaoModal(null));
+document.getElementById("btn-cancel-construcao").addEventListener("click", closeConstrucaoModal);
+
+formConstrucao.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("construcao-id").value;
+  const data = {
+    id: id || uid(),
+    nome: document.getElementById("construcao-nome").value.trim(),
+    descricao: document.getElementById("construcao-descricao").value.trim(),
+    tags: parseTags(document.getElementById("construcao-tags").value),
+  };
+  if (id) {
+    const idx = state.construcoes.findIndex((x) => x.id === id);
+    state.construcoes[idx] = data;
+  } else {
+    state.construcoes.push(data);
+  }
+  saveState();
+  closeConstrucaoModal();
+  renderConstrucoes();
+});
+
+function deleteConstrucao(id) {
+  if (!confirm("Excluir esta construção?")) return;
+  state.construcoes = state.construcoes.filter((x) => x.id !== id);
+  saveState();
+  renderConstrucoes();
+}
+
+function renderConstrucoes() {
+  const list = document.getElementById("construcao-list");
+  if (state.construcoes.length === 0) {
+    list.innerHTML = emptyState("cottage", "Nenhuma construção cadastrada ainda.");
+    return;
+  }
+  list.innerHTML = state.construcoes
+    .map(
+      (c) => `
+    <div class="objective-row">
+      <span>${escapeHtml(c.nome)}</span>
+      <button class="icon-btn" data-construcao-edit="${c.id}" title="Editar"><span class="icon">edit</span></button>
+      <button class="icon-btn" data-construcao-delete="${c.id}" title="Remover"><span class="icon">delete</span></button>
+    </div>
+  `
+    )
+    .join("");
+  list.querySelectorAll("[data-construcao-edit]").forEach((btn) =>
+    btn.addEventListener("click", () => openConstrucaoModal(state.construcoes.find((x) => x.id === btn.dataset.construcaoEdit)))
+  );
+  list.querySelectorAll("[data-construcao-delete]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteConstrucao(btn.dataset.construcaoDelete))
+  );
+}
+
 // ==================== Campanha: notas ====================
 const noteModal = document.getElementById("modal-note");
 const formNote = document.getElementById("form-note");
@@ -5818,6 +5958,8 @@ function renderAll() {
   renderConsequences();
   renderClues();
   renderSecrets();
+  renderEquipes();
+  renderConstrucoes();
   renderNotes();
   renderSessions();
   renderCenaAtualBar();
@@ -6536,6 +6678,23 @@ function openEntityPanel(tipo, entity) {
     entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openAmbienteModal(entity, entity.locationId); });
     const shareAmbBtn = entityPanelContent.querySelector("[data-entity-share-ambiente]");
     if (shareAmbBtn) shareAmbBtn.addEventListener("click", () => { toggleSharedText("ambiente", entity.id); openEntityPanel("ambiente", entity); });
+  } else if (tipo === "equipe" || tipo === "construcao") {
+    const kicker = tipo === "equipe" ? "Equipe" : "Construção";
+    html = `
+      <div class="entity-panel-kicker">${kicker}</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      ${entity.descricao ? `<div class="entity-panel-section">${linkifyText(entity.descricao)}</div>` : ""}
+      ${entityRelatedSectionHtml(relatedByTags(entity.tags || [], tipo, entity.id))}
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => {
+      closeEntityPanel();
+      if (tipo === "equipe") openEquipeModal(entity);
+      else openConstrucaoModal(entity);
+    });
   } else if (tipo === "clue") {
     html = `
       <div class="entity-panel-kicker">Pista</div>
@@ -6690,6 +6849,16 @@ function globalSearchResults(query) {
       results.push({ tipo: "Segredo", nome: s.titulo, contexto: locationLabelForTags(s.tags), go: () => openEntityPanel("secret", s) });
     }
   });
+  state.equipes.forEach((eq) => {
+    if (eq.nome.toLowerCase().includes(q) || (eq.descricao || "").toLowerCase().includes(q)) {
+      results.push({ tipo: "Equipe", nome: eq.nome, contexto: locationLabelForTags(eq.tags), go: () => openEntityPanel("equipe", eq) });
+    }
+  });
+  state.construcoes.forEach((c) => {
+    if (c.nome.toLowerCase().includes(q) || (c.descricao || "").toLowerCase().includes(q)) {
+      results.push({ tipo: "Construção", nome: c.nome, contexto: locationLabelForTags(c.tags), go: () => openEntityPanel("construcao", c) });
+    }
+  });
   // Sem isso, buscar o nome exato de um local (ex: "Cervovale") ficava enterrado
   // atrás de uma dúzia de NPCs que só têm essa palavra como tag — o nome batendo
   // de verdade tem que vir primeiro, resto (tag/texto) é desempate.
@@ -6757,6 +6926,8 @@ function muralCollections() {
     { tipo: "missao", label: "Missões", singular: "Missão", icon: "flag", list: () => state.objectives, nome: (x) => x.texto },
     { tipo: "clue", label: "Pistas", singular: "Pista", icon: "search", list: () => state.clues, nome: (x) => x.titulo },
     { tipo: "secret", label: "Segredos", singular: "Segredo", icon: "lock", list: () => state.secrets, nome: (x) => x.titulo },
+    { tipo: "equipe", label: "Equipes", singular: "Equipe", icon: "groups", list: () => state.equipes, nome: (x) => x.nome },
+    { tipo: "construcao", label: "Construções", singular: "Construção", icon: "cottage", list: () => state.construcoes, nome: (x) => x.nome },
     { tipo: "pc", label: labelPersonagemPlural(), singular: labelPersonagem(), icon: "auto_awesome", list: () => state.pcs, nome: (x) => x.nome },
   ];
 }
@@ -6777,7 +6948,7 @@ function muralEntityTags(tipo, obj) {
     const loc = state.locations.find((l) => l.id === obj.locationId);
     return loc ? [loc.tag] : [];
   }
-  if (tipo === "npc" || tipo === "monstro" || tipo === "item" || tipo === "documento" || tipo === "missao" || tipo === "clue" || tipo === "secret") {
+  if (tipo === "npc" || tipo === "monstro" || tipo === "item" || tipo === "documento" || tipo === "missao" || tipo === "clue" || tipo === "secret" || tipo === "equipe" || tipo === "construcao") {
     return obj.tags || [];
   }
   return [];

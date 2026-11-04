@@ -214,6 +214,18 @@
         </div>
         <div id="secret-list" class="objective-list"></div>
         <button id="btn-add-secret" class="btn btn-ghost"><span class="icon">add</span> Novo segredo</button>
+
+        <div class="campanha-col-header" style="margin-top:24px;">
+          <h2>Equipes</h2>
+        </div>
+        <div id="equipe-list" class="objective-list"></div>
+        <button id="btn-add-equipe" class="btn btn-ghost"><span class="icon">add</span> Nova equipe</button>
+
+        <div class="campanha-col-header" style="margin-top:24px;">
+          <h2>Construções</h2>
+        </div>
+        <div id="construcao-list" class="objective-list"></div>
+        <button id="btn-add-construcao" class="btn btn-ghost"><span class="icon">add</span> Nova construção</button>
       </div>
       <div class="campaign-block campanha-col-notas">
         <div class="campanha-col-header">
@@ -737,6 +749,52 @@
       </label>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-secret">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-equipe" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="equipe-modal-title">Nova equipe</h2>
+    <form id="form-equipe">
+      <input type="hidden" id="equipe-id">
+      <label>Nome
+        <input type="text" id="equipe-nome" required placeholder="ex: Guarda de Cervovale">
+      </label>
+      <label>Descrição / propósito
+        <textarea id="equipe-descricao" rows="3" placeholder="Quem compõe, o que querem, pra que servem"></textarea>
+      </label>
+      <label>Tags (separadas por vírgula)
+        <input type="text" id="equipe-tags" placeholder="ex: cervovale, guarda">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-equipe">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-construcao" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2 id="construcao-modal-title">Nova construção</h2>
+    <form id="form-construcao">
+      <input type="hidden" id="construcao-id">
+      <label>Nome
+        <input type="text" id="construcao-nome" required placeholder="ex: Torre da Bruxa">
+      </label>
+      <label>Descrição
+        <textarea id="construcao-descricao" rows="3" placeholder="O que é, quem mora/controla, estado atual"></textarea>
+      </label>
+      <label>Tags (separadas por vírgula)
+        <input type="text" id="construcao-tags" placeholder="ex: cervovale">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-construcao">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>
