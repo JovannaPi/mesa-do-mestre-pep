@@ -25,6 +25,7 @@
         <input type="text" id="global-search" class="input" placeholder="Buscar em tudo... (NPC, item, local, missão)" autocomplete="off">
         <div id="global-search-results" class="global-search-results hidden"></div>
       </div>
+      <button id="btn-mesas" class="btn btn-ghost" title="Trocar de Mesa"><span class="icon">view_agenda</span> Mesas</button>
       <button id="btn-rename-campaign" class="btn btn-ghost" title="Renomear campanha"><span class="icon">edit</span> Renomear</button>
       <button id="btn-export" class="btn btn-ghost" title="Exportar backup (.json)"><span class="icon">download</span> Backup</button>
       <label class="btn btn-ghost" title="Importar backup (.json)">
@@ -550,6 +551,40 @@
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-session">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL MESAS -->
+<div id="modal-mesas" class="modal-overlay hidden">
+  <div class="modal modal-mesas">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2>Minhas Mesas</h2>
+    <p class="field-hint">Cada Mesa é uma campanha independente, com seu próprio sistema de RPG e seus próprios dados — nada é compartilhado entre elas.</p>
+    <div id="mesas-lista" class="mesas-lista"></div>
+    <button type="button" id="btn-nova-mesa" class="btn btn-primary" style="margin-top:14px;"><span class="icon">add</span> Nova Mesa</button>
+  </div>
+</div>
+
+<div id="modal-nova-mesa" class="modal-overlay hidden">
+  <div class="modal">
+    <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
+    <h2>Nova Mesa</h2>
+    <form id="form-nova-mesa">
+      <label>Nome da Mesa
+        <input type="text" id="nova-mesa-nome" class="input" required placeholder="Ex: A Coroa Perdida">
+      </label>
+      <label>Sistema de RPG
+        <select id="nova-mesa-sistema" class="input">
+          <option value="pep">Perigos & Princesas</option>
+          <option value="dnd5e">D&D 5ª Edição</option>
+        </select>
+      </label>
+      <p class="field-hint">O sistema escolhido aqui fica fixo depois de criada a Mesa.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost js-close-modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Criar Mesa</button>
       </div>
     </form>
   </div>

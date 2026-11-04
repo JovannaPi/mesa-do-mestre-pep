@@ -14,6 +14,11 @@ let unsubscribe = null;
 let liveUnsubscribe = null;
 const mapCanvas = document.getElementById("player-map-canvas");
 
+// Qual Mesa abrir vem da URL (?mesa=id) — o link que a Mestra manda pras
+// jogadoras de cada Mesa carrega um id diferente. Sem o parâmetro, cai na
+// Mesa "cervovale" pra links antigos continuarem funcionando.
+const mesaId = new URLSearchParams(location.search).get("mesa") || "cervovale";
+
 // Posição dos marcadores, mapa ativo e visibilidade vêm de um documento separado e
 // pequeno no Firestore (veja firebase-config.js) — assim mover um marcador nunca precisa
 // reenviar a campanha inteira, só essa parte pequena. Isso é o que fazia o mapa demorar
@@ -116,7 +121,7 @@ async function persistTokenMove() {
   setStatus("Salvando posição...");
   try {
     const mod = await import("./firebase-config.js");
-    const ok = await mod.saveLiveState({
+    const ok = await mod.saveLiveState(mesaId, {
       tokenPositions: buildTokenPositionsFromState(latestState),
       activeMapId: latestState.activeMapId,
       mapaVisivelJogadores: latestState.mapaVisivelJogadores,
@@ -386,7 +391,7 @@ function notifyIfNewContent(state) {
 // ou puxar um item já cadastrado no Compêndio da Mestra (com a descrição junto). As
 // mudanças são salvas direto no Firestore (só o campo "pcs", pra não arriscar sobrescrever
 // outra parte do estado que a Mestra esteja editando ao mesmo tempo).
-const PC_STORAGE_KEY = "mesaJogadoraPcId";
+const PC_STORAGE_KEY = "mesaJogadoraPcId:" + mesaId; // por Mesa, pra não misturar "qual é minha ficha" entre campanhas diferentes no mesmo aparelho
 let fbMod = null;
 
 function getSelectedPcId() {
@@ -455,7 +460,7 @@ async function persistPcs() {
   setStatus("Salvando...");
   try {
     if (!fbMod) fbMod = await import("./firebase-config.js");
-    const ok = await fbMod.savePcs(latestState.pcs);
+    const ok = await fbMod.savePcs(mesaId, latestState.pcs);
     setStatus(ok ? "Conectado" : "Sem conexão — a mudança pode não ter sido salva");
   } catch (err) {
     setStatus("Sem conexão — a mudança pode não ter sido salva");
@@ -797,7 +802,7 @@ async function start() {
     setStatus("Não foi possível conectar. Verifique sua internet e recarregue a página.");
     return;
   }
-  const [initial, initialLive] = await Promise.all([mod.loadCloudState(), mod.loadLiveState()]);
+  const [initial, initialLive] = await Promise.all([mod.loadCloudState(mesaId), mod.loadLiveState(mesaId)]);
   if (initial) {
     latestState = initial;
     latestLive = initialLive;
@@ -808,6 +813,7 @@ async function start() {
     setStatus("Aguardando a Mestra iniciar a campanha...");
   }
   unsubscribe = mod.subscribeToState(
+    mesaId,
     (state) => {
       latestState = state;
       if (latestLive) applyLiveIntoState(latestLive);
@@ -817,6 +823,7 @@ async function start() {
     () => setStatus("Conexão perdida — tentando de novo...")
   );
   liveUnsubscribe = mod.subscribeToLiveState(
+    mesaId,
     (live) => {
       latestLive = live;
       if (latestState) {

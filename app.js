@@ -1,4 +1,89 @@
-const STORAGE_KEY = "mestre-pep-data-v2";
+const STORAGE_KEY = "mestre-pep-data-v2"; // prefixo; a chave real de cada Mesa é STORAGE_KEY + ":" + mesaId
+const MESAS_INDEX_KEY = "mestre-pep-mesas";
+const MESA_ATUAL_KEY = "mestre-pep-mesa-atual";
+
+// ==================== MESAS (campanhas independentes) ====================
+// Cada Mesa é um ambiente de campanha completo e isolado — tem seu próprio
+// sistema de RPG e seus próprios dados (NPCs, mapas, mural, tudo). O índice
+// abaixo guarda só os metadados de todas as Mesas; o conteúdo de cada uma
+// fica numa chave própria do localStorage, lida sob demanda.
+function mesaDataKey(mesaId) {
+  return STORAGE_KEY + ":" + mesaId;
+}
+
+function listMesas() {
+  try {
+    const raw = localStorage.getItem(MESAS_INDEX_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveMesasIndex(lista) {
+  localStorage.setItem(MESAS_INDEX_KEY, JSON.stringify(lista));
+}
+
+function getMesaAtualId() {
+  return localStorage.getItem(MESA_ATUAL_KEY);
+}
+
+function setMesaAtualId(id) {
+  localStorage.setItem(MESA_ATUAL_KEY, id);
+}
+
+// Migra o formato antigo (uma única campanha, sem conceito de Mesa) pra
+// dentro da primeira Mesa ("Cervovale", sistema Perigos & Princesas). Nunca
+// apaga a chave antiga — ela fica como backup intocado, e só é copiada (não
+// movida) pra nova chave, então mesmo se algo falhar no meio, nada se perde:
+// o pior caso é a migração rodar de novo no próximo carregamento.
+function migrarParaMesasSeNecessario() {
+  if (listMesas().length > 0) return;
+  const legado = localStorage.getItem(STORAGE_KEY);
+  if (!legado) return; // instalação nova, sem dado nenhum pra migrar
+  const mesaId = "cervovale";
+  localStorage.setItem(mesaDataKey(mesaId), legado);
+  const confirmacao = localStorage.getItem(mesaDataKey(mesaId));
+  if (confirmacao !== legado) return; // cópia falhou, tenta de novo no próximo load
+  saveMesasIndex([{ id: mesaId, nome: "Cervovale", sistemaId: "pep", criadaEm: Date.now(), atualizadoEm: Date.now() }]);
+  setMesaAtualId(mesaId);
+}
+
+function criarMesa(nome, sistemaId) {
+  const id = uid();
+  const lista = listMesas();
+  lista.push({ id, nome, sistemaId, criadaEm: Date.now(), atualizadoEm: Date.now() });
+  saveMesasIndex(lista);
+  const novaState = defaultState();
+  novaState.campaignName = nome;
+  localStorage.setItem(mesaDataKey(id), JSON.stringify(novaState));
+  return id;
+}
+
+function renomearMesa(id, novoNome) {
+  const lista = listMesas();
+  const m = lista.find((x) => x.id === id);
+  if (!m) return;
+  m.nome = novoNome;
+  saveMesasIndex(lista);
+}
+
+function excluirMesa(id) {
+  saveMesasIndex(listMesas().filter((x) => x.id !== id));
+  localStorage.removeItem(mesaDataKey(id));
+}
+
+function tocarAtualizacaoMesa(id) {
+  const lista = listMesas();
+  const m = lista.find((x) => x.id === id);
+  if (!m) return;
+  m.atualizadoEm = Date.now();
+  saveMesasIndex(lista);
+}
+
+function nomeSistema(sistemaId) {
+  return sistemaId === "dnd5e" ? "D&D 5ª Edição" : "Perigos & Princesas";
+}
 
 // Carregado sob demanda (import dinâmico) para que uma falha de rede ao buscar o
 // Firebase nunca impeça o resto do app (que funciona 100% offline) de rodar.
@@ -115,8 +200,8 @@ function defaultState() {
   };
 }
 
-function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
+function loadState(mesaId) {
+  const raw = localStorage.getItem(mesaDataKey(mesaId));
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
@@ -126,7 +211,14 @@ function loadState() {
   return defaultState();
 }
 
-let state = loadState();
+migrarParaMesasSeNecessario();
+let mesaAtualId = getMesaAtualId();
+if (!mesaAtualId || !listMesas().some((m) => m.id === mesaAtualId)) {
+  const lista = listMesas();
+  mesaAtualId = lista.length ? lista[0].id : null;
+  if (mesaAtualId) setMesaAtualId(mesaAtualId);
+}
+let state = mesaAtualId ? loadState(mesaAtualId) : defaultState();
 
 let cloudSyncTimer = null;
 function setSyncStatus(text) {
@@ -136,19 +228,21 @@ function setSyncStatus(text) {
 
 async function pushToCloud() {
   const mod = await getCloudModule();
-  if (!mod) {
+  if (!mod || !mesaAtualId) {
     setSyncStatus("Salvo só localmente (sem nuvem)");
     return;
   }
   setSyncStatus("Salvando na nuvem...");
-  const ok = await mod.saveCloudState(state);
+  const ok = await mod.saveCloudState(mesaAtualId, state);
   setSyncStatus(ok ? "Sincronizado" : "Salvo só localmente (sem nuvem)");
 }
 
 // immediate=true pula o debounce — usado para ações únicas e sensíveis a tempo,
 // como soltar um marcador no mapa, para o outro lado ver o movimento na hora.
 function saveState(immediate) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!mesaAtualId) return; // sem Mesa aberta ainda (ex.: instalação nova na tela "Minhas Mesas")
+  localStorage.setItem(mesaDataKey(mesaAtualId), JSON.stringify(state));
+  tocarAtualizacaoMesa(mesaAtualId);
   clearTimeout(cloudSyncTimer);
   if (immediate) {
     pushToCloud();
@@ -163,33 +257,46 @@ function saveState(immediate) {
 // com NPCs/itens/texto) chegar, senão ele traria de volta posições desatualizadas.
 let lastLiveSnapshot = null;
 
+// Cancela as assinaturas do Firestore da Mesa anterior antes de trocar de Mesa —
+// senão um snapshot atrasado da Mesa antiga podia chegar e sobrescrever a nova.
+let cancelarSyncAtual = null;
+
 function anyModalOpen() {
   return !!document.querySelector(".modal-overlay:not(.hidden)");
 }
 
 async function bootstrapCloudSync() {
+  if (cancelarSyncAtual) {
+    cancelarSyncAtual();
+    cancelarSyncAtual = null;
+  }
+  if (!mesaAtualId) return;
+  const mesaDaAssinatura = mesaAtualId;
   setSyncStatus("Conectando à nuvem...");
   const mod = await getCloudModule();
   if (!mod) {
     setSyncStatus("Salvo só localmente (sem nuvem)");
     return;
   }
-  const cloud = await mod.loadCloudState();
+  if (mesaAtualId !== mesaDaAssinatura) return; // trocou de Mesa enquanto conectava
+  const cloud = await mod.loadCloudState(mesaDaAssinatura);
+  if (mesaAtualId !== mesaDaAssinatura) return;
   if (cloud) {
     state = Object.assign(defaultState(), cloud);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(mesaDataKey(mesaDaAssinatura), JSON.stringify(state));
     renderAll();
     setSyncStatus("Sincronizado");
   } else {
     setSyncStatus("Salvando na nuvem...");
-    const ok = await mod.saveCloudState(state);
+    const ok = await mod.saveCloudState(mesaDaAssinatura, state);
     setSyncStatus(ok ? "Sincronizado" : "Salvo só localmente (sem nuvem)");
   }
 
   // Assinatura contínua — assim, uma mudança feita no celular aparece sozinha no
   // computador (e vice-versa) sem precisar recarregar a página. Só não aplica
   // enquanto um modal estiver aberto, pra não perder uma edição em andamento.
-  mod.subscribeToState(
+  const cancelState = mod.subscribeToState(
+    mesaDaAssinatura,
     (cloud2) => {
       if (anyModalOpen()) return;
       state = Object.assign(defaultState(), cloud2);
@@ -198,21 +305,26 @@ async function bootstrapCloudSync() {
         state.activeMapId = lastLiveSnapshot.activeMapId ?? state.activeMapId;
         state.mapaVisivelJogadores = lastLiveSnapshot.mapaVisivelJogadores ?? state.mapaVisivelJogadores;
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(mesaDataKey(mesaDaAssinatura), JSON.stringify(state));
       renderAll();
       setSyncStatus("Sincronizado");
     },
     () => setSyncStatus("Conexão com a nuvem perdida — tentando de novo...")
   );
 
-  mod.subscribeToLiveState((live) => {
+  const cancelLive = mod.subscribeToLiveState(mesaDaAssinatura, (live) => {
     lastLiveSnapshot = live;
     applyTokenPositions(live.tokenPositions);
     state.activeMapId = live.activeMapId ?? state.activeMapId;
     state.mapaVisivelJogadores = live.mapaVisivelJogadores ?? state.mapaVisivelJogadores;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(mesaDataKey(mesaDaAssinatura), JSON.stringify(state));
     if (document.getElementById("tab-mapa").classList.contains("active")) renderMap();
   });
+
+  cancelarSyncAtual = () => {
+    cancelState();
+    cancelLive();
+  };
 }
 
 // ==================== SEED DATA (Cervovale) ====================
@@ -2151,8 +2263,8 @@ function applyTokenPositions(tokenPositions) {
 
 async function pushLiveOnly() {
   const mod = await getCloudModule();
-  if (!mod) return;
-  await mod.saveLiveState({
+  if (!mod || !mesaAtualId) return;
+  await mod.saveLiveState(mesaAtualId, {
     tokenPositions: buildTokenPositions(),
     activeMapId: state.activeMapId,
     mapaVisivelJogadores: state.mapaVisivelJogadores,
@@ -2218,6 +2330,101 @@ document.getElementById("btn-rename-campaign").addEventListener("click", () => {
     document.getElementById("campaign-name").textContent = state.campaignName;
     saveState();
   }
+});
+
+// ---------- Mesas (trocar/criar/renomear/excluir) ----------
+function switchMesa(id) {
+  if (id === mesaAtualId) return;
+  mesaAtualId = id;
+  setMesaAtualId(id);
+  state = loadState(id);
+  document.getElementById("campaign-name").textContent = state.campaignName;
+  renderAll();
+  bootstrapCloudSync();
+}
+
+function renderMesasModal() {
+  const wrap = document.getElementById("mesas-lista");
+  const lista = listMesas().sort((a, b) => b.atualizadoEm - a.atualizadoEm);
+  wrap.innerHTML = lista.length
+    ? lista
+        .map(
+          (m) => `
+    <div class="mesa-card ${m.id === mesaAtualId ? "atual" : ""}">
+      <div class="mesa-card-info">
+        <div class="mesa-card-nome">${escapeHtml(m.nome)}${m.id === mesaAtualId ? '<span class="mesa-card-badge-atual">aberta agora</span>' : ""}</div>
+        <div class="mesa-card-meta">${escapeHtml(nomeSistema(m.sistemaId))}</div>
+      </div>
+      <div class="mesa-card-actions">
+        ${m.id !== mesaAtualId ? `<button type="button" class="btn btn-secondary" data-mesa-abrir="${m.id}">Abrir</button>` : ""}
+        <button type="button" class="btn icon-only" title="Renomear" data-mesa-renomear="${m.id}"><span class="icon">edit</span></button>
+        <button type="button" class="btn icon-only" title="Excluir" style="color:var(--danger);" data-mesa-excluir="${m.id}"><span class="icon">delete</span></button>
+      </div>
+    </div>`
+        )
+        .join("")
+    : emptyState("view_agenda", "Nenhuma Mesa ainda. Crie a primeira pra começar.");
+
+  wrap.querySelectorAll("[data-mesa-abrir]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      switchMesa(btn.dataset.mesaAbrir);
+      document.getElementById("modal-mesas").classList.add("hidden");
+    })
+  );
+  wrap.querySelectorAll("[data-mesa-renomear]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.mesaRenomear;
+      const atual = listMesas().find((m) => m.id === id);
+      const novoNome = prompt("Novo nome da Mesa:", atual ? atual.nome : "");
+      if (!novoNome || !novoNome.trim()) return;
+      renomearMesa(id, novoNome.trim());
+      if (id === mesaAtualId) {
+        state.campaignName = novoNome.trim();
+        saveState();
+        document.getElementById("campaign-name").textContent = state.campaignName;
+      }
+      renderMesasModal();
+    })
+  );
+  wrap.querySelectorAll("[data-mesa-excluir]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.mesaExcluir;
+      const atual = listMesas().find((m) => m.id === id);
+      if (!atual) return;
+      if (id === mesaAtualId) {
+        alert("Não dá pra excluir a Mesa que está aberta agora. Abra outra Mesa primeiro.");
+        return;
+      }
+      const digitado = prompt(`Essa ação apaga TODOS os dados de "${atual.nome}" — NPCs, mapas, tudo. Não tem volta.\n\nDigite o nome da Mesa pra confirmar:`);
+      if (digitado !== atual.nome) {
+        if (digitado !== null) alert("Nome não confere — nada foi excluído.");
+        return;
+      }
+      excluirMesa(id);
+      renderMesasModal();
+    })
+  );
+}
+
+document.getElementById("btn-mesas").addEventListener("click", () => {
+  renderMesasModal();
+  document.getElementById("modal-mesas").classList.remove("hidden");
+});
+
+document.getElementById("btn-nova-mesa").addEventListener("click", () => {
+  document.getElementById("modal-mesas").classList.add("hidden");
+  document.getElementById("form-nova-mesa").reset();
+  document.getElementById("modal-nova-mesa").classList.remove("hidden");
+});
+
+document.getElementById("form-nova-mesa").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const nome = document.getElementById("nova-mesa-nome").value.trim();
+  const sistemaId = document.getElementById("nova-mesa-sistema").value;
+  if (!nome) return;
+  const id = criarMesa(nome, sistemaId);
+  document.getElementById("modal-nova-mesa").classList.add("hidden");
+  switchMesa(id);
 });
 
 // ---------- Backup / restore ----------
@@ -4529,7 +4736,7 @@ function attachTokenDrag(el, token) {
       let y = ((e.clientY - rect.top) / rect.height) * 100;
       token.x = Math.max(0, Math.min(100, x));
       token.y = Math.max(0, Math.min(100, y));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (mesaAtualId) localStorage.setItem(mesaDataKey(mesaAtualId), JSON.stringify(state));
       pushLiveOnly();
     } else {
       openTokenModal(token, false);
@@ -5215,6 +5422,14 @@ function renderAll() {
 
 renderAll();
 bootstrapCloudSync();
+
+// Instalação nova, sem Mesa nenhuma ainda (não é o caso da Jovanna, que já
+// tem a Cervovale migrada automaticamente, mas cobre quem abrir o app do
+// zero): abre direto a tela de Mesas pra criar a primeira.
+if (!mesaAtualId) {
+  renderMesasModal();
+  document.getElementById("modal-mesas").classList.remove("hidden");
+}
 
 // ==================== Ferramentas de mesa: um botão por ferramenta ====================
 const TOOL_PANELS = {

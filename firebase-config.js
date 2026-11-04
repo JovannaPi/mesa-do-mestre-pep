@@ -44,11 +44,18 @@ const authReady = new Promise((resolve) => {
   });
 });
 
-const campaignDocRef = doc(db, "campaign", "main");
+// Um documento por Mesa (campanha independente), em vez do antigo caminho fixo
+// "campaign/main" — assim várias Mesas sincronizam cada uma pro seu próprio lugar,
+// sem misturar dado de uma Mesa na outra.
+function campaignDocRef(mesaId) {
+  return doc(db, "mesas", mesaId);
+}
 // Documento separado e pequeno, só com o que muda toda hora durante o jogo (posição dos
 // marcadores no mapa). Arrastar um marcador não deveria reenviar a campanha inteira
 // (NPCs, itens, texto da aventura...) pro Firestore — era isso que deixava o mapa lento.
-const liveDocRef = doc(db, "campaign", "live");
+function liveDocRef(mesaId) {
+  return doc(db, "mesas", mesaId, "estado", "live");
+}
 
 // Espera o login anônimo, mas nunca trava pra sempre: se "Anonymous" ainda não estiver
 // ativado no console (ou a rede estiver ruim), segue em frente depois de um tempo — a
@@ -59,10 +66,10 @@ function authReadyOrTimeout() {
   return Promise.race([authReady, new Promise((resolve) => setTimeout(resolve, 5000))]);
 }
 
-export async function loadCloudState() {
+export async function loadCloudState(mesaId) {
   try {
     await authReadyOrTimeout();
-    const snap = await getDoc(campaignDocRef);
+    const snap = await getDoc(campaignDocRef(mesaId));
     return snap.exists() ? snap.data() : null;
   } catch (err) {
     console.warn("Não foi possível carregar do Firestore (seguindo com dados locais):", err);
@@ -74,10 +81,10 @@ export async function loadCloudState() {
 // só o campo "pcs" no Firestore (em vez de reescrever a campanha inteira, como saveCloudState
 // faz), pra não ter risco de apagar uma mudança que a Mestra tenha feito em outra parte do
 // estado ao mesmo tempo.
-export async function savePcs(pcs) {
+export async function savePcs(mesaId, pcs) {
   try {
     await authReadyOrTimeout();
-    await updateDoc(campaignDocRef, { pcs });
+    await updateDoc(campaignDocRef(mesaId), { pcs });
     return true;
   } catch (err) {
     console.warn("Não foi possível salvar o inventário no Firestore:", err);
@@ -85,10 +92,10 @@ export async function savePcs(pcs) {
   }
 }
 
-export async function saveCloudState(state) {
+export async function saveCloudState(mesaId, state) {
   try {
     await authReadyOrTimeout();
-    await setDoc(campaignDocRef, state);
+    await setDoc(campaignDocRef(mesaId), state);
     return true;
   } catch (err) {
     console.warn("Não foi possível salvar no Firestore (dados continuam salvos localmente):", err);
@@ -100,13 +107,13 @@ export async function saveCloudState(state) {
 // no lado da Mestra) para refletir mudanças sem precisar recarregar a página. Espera o
 // login anônimo antes de assinar, mas devolve a função de cancelar na hora (síncrono),
 // sem virar Promise — quem chama não precisa mudar nada.
-export function subscribeToState(onChange, onError) {
+export function subscribeToState(mesaId, onChange, onError) {
   let liveUnsub = null;
   let cancelled = false;
   authReadyOrTimeout().then(() => {
     if (cancelled) return;
     liveUnsub = onSnapshot(
-      campaignDocRef,
+      campaignDocRef(mesaId),
       (snap) => {
         if (snap.exists()) onChange(snap.data());
       },
@@ -122,10 +129,10 @@ export function subscribeToState(onChange, onError) {
   };
 }
 
-export async function loadLiveState() {
+export async function loadLiveState(mesaId) {
   try {
     await authReadyOrTimeout();
-    const snap = await getDoc(liveDocRef);
+    const snap = await getDoc(liveDocRef(mesaId));
     return snap.exists() ? snap.data() : null;
   } catch (err) {
     console.warn("Não foi possível carregar a posição ao vivo do mapa:", err);
@@ -133,10 +140,10 @@ export async function loadLiveState() {
   }
 }
 
-export async function saveLiveState(liveData) {
+export async function saveLiveState(mesaId, liveData) {
   try {
     await authReadyOrTimeout();
-    await setDoc(liveDocRef, liveData);
+    await setDoc(liveDocRef(mesaId), liveData);
     return true;
   } catch (err) {
     console.warn("Não foi possível salvar a posição ao vivo do mapa:", err);
@@ -144,13 +151,13 @@ export async function saveLiveState(liveData) {
   }
 }
 
-export function subscribeToLiveState(onChange, onError) {
+export function subscribeToLiveState(mesaId, onChange, onError) {
   let liveUnsub = null;
   let cancelled = false;
   authReadyOrTimeout().then(() => {
     if (cancelled) return;
     liveUnsub = onSnapshot(
-      liveDocRef,
+      liveDocRef(mesaId),
       (snap) => {
         if (snap.exists()) onChange(snap.data());
       },
