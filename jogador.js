@@ -301,6 +301,7 @@ const DND5E_ATRIBUTOS = [
   { key: "sab", label: "Sabedoria" },
   { key: "car", label: "Carisma" },
 ];
+const T20_ATRIBUTOS = DND5E_ATRIBUTOS;
 function modDnd(valor) {
   return Math.floor((Number(valor || 10) - 10) / 2);
 }
@@ -323,6 +324,23 @@ function renderPcStats(state) {
         ${DND5E_ATRIBUTOS.map((a) => `<div class="stat-box"><span>${escapeHtml(a.label)}</span><b>${(f.atributos && f.atributos[a.key]) || 10}</b></div>`).join("")}
         <div class="stat-box"><span>CA</span><b>${f.ca}</b></div>
         <div class="stat-box"><span>PV</span><b>${f.pvAtual}/${f.pvMax}</b></div>
+        <div class="pc-hp-bar-wrap"><div class="pc-hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
+      </div>
+    `;
+    box.style.display = "";
+    return;
+  }
+  if (state.sistemaId === "tormenta20" && pc.ficha) {
+    const f = pc.ficha;
+    const hpPct = f.pvMax > 0 ? (f.pvAtual / f.pvMax) * 100 : 0;
+    const hpClass = hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : "";
+    box.innerHTML = `
+      <h2 class="pc-stats-title">${escapeHtml(pc.nome)} <small>— Nível ${f.nivel || 1}</small></h2>
+      <div class="pc-stats-grid">
+        ${T20_ATRIBUTOS.map((a) => `<div class="stat-box"><span>${escapeHtml(a.label)}</span><b>${(f.atributos && f.atributos[a.key]) || 0}</b></div>`).join("")}
+        <div class="stat-box"><span>Defesa</span><b>${f.defesa}</b></div>
+        <div class="stat-box"><span>PV</span><b>${f.pvAtual}/${f.pvMax}</b></div>
+        ${f.pmMax ? `<div class="stat-box"><span>PM</span><b>${f.pmAtual}/${f.pmMax}</b></div>` : ""}
         <div class="pc-hp-bar-wrap"><div class="pc-hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
       </div>
     `;

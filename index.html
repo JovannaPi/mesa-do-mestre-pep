@@ -344,6 +344,20 @@
           </label>
         </div>
       </div>
+      <div id="npc-campos-tormenta20" class="hidden">
+        <div class="attr-grid" id="npc-t20-atributos"></div>
+        <div class="attr-grid">
+          <label>Pontos de Vida
+            <input type="number" id="npc-t20-pv" min="0" value="10">
+          </label>
+          <label>Pontos de Mana
+            <input type="number" id="npc-t20-pm" min="0" value="0">
+          </label>
+          <label>Defesa
+            <input type="number" id="npc-t20-defesa" min="0" value="10">
+          </label>
+        </div>
+      </div>
       <label>Tags (separadas por vírgula)
         <input type="text" id="npc-tags" placeholder="ex: cervovale, chefe, bosque emaranhado">
       </label>
@@ -492,6 +506,41 @@
           </div>
         </div>
       </div>
+      <div id="pc-campos-tormenta20" class="hidden">
+        <div class="attr-grid">
+          <label>Nível
+            <input type="number" id="pc-t20-nivel" min="1" max="20" value="1">
+          </label>
+          <label>PV (máx.)
+            <input type="number" id="pc-t20-pv-max" min="0" value="10">
+          </label>
+          <label>PM (máx.)
+            <input type="number" id="pc-t20-pm-max" min="0" value="0">
+          </label>
+        </div>
+        <div class="attr-grid" id="pc-t20-atributos"></div>
+        <div class="attr-grid">
+          <label>Defesa
+            <input type="number" id="pc-t20-defesa" min="0" value="10">
+          </label>
+          <label>Raça
+            <input type="text" id="pc-t20-raca" placeholder="ex: Humano, Elfo, Anão">
+          </label>
+          <label>Classe
+            <input type="text" id="pc-t20-classe" placeholder="ex: Guerreiro, Arcanista">
+          </label>
+        </div>
+        <div class="field-label-block">
+          <span class="field-label-text">Perícias (marque as treinadas — ★ só pode usar se treinada)</span>
+          <div id="pc-t20-pericias" class="pericias-grid"></div>
+        </div>
+        <label>Arma / equipamento
+          <input type="text" id="pc-t20-arma" placeholder="ex: Espada longa, Arco longo">
+        </label>
+        <label>Poderes, magias e habilidades
+          <textarea id="pc-t20-habilidades" rows="3" placeholder="Liste poderes de classe/origem, magias conhecidas, talentos"></textarea>
+        </label>
+      </div>
       <label>Minhas Coisas / inventário (separados por vírgula)
         <input type="text" id="pc-inventario" placeholder="ex: corda, ração, kit de costura">
       </label>
@@ -536,6 +585,20 @@
           </label>
         </div>
         <p class="field-hint">Iniciativa de D&D: d20 + modificador de Destreza, do maior pro menor.</p>
+      </div>
+      <div id="c-campos-tormenta20" class="hidden">
+        <div class="attr-grid">
+          <label>Total de Iniciativa
+            <input type="number" id="c-t20-iniciativa" value="0">
+          </label>
+          <label>Defesa
+            <input type="number" id="c-t20-defesa" min="0" value="10">
+          </label>
+          <label>PV máx.
+            <input type="number" id="c-t20-pv-max" min="0" value="10">
+          </label>
+        </div>
+        <p class="field-hint">Iniciativa de Tormenta20: d20 + total de Iniciativa (perícia), do maior pro menor.</p>
       </div>
       <label>
         <input type="checkbox" id="c-is-pc">
@@ -663,6 +726,7 @@
         <select id="nova-mesa-sistema" class="input">
           <option value="pep">Perigos & Princesas</option>
           <option value="dnd5e">D&D 5ª Edição</option>
+          <option value="tormenta20">Tormenta20</option>
         </select>
       </label>
       <p class="field-hint">O sistema escolhido aqui fica fixo depois de criada a Mesa.</p>
