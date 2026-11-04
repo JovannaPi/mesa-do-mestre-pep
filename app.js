@@ -5266,6 +5266,7 @@ function getTokenVisual(token) {
   if (token.origemTipo === "pc") {
     const pc = state.pcs.find((p) => p.id === token.origemId);
     if (!pc) return null;
+    if (pc.ficha) return { foto: pc.foto || null, hpAtual: pc.ficha.pvAtual, hpMax: pc.ficha.pvMax };
     return { foto: pc.foto || null, hpAtual: pc.coracaoAtual, hpMax: pc.coracaoMax };
   }
   if (token.origemTipo === "npc") {
@@ -6684,19 +6685,23 @@ function openEntityPanel(tipo, entity) {
   let html = "";
   if (tipo === "npc") {
     const isMonster = entity.tipo === "Monstro";
-    html = `
-      <div class="entity-panel-kicker">${escapeHtml(entity.tipo)}</div>
-      <h2>${escapeHtml(entity.nome)}</h2>
-      ${entityPanelFotoHtml(entity, "npc")}
-      <div class="npc-stat-grid">
+    const isDndNpc = entity.ficha && entity.ficha.sistemaId === "dnd5e";
+    const npcStatGrid = isDndNpc
+      ? SISTEMAS.dnd5e.atributos.map((a) => `<div class="stat-box"><span>${escapeHtml(a.label)}</span><b>${fmtMod(modDnd(entity.ficha.atributos ? entity.ficha.atributos[a.key] : 10))}</b></div>`).join("") +
+        `<div class="stat-box"><span>PV</span><b>${entity.ficha.pv}</b></div><div class="stat-box"><span>CA</span><b>${entity.ficha.ca}</b></div>`
+      : `
         ${isMonster ? "" : `
         <div class="stat-box"><span>Determinação</span><b>${entity.determinacao}</b></div>
         <div class="stat-box"><span>Graça</span><b>${entity.graca}</b></div>
         <div class="stat-box"><span>Astúcia</span><b>${entity.astucia}</b></div>`}
         <div class="stat-box"><span>Coração</span><b>${entity.coracao}</b></div>
         <div class="stat-box"><span>Salvamento</span><b>${entity.salvamento}</b></div>
-        <div class="stat-box"><span>Armadura</span><b>${entity.armadura}</b></div>
-      </div>
+        <div class="stat-box"><span>Armadura</span><b>${entity.armadura}</b></div>`;
+    html = `
+      <div class="entity-panel-kicker">${escapeHtml(entity.tipo)}</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      ${entityPanelFotoHtml(entity, "npc")}
+      <div class="npc-stat-grid">${npcStatGrid}</div>
       ${entity.notas ? `<div class="entity-panel-section"><div class="entity-panel-section-title">Notas</div>${linkifyText(entity.notas)}</div>` : ""}
       ${entityRelatedSectionHtml(relatedByTags(entity.tags, "npc", entity.id))}
       <div class="entity-panel-actions">
@@ -6847,6 +6852,23 @@ function openEntityPanel(tipo, entity) {
     `;
     entityPanelContent.innerHTML = html;
     entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openDocumentoModal(entity); });
+  } else if (tipo === "pc" && entity.ficha && entity.ficha.sistemaId === "dnd5e") {
+    const f = entity.ficha;
+    const atrs = f.atributos || {};
+    html = `
+      <div class="entity-panel-kicker">${escapeHtml(labelPersonagem())}</div>
+      <h2>${escapeHtml(entity.nome)}</h2>
+      <div class="npc-stat-grid">
+        ${SISTEMAS.dnd5e.atributos.map((a) => `<div class="stat-box"><span>${escapeHtml(a.label)}</span><b>${fmtMod(modDnd(atrs[a.key]))}</b></div>`).join("")}
+        <div class="stat-box"><span>CA</span><b>${f.ca}</b></div>
+        <div class="stat-box"><span>PV</span><b>${f.pvAtual}/${f.pvMax}</b></div>
+      </div>
+      <div class="entity-panel-actions">
+        <button class="btn btn-primary" data-entity-edit>Editar</button>
+      </div>
+    `;
+    entityPanelContent.innerHTML = html;
+    entityPanelContent.querySelector("[data-entity-edit]").addEventListener("click", () => { closeEntityPanel(); openPcModal(entity); });
   } else if (tipo === "pc") {
     html = `
       <div class="entity-panel-kicker">Princesa</div>
