@@ -474,6 +474,16 @@
         <label>Arma / equipamento
           <input type="text" id="pc-dnd-arma" placeholder="ex: Espada longa +1, arco curto">
         </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="pc-dnd-conjurador"> É conjurador(a) (tem magias)
+        </label>
+        <div id="pc-dnd-conjuracao-bloco" class="hidden">
+          <p class="field-hint">Espaços de magia calculados pelo nível (tabela de conjurador completo — Bardo/Clériga/Druida/Feiticeira/Mago...). Se for meio-conjurador ou Bruxo, ajuste à mão depois de salvar.</p>
+          <div class="field-label-block">
+            <span class="field-label-text">Magias preparadas</span>
+            <div id="pc-dnd-magias" class="pericias-grid" style="max-height:260px;"></div>
+          </div>
+        </div>
       </div>
       <label>Minhas Coisas / inventário (separados por vírgula)
         <input type="text" id="pc-inventario" placeholder="ex: corda, ração, kit de costura">

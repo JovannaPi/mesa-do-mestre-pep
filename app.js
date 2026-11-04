@@ -130,8 +130,44 @@ const SISTEMAS = {
       "Envenenado(a)", "Exausto(a)", "Incapacitado(a)", "Invisível",
       "Paralisado(a)", "Petrificado(a)", "Surdo(a)",
     ],
+    // Espaços de magia por nível de personagem, tabela de conjurador completo
+    // (Bardo/Clériga/Druida/Feiticeira/Mago...). Meio-conjuradores e Bruxos
+    // (magia de pacto) progridem diferente — ajuste manual nesse caso. Só até
+    // o nível 10 por ora; framework, não simulação completa de cada classe.
+    espacosPorNivel: {
+      1: [2], 2: [3], 3: [4, 2], 4: [4, 3], 5: [4, 3, 2],
+      6: [4, 3, 3], 7: [4, 3, 3, 1], 8: [4, 3, 3, 2], 9: [4, 3, 3, 3, 1], 10: [4, 3, 3, 3, 2],
+    },
+    // Banco inicial de magias pra consulta/preparo — nomes do SRD (conteúdo
+    // aberto), com resumo mecânico escrito à parte, não copiado do livro.
+    // Pequeno de propósito: dá pra ampliar depois sem mudar a estrutura.
+    magias: [
+      { nome: "Taumaturgia", nivel: 0, escola: "Transmutação", resumo: "Efeito sobrenatural menor à distância (voz ecoando, porta tremendo, luz piscando)." },
+      { nome: "Mãos Mágicas", nivel: 0, escola: "Conjuração", resumo: "Cria uma mão espectral que manipula objetos leves à distância." },
+      { nome: "Faísca Gélida", nivel: 0, escola: "Evocação", resumo: "Ataque de dano de frio à distância; reduz a velocidade do alvo." },
+      { nome: "Fogo Elemental", nivel: 0, escola: "Evocação", resumo: "Ataque de dano de fogo à distância, com dado que cresce por nível." },
+      { nome: "Luz", nivel: 0, escola: "Evocação", resumo: "Faz um objeto emitir luz como uma tocha por um tempo." },
+      { nome: "Prestidigitação", nivel: 0, escola: "Transmutação", resumo: "Truque mágico menor — cor, cheiro, faísca, pequena limpeza ou sujeira." },
+      { nome: "Orientação", nivel: 0, escola: "Divinação", resumo: "Concede um bônus de 1d4 num teste de habilidade próprio." },
+      { nome: "Enfeitiçar Pessoa", nivel: 1, escola: "Encantamento", resumo: "Tenta tornar um humanoide amigável/sugestionável por um tempo." },
+      { nome: "Sono", nivel: 1, escola: "Encantamento", resumo: "Adormece criaturas numa área, começando pelas com menos PV." },
+      { nome: "Escudo", nivel: 1, escola: "Abjuração", resumo: "Reação que aumenta muito a CA até o próximo turno, contra um ataque." },
+      { nome: "Mísseis Mágicos", nivel: 1, escola: "Evocação", resumo: "Três dardos de força que acertam automaticamente, sem rolar ataque." },
+      { nome: "Curar Ferimentos", nivel: 1, escola: "Evocação", resumo: "Restaura PV ao toque, com dado que cresce por espaço gasto." },
+      { nome: "Detectar Magia", nivel: 1, escola: "Divinação", resumo: "Sente a presença de magia num raio curto por alguns minutos." },
+      { nome: "Névoa Obscurecente", nivel: 1, escola: "Conjuração", resumo: "Cria uma nuvem que bloqueia a visão numa área." },
+      { nome: "Invisibilidade", nivel: 2, escola: "Ilusão", resumo: "Torna uma criatura invisível até ela atacar ou conjurar." },
+      { nome: "Bola de Fogo", nivel: 3, escola: "Evocação", resumo: "Explosão de fogo numa área grande, dano alto a todos ali." },
+      { nome: "Relâmpago", nivel: 3, escola: "Evocação", resumo: "Linha de eletricidade que atravessa tudo no caminho." },
+      { nome: "Voo", nivel: 3, escola: "Transmutação", resumo: "Concede velocidade de voo a uma criatura tocada por um tempo." },
+      { nome: "Dissipar Magia", nivel: 3, escola: "Abjuração", resumo: "Encerra um efeito mágico ativo numa criatura, objeto ou efeito." },
+      { nome: "Contramágica", nivel: 3, escola: "Abjuração", resumo: "Reação que tenta anular a conjuração de outra criatura." },
+    ],
   },
 };
+const MAGIAS_DND_DESC = Object.fromEntries(
+  SISTEMAS.dnd5e.magias.map((m) => [m.nome, `<p style="margin:0;"><i>Nível ${m.nivel} — ${escapeHtml(m.escola)}</i></p><p style="margin:4px 0 0;">${escapeHtml(m.resumo)}</p>`])
+);
 
 function modDnd(valor) {
   return Math.floor((Number(valor || 10) - 10) / 2);
@@ -2774,7 +2810,7 @@ document.addEventListener("mouseover", (e) => {
   const link = e.target.closest(".ability-link");
   if (link && tooltip) {
     const term = link.dataset.ability;
-    tooltip.innerHTML = `<h4>${term}</h4>${GLOSSARY[term] || "Sem descrição."}`;
+    tooltip.innerHTML = `<h4>${term}</h4>${GLOSSARY[term] || MAGIAS_DND_DESC[term] || "Sem descrição."}`;
     const rect = link.getBoundingClientRect();
     
     // Posiciona no centro da palavra
@@ -3785,6 +3821,9 @@ const formPc = document.getElementById("form-pc");
 let currentPcFoto = null;
 setupPhotoInput("pc-foto", "pc-foto-preview", (url) => { currentPcFoto = url; });
 montarGridAtributosDnd("pc-dnd-atributos", "pc-dnd");
+document.getElementById("pc-dnd-conjurador").addEventListener("change", (e) => {
+  document.getElementById("pc-dnd-conjuracao-bloco").classList.toggle("hidden", !e.target.checked);
+});
 
 const DOM_DESCRICOES = {
   "Coração Selvagem": "Por causa de sua natureza animalística, você pode chamar as criaturas da floresta e invocá-las em seu auxílio. Talentos iniciais: Caça, Pesca, Orientação.",
@@ -3827,6 +3866,30 @@ function lerPericiasDnd(prefix) {
   return out;
 }
 
+function renderMagiasDnd(containerId, prefix, preparadas) {
+  const el = document.getElementById(containerId);
+  const marcadas = preparadas || {};
+  el.innerHTML = SISTEMAS.dnd5e.magias
+    .map(
+      (m, i) => `
+      <label class="pericia-row">
+        <input type="checkbox" id="${prefix}-magia-${i}" ${marcadas[m.nome] ? "checked" : ""}>
+        <span class="pericia-row-label">${escapeHtml(m.nome)}</span>
+        <span class="pericia-row-mod">Nv ${m.nivel}</span>
+      </label>`
+    )
+    .join("");
+}
+
+function lerMagiasDnd(prefix) {
+  const out = {};
+  SISTEMAS.dnd5e.magias.forEach((m, i) => {
+    const el = document.getElementById(`${prefix}-magia-${i}`);
+    if (el && el.checked) out[m.nome] = true;
+  });
+  return out;
+}
+
 function openPcModal(pc) {
   document.getElementById("pc-modal-title").textContent = (pc ? "Editar " : "Novo(a) ") + labelPersonagem();
   document.getElementById("pc-id").value = pc ? pc.id : "";
@@ -3846,6 +3909,9 @@ function openPcModal(pc) {
     document.getElementById("pc-dnd-dado-vida").value = f.dadoVida || "d8";
     document.getElementById("pc-dnd-arma").value = f.arma || "";
     renderPericiasDnd("pc-dnd-pericias", "pc-dnd", f);
+    document.getElementById("pc-dnd-conjurador").checked = !!f.conjurador;
+    document.getElementById("pc-dnd-conjuracao-bloco").classList.toggle("hidden", !f.conjurador);
+    renderMagiasDnd("pc-dnd-magias", "pc-dnd", f.magiasPreparadas);
   } else {
     document.getElementById("pc-dom-nome").value = pc ? pc.domNome : "";
     document.getElementById("pc-dom-descricao").value = pc ? pc.domDescricao : "";
@@ -3912,6 +3978,9 @@ formPc.addEventListener("submit", (e) => {
       arma: document.getElementById("pc-dnd-arma").value.trim(),
       pericias: lerPericiasDnd("pc-dnd"),
       condicoes: existing && existing.ficha ? existing.ficha.condicoes || {} : {},
+      conjurador: document.getElementById("pc-dnd-conjurador").checked,
+      magiasPreparadas: lerMagiasDnd("pc-dnd"),
+      espacosUsados: existing && existing.ficha ? existing.ficha.espacosUsados || {} : {},
     };
   } else {
     const coracaoMax = Number(document.getElementById("pc-coracao-max").value) || 0;
@@ -3986,6 +4055,31 @@ function pcRefChipHtml(pcId, ref) {
   `;
 }
 
+function pcMagiasHtml(p) {
+  const f = p.ficha || {};
+  const slots = SISTEMAS.dnd5e.espacosPorNivel[Math.min(f.nivel || 1, 10)] || [];
+  const usados = f.espacosUsados || {};
+  const preparadas = Object.keys(f.magiasPreparadas || {}).filter((n) => f.magiasPreparadas[n]);
+  const slotsHtml = slots
+    .map((total, i) => {
+      const nivelMagia = i + 1;
+      return `
+      <div class="pc-misc" style="margin-bottom:2px;">
+        <span>Espaços nv ${nivelMagia}:</span>
+        ${dieTrack(total, usados[nivelMagia] || 0, "pc-dnd-espaco", `${p.id}:${nivelMagia}`)}
+      </div>`;
+    })
+    .join("");
+  return `
+    <div class="npc-section-label">Conjuração</div>
+    ${slotsHtml || `<p class="field-hint">Nível ${f.nivel || 1} ainda não tem espaços de magia na tabela.</p>`}
+    <div class="pc-misc">
+      <b>Magias preparadas:</b>
+      ${preparadas.length ? preparadas.map((n) => `<span class="ability-link" data-ability="${escapeHtml(n)}">${escapeHtml(n)}</span>`).join(", ") : "<i>nenhuma marcada</i>"}
+    </div>
+  `;
+}
+
 function pcCardHtmlDnd(p) {
   const f = p.ficha || {};
   const atrs = f.atributos || {};
@@ -4030,6 +4124,7 @@ function pcCardHtmlDnd(p) {
           .join("")}
       </div>
       ${f.arma ? `<div class="pc-misc"><b>Arma/equipamento:</b> ${escapeHtml(f.arma)}</div>` : ""}
+      ${f.conjurador ? pcMagiasHtml(p) : ""}
       ${p.inventario.length ? `<div class="pc-misc"><b>Minhas coisas:</b> ${p.inventario.map(escapeHtml).join(", ")}</div>` : ""}
       <div class="pc-misc">
         <b>Do Compêndio:</b>
@@ -4189,6 +4284,19 @@ function renderPcs() {
   );
   list.querySelectorAll("[data-pc-dice-dom]").forEach((pip) =>
     pip.addEventListener("click", () => togglePcDicePip(pip.dataset.pcDiceDom, "dom", Number(pip.dataset.index)))
+  );
+  list.querySelectorAll("[data-pc-dnd-espaco]").forEach((pip) =>
+    pip.addEventListener("click", () => {
+      const [pcId, nivelMagia] = pip.dataset.pcDndEspaco.split(":");
+      const pc = state.pcs.find((p) => p.id === pcId);
+      if (!pc || !pc.ficha) return;
+      if (!pc.ficha.espacosUsados) pc.ficha.espacosUsados = {};
+      const index = Number(pip.dataset.index);
+      const atual = pc.ficha.espacosUsados[nivelMagia] || 0;
+      pc.ficha.espacosUsados[nivelMagia] = atual === index + 1 ? index : index + 1;
+      saveState();
+      renderPcs();
+    })
   );
   list.querySelectorAll("[data-pc-maldicao]").forEach((btn) =>
     btn.addEventListener("click", () => {
