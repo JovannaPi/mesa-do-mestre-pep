@@ -201,7 +201,7 @@ function labelPersonagemPlural() {
 function aplicarRotulosSistema() {
   const l = labelPersonagem();
   const elBtnAddPc = document.getElementById("label-btn-add-pc");
-  if (elBtnAddPc) elBtnAddPc.textContent = "Nova " + l;
+  if (elBtnAddPc) elBtnAddPc.textContent = (ehDnd() ? "Novo(a) " : "Nova ") + l;
   const elBtnAddFromPc = document.getElementById("label-btn-add-from-pc");
   if (elBtnAddFromPc) elBtnAddFromPc.textContent = l;
   const elCIsPc = document.getElementById("label-c-is-pc");
@@ -220,6 +220,7 @@ function aplicarRotulosSistema() {
     subtitle.innerHTML = `${escapeHtml(nomeSistema(sistemaAtualId()))} — mesa do mestre · `;
     if (statusSpan) subtitle.appendChild(statusSpan);
   }
+  document.title = `${state.campaignName || "Mesa do Mestre"} — ${nomeSistema(sistemaAtualId())}`;
 }
 
 // Monta (uma única vez) a grade de 6 atributos de D&D dentro de um
@@ -2495,6 +2496,7 @@ document.getElementById("btn-rename-campaign").addEventListener("click", () => {
   if (name && name.trim()) {
     state.campaignName = name.trim();
     document.getElementById("campaign-name").textContent = state.campaignName;
+    document.title = `${state.campaignName} — ${nomeSistema(sistemaAtualId())}`;
     saveState();
   }
 });
@@ -3866,6 +3868,29 @@ function lerPericiasDnd(prefix) {
   return out;
 }
 
+function renderSalvamentosDnd(containerId, prefix, salvamentosExistentes) {
+  const el = document.getElementById(containerId);
+  const marcados = salvamentosExistentes || {};
+  el.innerHTML = SISTEMAS.dnd5e.atributos
+    .map(
+      (a) => `
+      <label class="pericia-row">
+        <input type="checkbox" id="${prefix}-salvamento-${a.key}" ${marcados[a.key] ? "checked" : ""}>
+        <span class="pericia-row-label">${escapeHtml(a.label)}</span>
+      </label>`
+    )
+    .join("");
+}
+
+function lerSalvamentosDnd(prefix) {
+  const out = {};
+  SISTEMAS.dnd5e.atributos.forEach((a) => {
+    const el = document.getElementById(`${prefix}-salvamento-${a.key}`);
+    if (el && el.checked) out[a.key] = true;
+  });
+  return out;
+}
+
 function renderMagiasDnd(containerId, prefix, preparadas) {
   const el = document.getElementById(containerId);
   const marcadas = preparadas || {};
@@ -3907,8 +3932,10 @@ function openPcModal(pc) {
     document.getElementById("pc-dnd-ca").value = f.ca != null ? f.ca : 10;
     preencherAtributosDnd("pc-dnd", f.atributos);
     document.getElementById("pc-dnd-dado-vida").value = f.dadoVida || "d8";
+    document.getElementById("pc-dnd-classe").value = f.classe || "";
     document.getElementById("pc-dnd-arma").value = f.arma || "";
     renderPericiasDnd("pc-dnd-pericias", "pc-dnd", f);
+    renderSalvamentosDnd("pc-dnd-salvamentos", "pc-dnd", f.salvamentos);
     document.getElementById("pc-dnd-conjurador").checked = !!f.conjurador;
     document.getElementById("pc-dnd-conjuracao-bloco").classList.toggle("hidden", !f.conjurador);
     renderMagiasDnd("pc-dnd-magias", "pc-dnd", f.magiasPreparadas);
@@ -3975,8 +4002,10 @@ formPc.addEventListener("submit", (e) => {
       pvAtual: existing && existing.ficha ? Math.min(existing.ficha.pvAtual ?? pvMax, pvMax) : pvMax,
       ca: Number(document.getElementById("pc-dnd-ca").value) || 10,
       dadoVida: document.getElementById("pc-dnd-dado-vida").value.trim(),
+      classe: document.getElementById("pc-dnd-classe").value.trim(),
       arma: document.getElementById("pc-dnd-arma").value.trim(),
       pericias: lerPericiasDnd("pc-dnd"),
+      salvamentos: lerSalvamentosDnd("pc-dnd"),
       condicoes: existing && existing.ficha ? existing.ficha.condicoes || {} : {},
       conjurador: document.getElementById("pc-dnd-conjurador").checked,
       magiasPreparadas: lerMagiasDnd("pc-dnd"),
@@ -4094,12 +4123,23 @@ function pcCardHtmlDnd(p) {
           ${p.jogadora ? `<p class="pc-player">Jogadora: ${escapeHtml(p.jogadora)}</p>` : ""}
         </div>
       </div>
-      <div class="pc-dom">Nível ${f.nivel || 1} · Bônus de Proficiência ${fmtMod(prof)}</div>
+      <div class="pc-dom">${f.classe ? escapeHtml(f.classe) + " — " : ""}Nível ${f.nivel || 1} · Bônus de Proficiência ${fmtMod(prof)}</div>
       <div class="pc-stats">
         ${SISTEMAS.dnd5e.atributos
           .map((a) => `<span>${a.label.slice(0, 3).toUpperCase()} ${rollAttrBtn(p.nome, a.label, fmtMod(modDnd(atrs[a.key])), "dnd5e")}</span>`)
           .join("")}
         <span>CA <b>${f.ca}</b></span>
+      </div>
+      <div class="pc-misc">
+        <b>Salvamentos:</b>
+        ${
+          SISTEMAS.dnd5e.atributos.filter((a) => f.salvamentos && f.salvamentos[a.key]).length
+            ? SISTEMAS.dnd5e.atributos
+                .filter((a) => f.salvamentos && f.salvamentos[a.key])
+                .map((a) => `<span>${rollAttrBtn(p.nome, "Salvamento de " + a.label, fmtMod(modDnd(atrs[a.key]) + prof), "dnd5e")} ${escapeHtml(a.label)}</span>`)
+                .join(", ")
+            : "<i>nenhum com proficiência</i>"
+        }
       </div>
       <div class="hp-control">
         <button class="icon-btn" data-pc-pv-down="${p.id}"><span class="icon">remove</span></button>
@@ -6856,7 +6896,7 @@ function openEntityPanel(tipo, entity) {
     const f = entity.ficha;
     const atrs = f.atributos || {};
     html = `
-      <div class="entity-panel-kicker">${escapeHtml(labelPersonagem())}</div>
+      <div class="entity-panel-kicker">${escapeHtml(labelPersonagem())}${f.classe ? " — " + escapeHtml(f.classe) + " nv. " + (f.nivel || 1) : ""}</div>
       <h2>${escapeHtml(entity.nome)}</h2>
       <div class="npc-stat-grid">
         ${SISTEMAS.dnd5e.atributos.map((a) => `<div class="stat-box"><span>${escapeHtml(a.label)}</span><b>${fmtMod(modDnd(atrs[a.key]))}</b></div>`).join("")}
