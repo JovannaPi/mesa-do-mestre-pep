@@ -56,6 +56,7 @@ function criarMesa(nome, sistemaId) {
   saveMesasIndex(lista);
   const novaState = defaultState();
   novaState.campaignName = nome;
+  novaState.sistemaId = sistemaId;
   localStorage.setItem(mesaDataKey(id), JSON.stringify(novaState));
   return id;
 }
@@ -83,6 +84,133 @@ function tocarAtualizacaoMesa(id) {
 
 function nomeSistema(sistemaId) {
   return sistemaId === "dnd5e" ? "D&D 5ª Edição" : "Perigos & Princesas";
+}
+
+// ==================== MÓDULOS DE SISTEMA ====================
+// Cada sistema registrado aqui define sua própria mecânica (atributos,
+// perícias, resolução de teste, condições de combate). Perigos & Princesas
+// continua 100% no código já existente (não listado aqui porque não precisa
+// de config — os campos dele são fixos no próprio HTML/JS de sempre).
+// Adicionar um sistema novo no futuro (Ordem Paranormal, Tormenta20...) é
+// registrar uma entrada nova aqui + as telas dele, sem mexer no núcleo.
+const SISTEMAS = {
+  dnd5e: {
+    id: "dnd5e",
+    nome: "D&D 5ª Edição",
+    atributos: [
+      { key: "for", label: "Força" },
+      { key: "des", label: "Destreza" },
+      { key: "con", label: "Constituição" },
+      { key: "int", label: "Inteligência" },
+      { key: "sab", label: "Sabedoria" },
+      { key: "car", label: "Carisma" },
+    ],
+    pericias: [
+      { key: "acrobacia", label: "Acrobacia", atributo: "des" },
+      { key: "arcanismo", label: "Arcanismo", atributo: "int" },
+      { key: "atletismo", label: "Atletismo", atributo: "for" },
+      { key: "atuacao", label: "Atuação", atributo: "car" },
+      { key: "blefar", label: "Enganação", atributo: "car" },
+      { key: "furtividade", label: "Furtividade", atributo: "des" },
+      { key: "historia", label: "História", atributo: "int" },
+      { key: "intimidacao", label: "Intimidação", atributo: "car" },
+      { key: "intuicao", label: "Intuição", atributo: "sab" },
+      { key: "investigacao", label: "Investigação", atributo: "int" },
+      { key: "lidarComAnimais", label: "Lidar com Animais", atributo: "sab" },
+      { key: "medicina", label: "Medicina", atributo: "sab" },
+      { key: "natureza", label: "Natureza", atributo: "int" },
+      { key: "percepcao", label: "Percepção", atributo: "sab" },
+      { key: "persuasao", label: "Persuasão", atributo: "car" },
+      { key: "prestidigitacao", label: "Prestidigitação", atributo: "des" },
+      { key: "religiao", label: "Religião", atributo: "int" },
+      { key: "sobrevivencia", label: "Sobrevivência", atributo: "sab" },
+    ],
+    condicoes: [
+      "Agarrado(a)", "Atordoado(a)", "Caído(a)", "Cego(a)", "Enfeitiçado(a)",
+      "Envenenado(a)", "Exausto(a)", "Incapacitado(a)", "Invisível",
+      "Paralisado(a)", "Petrificado(a)", "Surdo(a)",
+    ],
+  },
+};
+
+function modDnd(valor) {
+  return Math.floor((Number(valor || 10) - 10) / 2);
+}
+
+function bonusProficienciaDnd(nivel) {
+  nivel = Number(nivel) || 1;
+  return 2 + Math.floor((Math.max(1, nivel) - 1) / 4);
+}
+
+function fmtMod(mod) {
+  return mod >= 0 ? "+" + mod : String(mod);
+}
+
+function sistemaAtualId() {
+  return state.sistemaId || "pep";
+}
+function ehDnd() {
+  return sistemaAtualId() === "dnd5e";
+}
+function labelPersonagem() {
+  return ehDnd() ? "Personagem" : "Princesa";
+}
+function labelPersonagemPlural() {
+  return ehDnd() ? "Personagens" : "Princesas";
+}
+
+// Troca os pedaços de texto estático do HTML que são "Princesa" (identidade de
+// Perigos & Princesas) por um rótulo genérico quando a Mesa aberta é de outro
+// sistema — sem isso, D&D ficaria com botões escritos "Nova Princesa".
+function aplicarRotulosSistema() {
+  const l = labelPersonagem();
+  const elBtnAddPc = document.getElementById("label-btn-add-pc");
+  if (elBtnAddPc) elBtnAddPc.textContent = "Nova " + l;
+  const elBtnAddFromPc = document.getElementById("label-btn-add-from-pc");
+  if (elBtnAddFromPc) elBtnAddFromPc.textContent = l;
+  const elCIsPc = document.getElementById("label-c-is-pc");
+  if (elCIsPc) elCIsPc.textContent = `É um(a) ${l} (PC)`;
+  const elPcNomeLabel = document.getElementById("label-pc-nome");
+  if (elPcNomeLabel) elPcNomeLabel.textContent = "Nome do(a) " + l;
+  const elFromPcTitle = document.getElementById("from-pc-title");
+  if (elFromPcTitle) elFromPcTitle.textContent = `Adicionar ${l} ao combate`;
+  const btnMapAddPc = document.getElementById("btn-map-add-pc");
+  if (btnMapAddPc) btnMapAddPc.title = l;
+  const btnAddFromPcHeader = document.getElementById("btn-add-from-pc");
+  if (btnAddFromPcHeader) btnAddFromPcHeader.title = "De um(a) " + l;
+  const subtitle = document.querySelector(".subtitle");
+  if (subtitle) {
+    const statusSpan = document.getElementById("sync-status");
+    subtitle.innerHTML = `${escapeHtml(nomeSistema(sistemaAtualId()))} — mesa do mestre · `;
+    if (statusSpan) subtitle.appendChild(statusSpan);
+  }
+}
+
+// Monta (uma única vez) a grade de 6 atributos de D&D dentro de um
+// contêiner vazio do HTML, reaproveitado no modal de NPC/PC/Combatente.
+function montarGridAtributosDnd(containerId, prefix) {
+  const el = document.getElementById(containerId);
+  if (!el || el.dataset.montado) return;
+  el.dataset.montado = "1";
+  el.innerHTML = SISTEMAS.dnd5e.atributos
+    .map((a) => `<label>${escapeHtml(a.label)}<input type="number" id="${prefix}-${a.key}" min="1" max="30" value="10"></label>`)
+    .join("");
+}
+
+function lerAtributosDnd(prefix) {
+  const out = {};
+  SISTEMAS.dnd5e.atributos.forEach((a) => {
+    const el = document.getElementById(`${prefix}-${a.key}`);
+    out[a.key] = el ? Number(el.value) || 10 : 10;
+  });
+  return out;
+}
+
+function preencherAtributosDnd(prefix, valores) {
+  SISTEMAS.dnd5e.atributos.forEach((a) => {
+    const el = document.getElementById(`${prefix}-${a.key}`);
+    if (el) el.value = valores && valores[a.key] != null ? valores[a.key] : 10;
+  });
 }
 
 // Carregado sob demanda (import dinâmico) para que uma falha de rede ao buscar o
@@ -146,6 +274,7 @@ async function uploadToCloudinary(fileOrDataUrl, resourceType) {
 function defaultState() {
   return {
     campaignName: "Cervovale",
+    sistemaId: "pep", // espelha o sistema da Mesa dentro do próprio state, pra jogador.js saber sem precisar do índice de Mesas
     npcs: [],
     pcs: [],
     sessions: [],
@@ -154,6 +283,8 @@ function defaultState() {
     consequences: [],
     items: [],
     documentos: [],
+    equipes: [],
+    construcoes: [],
     locations: [],
     ambientes: [],
     clues: [],
@@ -2339,6 +2470,7 @@ function switchMesa(id) {
   setMesaAtualId(id);
   state = loadState(id);
   document.getElementById("campaign-name").textContent = state.campaignName;
+  aplicarRotulosSistema();
   renderAll();
   bootstrapCloudSync();
 }
@@ -2778,6 +2910,7 @@ const npcModal = document.getElementById("modal-npc");
 const formNpc = document.getElementById("form-npc");
 let currentNpcFoto = null;
 setupPhotoInput("npc-foto", "npc-foto-preview", (url) => { currentNpcFoto = url; });
+montarGridAtributosDnd("npc-dnd-atributos", "npc-dnd");
 
 function openNpcModal(npc, defaultTipo) {
   document.getElementById("npc-modal-title").textContent = npc ? "Editar NPC/Monstro" : "Novo NPC/Monstro";
@@ -2787,12 +2920,21 @@ function openNpcModal(npc, defaultTipo) {
   currentNpcFoto = npc ? npc.foto || null : null;
   showPhotoPreview("npc-foto-preview", currentNpcFoto);
   document.getElementById("npc-tipo").value = npc ? npc.tipo : (defaultTipo || "NPC");
-  document.getElementById("npc-determinacao").value = npc ? npc.determinacao : 10;
-  document.getElementById("npc-graca").value = npc ? npc.graca : 10;
-  document.getElementById("npc-astucia").value = npc ? npc.astucia : 10;
-  document.getElementById("npc-coracao").value = npc ? npc.coracao : 10;
-  document.getElementById("npc-salvamento").value = npc ? npc.salvamento : 10;
-  document.getElementById("npc-armadura").value = npc ? npc.armadura : 0;
+  document.getElementById("npc-campos-pep").classList.toggle("hidden", ehDnd());
+  document.getElementById("npc-campos-dnd5e").classList.toggle("hidden", !ehDnd());
+  if (ehDnd()) {
+    const f = npc ? npc.ficha || {} : {};
+    preencherAtributosDnd("npc-dnd", f.atributos);
+    document.getElementById("npc-dnd-pv").value = f.pv != null ? f.pv : 10;
+    document.getElementById("npc-dnd-ca").value = f.ca != null ? f.ca : 10;
+  } else {
+    document.getElementById("npc-determinacao").value = npc ? npc.determinacao : 10;
+    document.getElementById("npc-graca").value = npc ? npc.graca : 10;
+    document.getElementById("npc-astucia").value = npc ? npc.astucia : 10;
+    document.getElementById("npc-coracao").value = npc ? npc.coracao : 10;
+    document.getElementById("npc-salvamento").value = npc ? npc.salvamento : 10;
+    document.getElementById("npc-armadura").value = npc ? npc.armadura : 0;
+  }
   document.getElementById("npc-tags").value = npc ? npc.tags.join(", ") : "";
   document.getElementById("npc-notas").value = npc ? npc.notas : "";
   npcModal.classList.remove("hidden");
@@ -2827,16 +2969,25 @@ formNpc.addEventListener("submit", (e) => {
     id: id || uid(),
     nome: document.getElementById("npc-nome").value.trim(),
     tipo: document.getElementById("npc-tipo").value,
-    determinacao: Number(document.getElementById("npc-determinacao").value) || 0,
-    graca: Number(document.getElementById("npc-graca").value) || 0,
-    astucia: Number(document.getElementById("npc-astucia").value) || 0,
-    coracao: Number(document.getElementById("npc-coracao").value) || 0,
-    salvamento: Number(document.getElementById("npc-salvamento").value) || 0,
-    armadura: Number(document.getElementById("npc-armadura").value) || 0,
     tags: parseTags(document.getElementById("npc-tags").value),
     notas: document.getElementById("npc-notas").value.trim(),
     foto: currentNpcFoto,
   };
+  if (ehDnd()) {
+    data.ficha = {
+      sistemaId: "dnd5e",
+      atributos: lerAtributosDnd("npc-dnd"),
+      pv: Number(document.getElementById("npc-dnd-pv").value) || 0,
+      ca: Number(document.getElementById("npc-dnd-ca").value) || 10,
+    };
+  } else {
+    data.determinacao = Number(document.getElementById("npc-determinacao").value) || 0;
+    data.graca = Number(document.getElementById("npc-graca").value) || 0;
+    data.astucia = Number(document.getElementById("npc-astucia").value) || 0;
+    data.coracao = Number(document.getElementById("npc-coracao").value) || 0;
+    data.salvamento = Number(document.getElementById("npc-salvamento").value) || 0;
+    data.armadura = Number(document.getElementById("npc-armadura").value) || 0;
+  }
   if (id) {
     const idx = state.npcs.findIndex((n) => n.id === id);
     state.npcs[idx] = data;
@@ -2855,20 +3006,32 @@ function deleteNpc(id) {
   renderNpcs();
 }
 
-function rollAttrBtn(entityName, label, value) {
-  return `<button type="button" class="roll-attr" data-roll-name="${escapeHtml(entityName)}" data-roll-label="${escapeHtml(label)}" data-roll-value="${value}">${value}</button>`;
+function rollAttrBtn(entityName, label, value, sistema) {
+  return `<button type="button" class="roll-attr" data-roll-sistema="${sistema || "pep"}" data-roll-name="${escapeHtml(entityName)}" data-roll-label="${escapeHtml(label)}" data-roll-value="${value}">${value}</button>`;
 }
 
 function npcCardHtml(n) {
   const isMonster = n.tipo === "Monstro";
   const isShowingFoto = n.foto && state.handoutAtivoId === n.id && (state.handoutAtivoTipo || "imagem") === "npc";
-  const statBlock = isMonster
-    ? `
+  let statBlock;
+  if (n.ficha && n.ficha.sistemaId === "dnd5e") {
+    const f = n.ficha;
+    statBlock = SISTEMAS.dnd5e.atributos
+      .map((a) => {
+        const mod = modDnd(f.atributos ? f.atributos[a.key] : 10);
+        return `<div class="stat-box"><span>${escapeHtml(a.label)}</span>${rollAttrBtn(n.nome, a.label, fmtMod(mod), "dnd5e")}</div>`;
+      })
+      .join("") +
+      `<div class="stat-box"><span>PV</span><b>${f.pv}</b></div>` +
+      `<div class="stat-box"><span>CA</span><b>${f.ca}</b></div>`;
+  } else if (isMonster) {
+    statBlock = `
       <div class="stat-box"><span>Coração</span><b>${n.coracao}</b></div>
       <div class="stat-box"><span>Salvamento</span>${rollAttrBtn(n.nome, "Salvamento", n.salvamento)}</div>
       <div class="stat-box"><span>Armadura</span><b>${n.armadura}</b></div>
-    `
-    : `
+    `;
+  } else {
+    statBlock = `
       <div class="stat-box"><span>Determinação</span>${rollAttrBtn(n.nome, "Determinação", n.determinacao)}</div>
       <div class="stat-box"><span>Graça</span>${rollAttrBtn(n.nome, "Graça", n.graca)}</div>
       <div class="stat-box"><span>Astúcia</span>${rollAttrBtn(n.nome, "Astúcia", n.astucia)}</div>
@@ -2876,6 +3039,7 @@ function npcCardHtml(n) {
       <div class="stat-box"><span>Salvamento</span>${rollAttrBtn(n.nome, "Salvamento", n.salvamento)}</div>
       <div class="stat-box"><span>Armadura</span><b>${n.armadura}</b></div>
     `;
+  }
   return `
     <div class="npc-card">
       <div class="card-header-row">
@@ -3046,7 +3210,7 @@ let giveToPcTarget = null;
 function renderGiveToPcList() {
   const list = document.getElementById("give-to-pc-list");
   if (state.pcs.length === 0) {
-    list.innerHTML = emptyState("face_3", "Nenhuma Princesa cadastrada. Crie uma na aba \"Personagens\" primeiro.");
+    list.innerHTML = emptyState("face_3", `Nenhum(a) ${labelPersonagem()} cadastrado(a). Crie na aba "Personagens" primeiro.`);
     return;
   }
   list.innerHTML = state.pcs
@@ -3082,7 +3246,7 @@ document.addEventListener("click", (e) => {
   if (!btn) return;
   giveToPcTarget = { tipo: btn.dataset.giveToPc, refId: btn.dataset.giveId };
   document.getElementById("give-to-pc-title").textContent =
-    giveToPcTarget.tipo === "documento" ? "Dar este achado a uma Princesa" : "Dar este item a uma Princesa";
+    (giveToPcTarget.tipo === "documento" ? "Dar este achado a um(a) " : "Dar este item a um(a) ") + labelPersonagem();
   renderGiveToPcList();
   giveToPcModal.classList.remove("hidden");
 });
@@ -3620,6 +3784,7 @@ const pcModal = document.getElementById("modal-pc");
 const formPc = document.getElementById("form-pc");
 let currentPcFoto = null;
 setupPhotoInput("pc-foto", "pc-foto-preview", (url) => { currentPcFoto = url; });
+montarGridAtributosDnd("pc-dnd-atributos", "pc-dnd");
 
 const DOM_DESCRICOES = {
   "Coração Selvagem": "Por causa de sua natureza animalística, você pode chamar as criaturas da floresta e invocá-las em seu auxílio. Talentos iniciais: Caça, Pesca, Orientação.",
@@ -3638,30 +3803,67 @@ document.getElementById("pc-dom-nome").addEventListener("change", (e) => {
   if (desc && !field.value.trim()) field.value = desc;
 });
 
+function renderPericiasDnd(containerId, prefix, fichaExistente) {
+  const el = document.getElementById(containerId);
+  const marcadas = (fichaExistente && fichaExistente.pericias) || {};
+  el.innerHTML = SISTEMAS.dnd5e.pericias
+    .map(
+      (p) => `
+      <label class="pericia-row">
+        <input type="checkbox" id="${prefix}-pericia-${p.key}" ${marcadas[p.key] ? "checked" : ""}>
+        <span class="pericia-row-label">${escapeHtml(p.label)}</span>
+        <span class="pericia-row-mod">${escapeHtml(SISTEMAS.dnd5e.atributos.find((a) => a.key === p.atributo).label.slice(0, 3))}</span>
+      </label>`
+    )
+    .join("");
+}
+
+function lerPericiasDnd(prefix) {
+  const out = {};
+  SISTEMAS.dnd5e.pericias.forEach((p) => {
+    const el = document.getElementById(`${prefix}-pericia-${p.key}`);
+    if (el && el.checked) out[p.key] = true;
+  });
+  return out;
+}
+
 function openPcModal(pc) {
-  document.getElementById("pc-modal-title").textContent = pc ? "Editar Princesa" : "Nova Princesa";
+  document.getElementById("pc-modal-title").textContent = (pc ? "Editar " : "Novo(a) ") + labelPersonagem();
   document.getElementById("pc-id").value = pc ? pc.id : "";
   document.getElementById("pc-nome").value = pc ? pc.nome : "";
   document.getElementById("pc-jogadora").value = pc ? pc.jogadora : "";
   document.getElementById("pc-foto").value = "";
   currentPcFoto = pc ? pc.foto || null : null;
   showPhotoPreview("pc-foto-preview", currentPcFoto);
-  document.getElementById("pc-dom-nome").value = pc ? pc.domNome : "";
-  document.getElementById("pc-dom-descricao").value = pc ? pc.domDescricao : "";
-  document.getElementById("pc-determinacao").value = pc ? pc.determinacao : 10;
-  document.getElementById("pc-graca").value = pc ? pc.graca : 10;
-  document.getElementById("pc-astucia").value = pc ? pc.astucia : 10;
-  document.getElementById("pc-coracao-max").value = pc ? pc.coracaoMax : 7;
-  document.getElementById("pc-armadura").value = pc ? pc.armadura : 0;
-  document.getElementById("pc-dinheiro").value = pc ? pc.dinheiro : 0;
-  document.getElementById("pc-dado-coracao-total").value = pc ? pc.dadoCoracaoTotal : 1;
-  document.getElementById("pc-dado-dom-total").value = pc ? pc.dadoDomTotal : 1;
-  document.getElementById("pc-arma").value = pc ? pc.arma : "";
-  document.getElementById("pc-talentos").value = pc ? pc.talentos.join(", ") : "";
+  document.getElementById("pc-campos-pep").classList.toggle("hidden", ehDnd());
+  document.getElementById("pc-campos-dnd5e").classList.toggle("hidden", !ehDnd());
+  if (ehDnd()) {
+    const f = pc ? pc.ficha || {} : {};
+    document.getElementById("pc-dnd-nivel").value = f.nivel || 1;
+    document.getElementById("pc-dnd-pv-max").value = f.pvMax != null ? f.pvMax : 10;
+    document.getElementById("pc-dnd-ca").value = f.ca != null ? f.ca : 10;
+    preencherAtributosDnd("pc-dnd", f.atributos);
+    document.getElementById("pc-dnd-dado-vida").value = f.dadoVida || "d8";
+    document.getElementById("pc-dnd-arma").value = f.arma || "";
+    renderPericiasDnd("pc-dnd-pericias", "pc-dnd", f);
+  } else {
+    document.getElementById("pc-dom-nome").value = pc ? pc.domNome : "";
+    document.getElementById("pc-dom-descricao").value = pc ? pc.domDescricao : "";
+    document.getElementById("pc-determinacao").value = pc ? pc.determinacao : 10;
+    document.getElementById("pc-graca").value = pc ? pc.graca : 10;
+    document.getElementById("pc-astucia").value = pc ? pc.astucia : 10;
+    document.getElementById("pc-coracao-max").value = pc ? pc.coracaoMax : 7;
+    document.getElementById("pc-armadura").value = pc ? pc.armadura : 0;
+    document.getElementById("pc-dinheiro").value = pc ? pc.dinheiro : 0;
+    document.getElementById("pc-dado-coracao-total").value = pc ? pc.dadoCoracaoTotal : 1;
+    document.getElementById("pc-dado-dom-total").value = pc ? pc.dadoDomTotal : 1;
+    document.getElementById("pc-arma").value = pc ? pc.arma : "";
+    document.getElementById("pc-talentos").value = pc ? pc.talentos.join(", ") : "";
+    document.getElementById("pc-trauma").value = pc ? pc.trauma : "";
+    document.getElementById("pc-maldicao-tipo").value = pc ? pc.maldicaoTipo || "" : "";
+    renderMaldicaoPicker(pc ? pc.maldicaoEstagio || 0 : 0);
+  }
   document.getElementById("pc-inventario").value = pc ? pc.inventario.join(", ") : "";
-  document.getElementById("pc-trauma").value = pc ? pc.trauma : "";
-  document.getElementById("pc-maldicao-tipo").value = pc ? pc.maldicaoTipo || "" : "";
-  renderMaldicaoPicker(pc ? pc.maldicaoEstagio || 0 : 0);
   pcModal.classList.remove("hidden");
 }
 
@@ -3689,36 +3891,52 @@ formPc.addEventListener("submit", (e) => {
   e.preventDefault();
   const id = document.getElementById("pc-id").value;
   const existing = id ? state.pcs.find((p) => p.id === id) : null;
-  const coracaoMax = Number(document.getElementById("pc-coracao-max").value) || 0;
-  const dadoCoracaoTotal = Number(document.getElementById("pc-dado-coracao-total").value) || 0;
-  const dadoDomTotal = Number(document.getElementById("pc-dado-dom-total").value) || 0;
   const data = {
     id: id || uid(),
     nome: document.getElementById("pc-nome").value.trim(),
     jogadora: document.getElementById("pc-jogadora").value.trim(),
-    domNome: document.getElementById("pc-dom-nome").value.trim(),
-    domDescricao: document.getElementById("pc-dom-descricao").value.trim(),
-    determinacao: Number(document.getElementById("pc-determinacao").value) || 0,
-    graca: Number(document.getElementById("pc-graca").value) || 0,
-    astucia: Number(document.getElementById("pc-astucia").value) || 0,
-    coracaoMax,
-    coracaoAtual: existing ? Math.min(existing.coracaoAtual, coracaoMax) : coracaoMax,
-    armadura: Number(document.getElementById("pc-armadura").value) || 0,
-    dinheiro: Number(document.getElementById("pc-dinheiro").value) || 0,
-    dadoCoracaoTotal,
-    dadoCoracaoUsados: existing ? Math.min(existing.dadoCoracaoUsados, dadoCoracaoTotal) : 0,
-    dadoDomTotal,
-    dadoDomUsados: existing ? Math.min(existing.dadoDomUsados, dadoDomTotal) : 0,
-    arma: document.getElementById("pc-arma").value.trim(),
-    talentos: parseTags(document.getElementById("pc-talentos").value),
     inventario: parseTags(document.getElementById("pc-inventario").value),
     compendioRefs: existing ? existing.compendioRefs || [] : [],
-    trauma: document.getElementById("pc-trauma").value.trim(),
-    maldicaoTipo: document.getElementById("pc-maldicao-tipo").value,
-    maldicaoEstagio: Number(document.getElementById("pc-maldicao-estagio").value) || 0,
-    aflicoes: existing ? existing.aflicoes : { cansada: false, atordoada: false, confusa: false },
     foto: currentPcFoto,
   };
+  if (ehDnd()) {
+    const pvMax = Number(document.getElementById("pc-dnd-pv-max").value) || 0;
+    data.ficha = {
+      sistemaId: "dnd5e",
+      nivel: Number(document.getElementById("pc-dnd-nivel").value) || 1,
+      atributos: lerAtributosDnd("pc-dnd"),
+      pvMax,
+      pvAtual: existing && existing.ficha ? Math.min(existing.ficha.pvAtual ?? pvMax, pvMax) : pvMax,
+      ca: Number(document.getElementById("pc-dnd-ca").value) || 10,
+      dadoVida: document.getElementById("pc-dnd-dado-vida").value.trim(),
+      arma: document.getElementById("pc-dnd-arma").value.trim(),
+      pericias: lerPericiasDnd("pc-dnd"),
+      condicoes: existing && existing.ficha ? existing.ficha.condicoes || {} : {},
+    };
+  } else {
+    const coracaoMax = Number(document.getElementById("pc-coracao-max").value) || 0;
+    const dadoCoracaoTotal = Number(document.getElementById("pc-dado-coracao-total").value) || 0;
+    const dadoDomTotal = Number(document.getElementById("pc-dado-dom-total").value) || 0;
+    data.domNome = document.getElementById("pc-dom-nome").value.trim();
+    data.domDescricao = document.getElementById("pc-dom-descricao").value.trim();
+    data.determinacao = Number(document.getElementById("pc-determinacao").value) || 0;
+    data.graca = Number(document.getElementById("pc-graca").value) || 0;
+    data.astucia = Number(document.getElementById("pc-astucia").value) || 0;
+    data.coracaoMax = coracaoMax;
+    data.coracaoAtual = existing ? Math.min(existing.coracaoAtual, coracaoMax) : coracaoMax;
+    data.armadura = Number(document.getElementById("pc-armadura").value) || 0;
+    data.dinheiro = Number(document.getElementById("pc-dinheiro").value) || 0;
+    data.dadoCoracaoTotal = dadoCoracaoTotal;
+    data.dadoCoracaoUsados = existing ? Math.min(existing.dadoCoracaoUsados, dadoCoracaoTotal) : 0;
+    data.dadoDomTotal = dadoDomTotal;
+    data.dadoDomUsados = existing ? Math.min(existing.dadoDomUsados, dadoDomTotal) : 0;
+    data.arma = document.getElementById("pc-arma").value.trim();
+    data.talentos = parseTags(document.getElementById("pc-talentos").value);
+    data.trauma = document.getElementById("pc-trauma").value.trim();
+    data.maldicaoTipo = document.getElementById("pc-maldicao-tipo").value;
+    data.maldicaoEstagio = Number(document.getElementById("pc-maldicao-estagio").value) || 0;
+    data.aflicoes = existing ? existing.aflicoes : { cansada: false, atordoada: false, confusa: false };
+  }
   if (id) {
     const idx = state.pcs.findIndex((p) => p.id === id);
     state.pcs[idx] = data;
@@ -3768,15 +3986,68 @@ function pcRefChipHtml(pcId, ref) {
   `;
 }
 
-function renderPcs() {
-  const list = document.getElementById("pc-list");
-  if (state.pcs.length === 0) {
-    list.innerHTML = emptyState("auto_awesome", "Nenhuma Princesa cadastrada ainda.");
-    return;
-  }
-  list.innerHTML = state.pcs
-    .map(
-      (p) => `
+function pcCardHtmlDnd(p) {
+  const f = p.ficha || {};
+  const atrs = f.atributos || {};
+  const prof = bonusProficienciaDnd(f.nivel);
+  const condicoes = f.condicoes || {};
+  return `
+    <div class="pc-card">
+      <div class="card-header-row">
+        ${p.foto ? `<img class="avatar" src="${p.foto}" alt="${escapeHtml(p.nome)}">` : ""}
+        <div class="pc-card-title">
+          <h3>${escapeHtml(p.nome)}</h3>
+          ${p.jogadora ? `<p class="pc-player">Jogadora: ${escapeHtml(p.jogadora)}</p>` : ""}
+        </div>
+      </div>
+      <div class="pc-dom">Nível ${f.nivel || 1} · Bônus de Proficiência ${fmtMod(prof)}</div>
+      <div class="pc-stats">
+        ${SISTEMAS.dnd5e.atributos
+          .map((a) => `<span>${a.label.slice(0, 3).toUpperCase()} ${rollAttrBtn(p.nome, a.label, fmtMod(modDnd(atrs[a.key])), "dnd5e")}</span>`)
+          .join("")}
+        <span>CA <b>${f.ca}</b></span>
+      </div>
+      <div class="hp-control">
+        <button class="icon-btn" data-pc-pv-down="${p.id}"><span class="icon">remove</span></button>
+        <span>PV: ${f.pvAtual} / ${f.pvMax}</span>
+        <button class="icon-btn" data-pc-pv-up="${p.id}"><span class="icon">add</span></button>
+      </div>
+      ${f.dadoVida ? `<div class="pc-misc"><b>Dado de Vida:</b> ${escapeHtml(f.dadoVida)}</div>` : ""}
+      <div class="pc-misc">
+        <b>Perícias treinadas:</b>
+        ${
+          SISTEMAS.dnd5e.pericias.filter((per) => f.pericias && f.pericias[per.key]).length
+            ? SISTEMAS.dnd5e.pericias
+                .filter((per) => f.pericias && f.pericias[per.key])
+                .map((per) => `<span>${rollAttrBtn(p.nome, per.label, fmtMod(modDnd(atrs[per.atributo]) + prof), "dnd5e")} ${escapeHtml(per.label)}</span>`)
+                .join(", ")
+            : "<i>nenhuma marcada</i>"
+        }
+      </div>
+      <div class="affliction-toggles">
+        ${SISTEMAS.dnd5e.condicoes
+          .map((c) => `<button class="affliction-btn ${condicoes[c] ? "active cansada" : ""}" data-pc-condicao="${p.id}" data-key="${escapeHtml(c)}">${escapeHtml(c)}</button>`)
+          .join("")}
+      </div>
+      ${f.arma ? `<div class="pc-misc"><b>Arma/equipamento:</b> ${escapeHtml(f.arma)}</div>` : ""}
+      ${p.inventario.length ? `<div class="pc-misc"><b>Minhas coisas:</b> ${p.inventario.map(escapeHtml).join(", ")}</div>` : ""}
+      <div class="pc-misc">
+        <b>Do Compêndio:</b>
+        <div class="ref-chips">
+          ${(p.compendioRefs || []).map((r) => pcRefChipHtml(p.id, r)).join("")}
+          <button type="button" class="btn btn-ghost" style="padding:3px 10px; font-size:0.78rem;" data-add-pc-ref="${p.id}">+ Adicionar</button>
+        </div>
+      </div>
+      <div class="pc-card-actions">
+        <button class="btn btn-ghost" data-edit-pc="${p.id}">Editar</button>
+        <button class="btn btn-danger" data-delete-pc="${p.id}">Excluir</button>
+      </div>
+    </div>
+  `;
+}
+
+function pcCardHtmlPep(p) {
+  return `
     <div class="pc-card">
       <div class="card-header-row">
         ${p.foto ? `<img class="avatar" src="${p.foto}" alt="${escapeHtml(p.nome)}">` : ""}
@@ -3838,9 +4109,16 @@ function renderPcs() {
         <button class="btn btn-danger" data-delete-pc="${p.id}">Excluir</button>
       </div>
     </div>
-  `
-    )
-    .join("");
+  `;
+}
+
+function renderPcs() {
+  const list = document.getElementById("pc-list");
+  if (state.pcs.length === 0) {
+    list.innerHTML = emptyState("auto_awesome", `Nenhum(a) ${labelPersonagem()} cadastrado(a) ainda.`);
+    return;
+  }
+  list.innerHTML = state.pcs.map((p) => (ehDnd() ? pcCardHtmlDnd(p) : pcCardHtmlPep(p))).join("");
 
   list.querySelectorAll("[data-edit-pc]").forEach((btn) =>
     btn.addEventListener("click", () => openPcModal(state.pcs.find((p) => p.id === btn.dataset.editPc)))
@@ -3860,6 +4138,31 @@ function renderPcs() {
     btn.addEventListener("click", () => {
       const p = state.pcs.find((x) => x.id === btn.dataset.pcHpUp);
       p.coracaoAtual = Math.min(p.coracaoMax, p.coracaoAtual + 1);
+      saveState();
+      renderPcs();
+    })
+  );
+  list.querySelectorAll("[data-pc-pv-down]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const p = state.pcs.find((x) => x.id === btn.dataset.pcPvDown);
+      p.ficha.pvAtual = Math.max(0, p.ficha.pvAtual - 1);
+      saveState();
+      renderPcs();
+    })
+  );
+  list.querySelectorAll("[data-pc-pv-up]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const p = state.pcs.find((x) => x.id === btn.dataset.pcPvUp);
+      p.ficha.pvAtual = Math.min(p.ficha.pvMax, p.ficha.pvAtual + 1);
+      saveState();
+      renderPcs();
+    })
+  );
+  list.querySelectorAll("[data-pc-condicao]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const p = state.pcs.find((x) => x.id === btn.dataset.pcCondicao);
+      if (!p.ficha.condicoes) p.ficha.condicoes = {};
+      p.ficha.condicoes[btn.dataset.key] = !p.ficha.condicoes[btn.dataset.key];
       saveState();
       renderPcs();
     })
@@ -3903,6 +4206,8 @@ const combatantModal = document.getElementById("modal-combatant");
 const formCombatant = document.getElementById("form-combatant");
 
 document.getElementById("btn-add-combatant").addEventListener("click", () => {
+  document.getElementById("c-campos-pep").classList.toggle("hidden", ehDnd());
+  document.getElementById("c-campos-dnd5e").classList.toggle("hidden", !ehDnd());
   combatantModal.classList.remove("hidden");
 });
 document.getElementById("btn-cancel-combatant").addEventListener("click", () => {
@@ -3932,33 +4237,60 @@ function newCombatant(overrides) {
       notas: "",
       tipo: "",
       notaMestra: "",
+      // Campos de D&D 5ª Edição — ficam nulos/vazios num combatente de P&P
+      ca: null,
+      iniciativaMod: null,
+      condicoes: {},
     },
     overrides
   );
 }
 
 // sucesso === null quando ainda não rolou; true/false depois de preencher o d20
+// (regra de P&P: rola por baixo da Astúcia). Em D&D, a iniciativa é um total
+// comparável (d20+mod), sem conceito de sucesso/falha — cada sistema calcula
+// e ordena do seu jeito, por isso a ramificação logo no início da função.
 function computeIniciativa(c) {
   if (c.d20 === null || c.d20 === undefined || c.d20 === "") {
     c.sucesso = null;
     c.critico = false;
+    c.iniciativaTotal = null;
     return;
   }
   const roll = Number(c.d20);
+  if (ehDnd()) {
+    c.iniciativaTotal = roll + (c.iniciativaMod || 0);
+    c.sucesso = null;
+    c.critico = roll === 20;
+    return;
+  }
   c.critico = roll === 1;
   c.sucesso = roll === 1 ? true : roll === 20 ? false : roll <= c.astucia;
 }
 
 formCombatant.addEventListener("submit", (e) => {
   e.preventDefault();
-  const coracaoMax = Number(document.getElementById("c-coracao-max").value) || 0;
-  const c = newCombatant({
-    nome: document.getElementById("c-nome").value.trim(),
-    astucia: Number(document.getElementById("c-astucia").value) || 10,
-    coracaoMax,
-    coracaoAtual: coracaoMax,
-    isPc: document.getElementById("c-is-pc").checked,
-  });
+  let c;
+  if (ehDnd()) {
+    const pvMax = Number(document.getElementById("c-dnd-pv-max").value) || 0;
+    c = newCombatant({
+      nome: document.getElementById("c-nome").value.trim(),
+      coracaoMax: pvMax,
+      coracaoAtual: pvMax,
+      isPc: document.getElementById("c-is-pc").checked,
+      ca: Number(document.getElementById("c-dnd-ca").value) || 10,
+      iniciativaMod: Number(document.getElementById("c-dnd-des-mod").value) || 0,
+    });
+  } else {
+    const coracaoMax = Number(document.getElementById("c-coracao-max").value) || 0;
+    c = newCombatant({
+      nome: document.getElementById("c-nome").value.trim(),
+      astucia: Number(document.getElementById("c-astucia").value) || 10,
+      coracaoMax,
+      coracaoAtual: coracaoMax,
+      isPc: document.getElementById("c-is-pc").checked,
+    });
+  }
   computeIniciativa(c);
   state.combat.combatants.push(c);
   saveState();
@@ -3982,31 +4314,47 @@ function renderFromNpcList() {
     return;
   }
   list.innerHTML = filtered
-    .map(
-      (n) => `
+    .map((n) => {
+      const resumo = ehDnd() && n.ficha ? `PV ${n.ficha.pv}, CA ${n.ficha.ca}` : `Coração ${n.coracao}, Ast. ${n.astucia}`;
+      return `
       <div class="from-npc-item">
-        <span>${escapeHtml(n.nome)} <small style="color:var(--text-dim)">(Coração ${n.coracao}, Ast. ${n.astucia})</small></span>
+        <span>${escapeHtml(n.nome)} <small style="color:var(--text-dim)">(${resumo})</small></span>
         <button class="btn btn-secondary" data-add-from-npc="${n.id}">+ Adicionar</button>
       </div>
-    `
-    )
+    `;
+    })
     .join("");
   list.querySelectorAll("[data-add-from-npc]").forEach((btn) =>
     btn.addEventListener("click", () => {
       const n = state.npcs.find((x) => x.id === btn.dataset.addFromNpc);
-      const c = newCombatant({
-        nome: n.nome,
-        astucia: n.astucia,
-        coracaoMax: n.coracao,
-        coracaoAtual: n.coracao,
-        isPc: false,
-        determinacao: n.determinacao,
-        graca: n.graca,
-        salvamento: n.salvamento,
-        armadura: n.armadura,
-        notas: n.notas,
-        tipo: n.tipo,
-      });
+      let c;
+      if (ehDnd() && n.ficha) {
+        const f = n.ficha;
+        c = newCombatant({
+          nome: n.nome,
+          coracaoMax: f.pv,
+          coracaoAtual: f.pv,
+          isPc: false,
+          ca: f.ca,
+          iniciativaMod: modDnd(f.atributos ? f.atributos.des : 10),
+          notas: n.notas,
+          tipo: n.tipo,
+        });
+      } else {
+        c = newCombatant({
+          nome: n.nome,
+          astucia: n.astucia,
+          coracaoMax: n.coracao,
+          coracaoAtual: n.coracao,
+          isPc: false,
+          determinacao: n.determinacao,
+          graca: n.graca,
+          salvamento: n.salvamento,
+          armadura: n.armadura,
+          notas: n.notas,
+          tipo: n.tipo,
+        });
+      }
       state.combat.combatants.push(c);
       saveState();
       renderCombat();
@@ -4038,33 +4386,49 @@ const fromPcModal = document.getElementById("modal-from-pc");
 document.getElementById("btn-add-from-pc").addEventListener("click", () => {
   const list = document.getElementById("from-pc-list");
   if (state.pcs.length === 0) {
-    list.innerHTML = emptyState("face_3", "Nenhuma Princesa cadastrada. Crie uma na aba \"Personagens\" primeiro.");
+    list.innerHTML = emptyState("face_3", `Nenhum(a) ${labelPersonagem()} cadastrado(a). Crie na aba "Personagens" primeiro.`);
   } else {
     list.innerHTML = state.pcs
-      .map(
-        (p) => `
+      .map((p) => {
+        const resumo = ehDnd() && p.ficha ? `PV ${p.ficha.pvAtual}/${p.ficha.pvMax}, CA ${p.ficha.ca}` : `Coração ${p.coracaoAtual}/${p.coracaoMax}, Ast. ${p.astucia}`;
+        return `
       <div class="from-npc-item">
-        <span>${escapeHtml(p.nome)} <small style="color:var(--text-dim)">(Coração ${p.coracaoAtual}/${p.coracaoMax}, Ast. ${p.astucia})</small></span>
+        <span>${escapeHtml(p.nome)} <small style="color:var(--text-dim)">(${resumo})</small></span>
         <button class="btn btn-secondary" data-add-from-pc="${p.id}">+ Adicionar</button>
       </div>
-    `
-      )
+    `;
+      })
       .join("");
     list.querySelectorAll("[data-add-from-pc]").forEach((btn) =>
       btn.addEventListener("click", () => {
         const p = state.pcs.find((x) => x.id === btn.dataset.addFromPc);
-        const c = newCombatant({
-          nome: p.nome,
-          astucia: p.astucia,
-          coracaoMax: p.coracaoMax,
-          coracaoAtual: p.coracaoAtual,
-          isPc: true,
-          determinacao: p.determinacao,
-          graca: p.graca,
-          armadura: p.armadura,
-          notas: [p.domNome, p.domDescricao].filter(Boolean).join(" — "),
-          aflicoes: Object.assign({}, p.aflicoes),
-        });
+        let c;
+        if (ehDnd() && p.ficha) {
+          const f = p.ficha;
+          c = newCombatant({
+            nome: p.nome,
+            coracaoMax: f.pvMax,
+            coracaoAtual: f.pvAtual,
+            isPc: true,
+            ca: f.ca,
+            iniciativaMod: modDnd(f.atributos ? f.atributos.des : 10),
+            notas: f.arma || "",
+            condicoes: Object.assign({}, f.condicoes),
+          });
+        } else {
+          c = newCombatant({
+            nome: p.nome,
+            astucia: p.astucia,
+            coracaoMax: p.coracaoMax,
+            coracaoAtual: p.coracaoAtual,
+            isPc: true,
+            determinacao: p.determinacao,
+            graca: p.graca,
+            armadura: p.armadura,
+            notas: [p.domNome, p.domDescricao].filter(Boolean).join(" — "),
+            aflicoes: Object.assign({}, p.aflicoes),
+          });
+        }
         state.combat.combatants.push(c);
         saveState();
         renderCombat();
@@ -4176,7 +4540,18 @@ document.getElementById("btn-clear-combat").addEventListener("click", () => {
 });
 
 function sortCombatants() {
-  // Regra oficial: quem teve sucesso no teste de Astúcia age antes; quem falhou, age depois.
+  if (ehDnd()) {
+    // Iniciativa de D&D: maior total primeiro; quem ainda não rolou fica no fim.
+    state.combat.combatants.sort((a, b) => {
+      const ta = a.iniciativaTotal, tb = b.iniciativaTotal;
+      if (ta == null && tb == null) return 0;
+      if (ta == null) return 1;
+      if (tb == null) return -1;
+      return tb - ta;
+    });
+    return;
+  }
+  // Regra oficial de P&P: quem teve sucesso no teste de Astúcia age antes; quem falhou, age depois.
   // Quem ainda não rolou fica no meio (nem confirmado antes, nem depois).
   const rank = (c) => (c.sucesso === true ? 0 : c.sucesso === null || c.sucesso === undefined ? 1 : 2);
   state.combat.combatants.sort((a, b) => rank(a) - rank(b));
@@ -4211,14 +4586,22 @@ function removeCombatant(id) {
 function openCombatantQuickView(c) {
   document.getElementById("combatant-view-title").textContent = c.nome;
   const body = document.getElementById("combatant-view-body");
-  body.innerHTML = `
+  const statGrid = ehDnd()
+    ? `
+    <div class="npc-stat-grid">
+      ${c.ca !== null ? `<div class="stat-box"><span>CA</span><b>${c.ca}</b></div>` : ""}
+      ${c.iniciativaMod !== null ? `<div class="stat-box"><span>Mod. Destreza</span><b>${fmtMod(c.iniciativaMod)}</b></div>` : ""}
+    </div>`
+    : `
     <div class="npc-stat-grid">
       ${c.determinacao !== null ? `<div class="stat-box"><span>Determinação</span>${rollAttrBtn(c.nome, "Determinação", c.determinacao)}</div>` : ""}
       ${c.graca !== null ? `<div class="stat-box"><span>Graça</span>${rollAttrBtn(c.nome, "Graça", c.graca)}</div>` : ""}
       <div class="stat-box"><span>Astúcia</span>${rollAttrBtn(c.nome, "Astúcia", c.astucia)}</div>
       ${c.salvamento !== null ? `<div class="stat-box"><span>Salvamento</span>${rollAttrBtn(c.nome, "Salvamento", c.salvamento)}</div>` : ""}
       <div class="stat-box"><span>Armadura</span><b>${c.armadura}</b></div>
-    </div>
+    </div>`;
+  body.innerHTML = `
+    ${statGrid}
     ${c.notas ? `<div class="npc-section-label">Ataques &amp; poderes (clique para explicar)</div><div class="npc-notes">${linkifyText(c.notas)}</div>` : `<p class="field-hint">Sem anotações de ataques pra esse combatente.</p>`}
     <div class="npc-section-label">Nota de combate (só pra você — comportamento, gatilho, o que fazer nesse turno)</div>
     <textarea id="combatant-view-nota" class="input" rows="3" placeholder="Ex.: Não quer matar Rui, quer capturar. Foge se chegar a 5 de Coração." style="resize:vertical; font-family:inherit;">${escapeHtml(c.notaMestra || "")}</textarea>
@@ -4313,10 +4696,26 @@ function renderCombat() {
       const hpClass = hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : "";
       const isCurrent = idx === state.combat.currentIndex;
       let statusBadge = `<span class="init-status pending">aguardando d20</span>`;
-      if (c.sucesso === true) statusBadge = `<span class="init-status age-antes">Age antes${c.critico ? " — crítico! 2 ações no 1º turno" : ""}</span>`;
-      else if (c.sucesso === false) statusBadge = `<span class="init-status age-depois">Age depois</span>`;
+      if (ehDnd()) {
+        if (c.iniciativaTotal != null) statusBadge = `<span class="init-status age-antes">Iniciativa ${c.iniciativaTotal}${c.critico ? " — natural 20!" : ""}</span>`;
+      } else {
+        if (c.sucesso === true) statusBadge = `<span class="init-status age-antes">Age antes${c.critico ? " — crítico! 2 ações no 1º turno" : ""}</span>`;
+        else if (c.sucesso === false) statusBadge = `<span class="init-status age-depois">Age depois</span>`;
+      }
 
-      const hasDetails = c.notas || c.determinacao !== null || c.graca !== null || c.salvamento !== null || c.notaMestra;
+      const hasDetails = ehDnd()
+        ? c.notas || c.ca !== null || c.notaMestra
+        : c.notas || c.determinacao !== null || c.graca !== null || c.salvamento !== null || c.notaMestra;
+
+      const afliccoesHtml = ehDnd()
+        ? SISTEMAS.dnd5e.condicoes
+            .map((cond) => `<button class="affliction-btn ${c.condicoes && c.condicoes[cond] ? "active cansada" : ""}" data-c-condicao="${c.id}" data-key="${escapeHtml(cond)}">${escapeHtml(cond)}</button>`)
+            .join("")
+        : `
+            <button class="affliction-btn ${c.aflicoes.cansada ? "active cansada" : ""}" data-c-affliction="${c.id}" data-key="cansada">Cansada</button>
+            <button class="affliction-btn ${c.aflicoes.atordoada ? "active atordoada" : ""}" data-c-affliction="${c.id}" data-key="atordoada">Atordoada</button>
+            <button class="affliction-btn ${c.aflicoes.confusa ? "active confusa" : ""}" data-c-affliction="${c.id}" data-key="confusa">Confusa</button>
+          `;
 
       return `
       <div class="combatant-card ${isCurrent ? "current-turn" : ""} ${c.isPc ? "is-pc" : "is-npc"}">
@@ -4327,6 +4726,7 @@ function renderCombat() {
           </div>
           <div class="combatant-name" ${hasDetails ? `data-toggle-combatant="${c.id}"` : ""}>
             ${isCurrent ? "▶ " : ""}${escapeHtml(c.nome)}${c.tipo ? ` <span class="npc-type-badge">${escapeHtml(c.tipo)}</span>` : ""}
+            ${ehDnd() && c.ca !== null ? ` <span class="npc-type-badge">CA ${c.ca}</span>` : ""}
             ${c.notaMestra ? `<span class="icon expand-caret" title="Tem nota de combate">sticky_note_2</span>` : ""}
             ${hasDetails ? `<span class="icon expand-caret">info</span>` : ""}
           </div>
@@ -4336,11 +4736,7 @@ function renderCombat() {
             <button class="icon-btn" data-hp-up="${c.id}"><span class="icon">add</span></button>
             <div class="hp-bar-wrap"><div class="hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
           </div>
-          <div class="affliction-toggles">
-            <button class="affliction-btn ${c.aflicoes.cansada ? "active cansada" : ""}" data-c-affliction="${c.id}" data-key="cansada">Cansada</button>
-            <button class="affliction-btn ${c.aflicoes.atordoada ? "active atordoada" : ""}" data-c-affliction="${c.id}" data-key="atordoada">Atordoada</button>
-            <button class="affliction-btn ${c.aflicoes.confusa ? "active confusa" : ""}" data-c-affliction="${c.id}" data-key="confusa">Confusa</button>
-          </div>
+          <div class="affliction-toggles">${afliccoesHtml}</div>
           <div class="combatant-actions">
             <button class="icon-btn" data-remove-combatant="${c.id}" title="Remover"><span class="icon">delete</span></button>
           </div>
@@ -4363,6 +4759,16 @@ function renderCombat() {
   list.querySelectorAll("[data-hp-up]").forEach((btn) => btn.addEventListener("click", () => updateHp(btn.dataset.hpUp, 1)));
   list.querySelectorAll("[data-c-affliction]").forEach((btn) =>
     btn.addEventListener("click", () => toggleCombatantAffliction(btn.dataset.cAffliction, btn.dataset.key))
+  );
+  list.querySelectorAll("[data-c-condicao]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const c = state.combat.combatants.find((x) => x.id === btn.dataset.cCondicao);
+      if (!c) return;
+      if (!c.condicoes) c.condicoes = {};
+      c.condicoes[btn.dataset.key] = !c.condicoes[btn.dataset.key];
+      saveState();
+      renderCombat();
+    })
   );
   list.querySelectorAll("[data-remove-combatant]").forEach((btn) =>
     btn.addEventListener("click", () => removeCombatant(btn.dataset.removeCombatant))
@@ -4676,7 +5082,7 @@ document.getElementById("btn-map-add-monster").addEventListener("click", () => {
 });
 document.getElementById("btn-map-add-pc").addEventListener("click", () => {
   const entries = state.pcs.map((p) => ({ id: p.id, nome: p.nome, cor: TOKEN_COLORS[3], tipo: "pc" }));
-  openMapPicker("Adicionar Princesa", entries);
+  openMapPicker("Adicionar " + labelPersonagem(), entries);
 });
 document.getElementById("btn-map-add-generic").addEventListener("click", () => {
   const token = addTokenToMap("Marcador", TOKEN_COLORS[0], 50, 50);
@@ -5420,6 +5826,7 @@ function renderAll() {
   renderMural();
 }
 
+aplicarRotulosSistema();
 renderAll();
 bootstrapCloudSync();
 
@@ -5487,9 +5894,31 @@ function rollAttributeCheck(entityName, attrLabel, value) {
   document.getElementById("dice-history").innerHTML = diceHistory.map(escapeHtml).join("<br>");
   openToolPanel("dice");
 }
+// Resolução de D&D: d20 + modificador vs uma Classe de Dificuldade pedida na
+// hora — diferente da regra de P&P (rola por baixo do atributo), cada
+// sistema é dono da sua própria conta.
+function rollCheckDnd(entityName, label, mod) {
+  const cdTexto = prompt(`Classe de Dificuldade (CD) do teste de ${label}:`, "15");
+  if (cdTexto === null) return;
+  const cd = Number(cdTexto) || 10;
+  const roll = 1 + Math.floor(Math.random() * 20);
+  const total = roll + mod;
+  const outcome = roll === 20 ? "sucesso crítico" : roll === 1 ? "falha crítica" : total >= cd ? "sucesso" : "falha";
+  const cls = outcome.includes("sucesso") ? "dice-check-success" : "dice-check-fail";
+  document.getElementById("dice-result").innerHTML = `${total} <span class="${cls}" style="font-size:1.1rem;">${outcome}</span>`;
+  diceHistory.unshift(`${entityName} — ${label} (${fmtMod(mod)}) vs CD ${cd}: d20=${roll}+${mod}=${total} → ${outcome}`);
+  diceHistory = diceHistory.slice(0, 6);
+  document.getElementById("dice-history").innerHTML = diceHistory.map(escapeHtml).join("<br>");
+  openToolPanel("dice");
+}
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".roll-attr");
-  if (btn) rollAttributeCheck(btn.dataset.rollName, btn.dataset.rollLabel, Number(btn.dataset.rollValue));
+  if (!btn) return;
+  if (btn.dataset.rollSistema === "dnd5e") {
+    rollCheckDnd(btn.dataset.rollName, btn.dataset.rollLabel, Number(btn.dataset.rollValue));
+  } else {
+    rollAttributeCheck(btn.dataset.rollName, btn.dataset.rollLabel, Number(btn.dataset.rollValue));
+  }
 });
 
 function showDiceResult(total, detail) {
@@ -6242,7 +6671,7 @@ function globalSearchResults(query) {
   });
   state.pcs.forEach((p) => {
     if (p.nome.toLowerCase().includes(q)) {
-      results.push({ tipo: "Princesa", nome: p.nome, contexto: "", go: () => openEntityPanel("pc", p) });
+      results.push({ tipo: labelPersonagem(), nome: p.nome, contexto: "", go: () => openEntityPanel("pc", p) });
     }
   });
   state.ambientes.forEach((a) => {
@@ -6328,7 +6757,7 @@ function muralCollections() {
     { tipo: "missao", label: "Missões", singular: "Missão", icon: "flag", list: () => state.objectives, nome: (x) => x.texto },
     { tipo: "clue", label: "Pistas", singular: "Pista", icon: "search", list: () => state.clues, nome: (x) => x.titulo },
     { tipo: "secret", label: "Segredos", singular: "Segredo", icon: "lock", list: () => state.secrets, nome: (x) => x.titulo },
-    { tipo: "pc", label: "Princesas", singular: "Princesa", icon: "auto_awesome", list: () => state.pcs, nome: (x) => x.nome },
+    { tipo: "pc", label: labelPersonagemPlural(), singular: labelPersonagem(), icon: "auto_awesome", list: () => state.pcs, nome: (x) => x.nome },
   ];
 }
 

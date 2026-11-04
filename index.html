@@ -62,7 +62,7 @@
       <div class="toolbar-group">
         <button id="btn-add-combatant" class="btn btn-primary"><img class="btn-icon-img" src="icon-plus.png?v=2" alt=""> Combatente</button>
         <button id="btn-add-from-npc" class="btn btn-secondary" title="Do banco de NPCs"><img class="btn-icon-img" src="icon-person.png?v=2" alt=""> NPC</button>
-        <button id="btn-add-from-pc" class="btn btn-secondary" title="De uma Princesa"><img class="btn-icon-img" src="icon-crown.png?v=2" alt=""> Princesa</button>
+        <button id="btn-add-from-pc" class="btn btn-secondary" title="De uma Princesa"><img class="btn-icon-img" src="icon-crown.png?v=2" alt=""> <span id="label-btn-add-from-pc">Princesa</span></button>
       </div>
       <div class="toolbar-group">
         <button id="btn-roll-init" class="btn btn-secondary"><img class="btn-icon-img" src="icon-d20.png?v=2" alt=""> Rolar d20</button>
@@ -84,7 +84,7 @@
   <!-- PCS (PERSONAGENS) -->
   <section id="tab-pcs" class="tab-panel">
     <div class="panel-toolbar">
-      <button id="btn-add-pc" class="btn btn-primary"><span class="icon">add</span> Nova Princesa</button>
+      <button id="btn-add-pc" class="btn btn-primary"><span class="icon">add</span> <span id="label-btn-add-pc">Nova Princesa</span></button>
     </div>
     <div id="pc-list" class="card-grid"></div>
   </section>
@@ -297,27 +297,40 @@
           <option value="Aliado">Aliado</option>
         </select>
       </label>
-      <div class="attr-grid">
-        <label><span class="icon attr-icon">local_fire_department</span>Determinação
-          <input type="number" id="npc-determinacao" min="1" max="20" value="10">
-        </label>
-        <label><span class="icon attr-icon">auto_awesome</span>Graça
-          <input type="number" id="npc-graca" min="1" max="20" value="10">
-        </label>
-        <label><span class="icon attr-icon">visibility</span>Astúcia
-          <input type="number" id="npc-astucia" min="1" max="20" value="10">
-        </label>
+      <div id="npc-campos-pep">
+        <div class="attr-grid">
+          <label><span class="icon attr-icon">local_fire_department</span>Determinação
+            <input type="number" id="npc-determinacao" min="1" max="20" value="10">
+          </label>
+          <label><span class="icon attr-icon">auto_awesome</span>Graça
+            <input type="number" id="npc-graca" min="1" max="20" value="10">
+          </label>
+          <label><span class="icon attr-icon">visibility</span>Astúcia
+            <input type="number" id="npc-astucia" min="1" max="20" value="10">
+          </label>
+        </div>
+        <div class="attr-grid">
+          <label><span class="icon attr-icon">favorite</span>Coração (PC)
+            <input type="number" id="npc-coracao" min="0" value="10">
+          </label>
+          <label><span class="icon attr-icon">health_and_safety</span>Salvamento
+            <input type="number" id="npc-salvamento" min="0" value="10">
+          </label>
+          <label><span class="icon attr-icon">shield</span>Armadura
+            <input type="number" id="npc-armadura" min="0" value="0">
+          </label>
+        </div>
       </div>
-      <div class="attr-grid">
-        <label><span class="icon attr-icon">favorite</span>Coração (PC)
-          <input type="number" id="npc-coracao" min="0" value="10">
-        </label>
-        <label><span class="icon attr-icon">health_and_safety</span>Salvamento
-          <input type="number" id="npc-salvamento" min="0" value="10">
-        </label>
-        <label><span class="icon attr-icon">shield</span>Armadura
-          <input type="number" id="npc-armadura" min="0" value="0">
-        </label>
+      <div id="npc-campos-dnd5e" class="hidden">
+        <div class="attr-grid" id="npc-dnd-atributos"></div>
+        <div class="attr-grid">
+          <label>Pontos de Vida
+            <input type="number" id="npc-dnd-pv" min="0" value="10">
+          </label>
+          <label>Classe de Armadura (CA)
+            <input type="number" id="npc-dnd-ca" min="0" value="10">
+          </label>
+        </div>
       </div>
       <label>Tags (separadas por vírgula)
         <input type="text" id="npc-tags" placeholder="ex: cervovale, chefe, bosque emaranhado">
@@ -341,7 +354,7 @@
     <h2 id="pc-modal-title">Nova Princesa</h2>
     <form id="form-pc">
       <input type="hidden" id="pc-id">
-      <label>Nome da Princesa
+      <label><span id="label-pc-nome">Nome da Princesa</span>
         <input type="text" id="pc-nome" required>
       </label>
       <label>Jogadora
@@ -368,65 +381,91 @@
       <label>Descrição do Dom
         <textarea id="pc-dom-descricao" rows="2" placeholder="Preenchido automaticamente ao escolher o Dom — edite à vontade"></textarea>
       </label>
-      <p class="field-hint">Atributos: role 4d4 para cada Virtude (pode reordenar/rerrolar uma). Teste de Virtude = role d20 e tire igual ou menos que o atributo. 1 é sempre sucesso, 20 é sempre falha.</p>
-      <div class="attr-grid">
-        <label><span class="icon attr-icon">local_fire_department</span>Determinação
-          <input type="number" id="pc-determinacao" min="1" max="20" value="10">
+      <div id="pc-campos-pep">
+        <p class="field-hint">Atributos: role 4d4 para cada Virtude (pode reordenar/rerrolar uma). Teste de Virtude = role d20 e tire igual ou menos que o atributo. 1 é sempre sucesso, 20 é sempre falha.</p>
+        <div class="attr-grid">
+          <label><span class="icon attr-icon">local_fire_department</span>Determinação
+            <input type="number" id="pc-determinacao" min="1" max="20" value="10">
+          </label>
+          <label><span class="icon attr-icon">auto_awesome</span>Graça
+            <input type="number" id="pc-graca" min="1" max="20" value="10">
+          </label>
+          <label><span class="icon attr-icon">visibility</span>Astúcia
+            <input type="number" id="pc-astucia" min="1" max="20" value="10">
+          </label>
+        </div>
+        <div class="attr-grid">
+          <label><span class="icon attr-icon">favorite</span>Coração máx. <small>(d4+4 inicial)</small>
+            <input type="number" id="pc-coracao-max" min="0" value="7">
+          </label>
+          <label><span class="icon attr-icon">shield</span>Armadura
+            <input type="number" id="pc-armadura" min="0" value="0">
+          </label>
+          <label>Dinheiro (pp)
+            <input type="number" id="pc-dinheiro" min="0" value="0">
+          </label>
+        </div>
+        <div class="attr-grid">
+          <label>Dados de Coração <small>(1/nível)</small>
+            <input type="number" id="pc-dado-coracao-total" min="0" max="8" value="1">
+          </label>
+          <label>Dados de Dom <small>(1/nível)</small>
+            <input type="number" id="pc-dado-dom-total" min="0" max="8" value="1">
+          </label>
+        </div>
+        <label>Arma
+          <input type="text" id="pc-arma" placeholder="ex: Espada (d8)">
         </label>
-        <label><span class="icon attr-icon">auto_awesome</span>Graça
-          <input type="number" id="pc-graca" min="1" max="20" value="10">
+        <label>Talentos (separados por vírgula)
+          <input type="text" id="pc-talentos" placeholder="ex: Folclore, Orientação">
         </label>
-        <label><span class="icon attr-icon">visibility</span>Astúcia
-          <input type="number" id="pc-astucia" min="1" max="20" value="10">
+        <label>Trauma
+          <input type="text" id="pc-trauma">
+        </label>
+        <label>Maldição Doce (tipo)
+          <select id="pc-maldicao-tipo">
+            <option value="">— sem maldição —</option>
+            <option>Bolo de Mel</option>
+            <option>Pé de Moleque</option>
+            <option>Sonho de Creme</option>
+            <option>Puxa-Puxa</option>
+            <option>Sorvete</option>
+            <option>Marshmallow</option>
+          </select>
+        </label>
+        <div class="field-label-block">
+          <span class="field-label-text">Estágio da Maldição Doce (0 a 4)</span>
+          <div id="pc-maldicao-picker" class="color-picker"></div>
+          <input type="hidden" id="pc-maldicao-estagio" value="0">
+        </div>
+      </div>
+      <div id="pc-campos-dnd5e" class="hidden">
+        <div class="attr-grid">
+          <label>Nível
+            <input type="number" id="pc-dnd-nivel" min="1" max="20" value="1">
+          </label>
+          <label>Pontos de Vida (máx.)
+            <input type="number" id="pc-dnd-pv-max" min="0" value="10">
+          </label>
+          <label>Classe de Armadura (CA)
+            <input type="number" id="pc-dnd-ca" min="0" value="10">
+          </label>
+        </div>
+        <div class="attr-grid" id="pc-dnd-atributos"></div>
+        <label>Dado de Vida <small>(ex: d8)</small>
+          <input type="text" id="pc-dnd-dado-vida" placeholder="ex: d8">
+        </label>
+        <div class="field-label-block">
+          <span class="field-label-text">Perícias (marque as que são treinadas)</span>
+          <div id="pc-dnd-pericias" class="pericias-grid"></div>
+        </div>
+        <label>Arma / equipamento
+          <input type="text" id="pc-dnd-arma" placeholder="ex: Espada longa +1, arco curto">
         </label>
       </div>
-      <div class="attr-grid">
-        <label><span class="icon attr-icon">favorite</span>Coração máx. <small>(d4+4 inicial)</small>
-          <input type="number" id="pc-coracao-max" min="0" value="7">
-        </label>
-        <label><span class="icon attr-icon">shield</span>Armadura
-          <input type="number" id="pc-armadura" min="0" value="0">
-        </label>
-        <label>Dinheiro (pp)
-          <input type="number" id="pc-dinheiro" min="0" value="0">
-        </label>
-      </div>
-      <div class="attr-grid">
-        <label>Dados de Coração <small>(1/nível)</small>
-          <input type="number" id="pc-dado-coracao-total" min="0" max="8" value="1">
-        </label>
-        <label>Dados de Dom <small>(1/nível)</small>
-          <input type="number" id="pc-dado-dom-total" min="0" max="8" value="1">
-        </label>
-      </div>
-      <label>Arma
-        <input type="text" id="pc-arma" placeholder="ex: Espada (d8)">
-      </label>
-      <label>Talentos (separados por vírgula)
-        <input type="text" id="pc-talentos" placeholder="ex: Folclore, Orientação">
-      </label>
       <label>Minhas Coisas / inventário (separados por vírgula)
         <input type="text" id="pc-inventario" placeholder="ex: corda, ração, kit de costura">
       </label>
-      <label>Trauma
-        <input type="text" id="pc-trauma">
-      </label>
-      <label>Maldição Doce (tipo)
-        <select id="pc-maldicao-tipo">
-          <option value="">— sem maldição —</option>
-          <option>Bolo de Mel</option>
-          <option>Pé de Moleque</option>
-          <option>Sonho de Creme</option>
-          <option>Puxa-Puxa</option>
-          <option>Sorvete</option>
-          <option>Marshmallow</option>
-        </select>
-      </label>
-      <div class="field-label-block">
-        <span class="field-label-text">Estágio da Maldição Doce (0 a 4)</span>
-        <div id="pc-maldicao-picker" class="color-picker"></div>
-        <input type="hidden" id="pc-maldicao-estagio" value="0">
-      </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-pc">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
@@ -444,18 +483,34 @@
       <label>Nome
         <input type="text" id="c-nome" required>
       </label>
-      <div class="attr-grid">
-        <label><span class="icon attr-icon">visibility</span>Astúcia
-          <input type="number" id="c-astucia" min="1" max="20" value="10">
-        </label>
-        <label><span class="icon attr-icon">favorite</span>Coração máx.
-          <input type="number" id="c-coracao-max" min="0" value="10">
-        </label>
+      <div id="c-campos-pep">
+        <div class="attr-grid">
+          <label><span class="icon attr-icon">visibility</span>Astúcia
+            <input type="number" id="c-astucia" min="1" max="20" value="10">
+          </label>
+          <label><span class="icon attr-icon">favorite</span>Coração máx.
+            <input type="number" id="c-coracao-max" min="0" value="10">
+          </label>
+        </div>
+        <p class="field-hint">A Astúcia é usada para calcular a iniciativa: quem rolar igual ou menos que a Astúcia (e não tirar 20) age antes; quem passar, age depois. Você preenche o resultado do d20 de cada combatente direto no card do combate.</p>
       </div>
-      <p class="field-hint">A Astúcia é usada para calcular a iniciativa: quem rolar igual ou menos que a Astúcia (e não tirar 20) age antes; quem passar, age depois. Você preenche o resultado do d20 de cada combatente direto no card do combate.</p>
+      <div id="c-campos-dnd5e" class="hidden">
+        <div class="attr-grid">
+          <label>Modificador de Destreza
+            <input type="number" id="c-dnd-des-mod" value="0">
+          </label>
+          <label>Classe de Armadura (CA)
+            <input type="number" id="c-dnd-ca" min="0" value="10">
+          </label>
+          <label>PV máx.
+            <input type="number" id="c-dnd-pv-max" min="0" value="10">
+          </label>
+        </div>
+        <p class="field-hint">Iniciativa de D&D: d20 + modificador de Destreza, do maior pro menor.</p>
+      </div>
       <label>
         <input type="checkbox" id="c-is-pc">
-        É uma Princesa (PC)
+        <span id="label-c-is-pc">É uma Princesa (PC)</span>
       </label>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="btn-cancel-combatant">Cancelar</button>
@@ -486,7 +541,7 @@
 <div id="modal-from-pc" class="modal-overlay hidden">
   <div class="modal">
     <button type="button" class="btn-close-modal js-close-modal" aria-label="Fechar">&times;</button>
-    <h2>Adicionar Princesa ao combate</h2>
+    <h2 id="from-pc-title">Adicionar Princesa ao combate</h2>
     <div id="from-pc-list" class="from-npc-list"></div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" id="btn-cancel-from-pc">Fechar</button>

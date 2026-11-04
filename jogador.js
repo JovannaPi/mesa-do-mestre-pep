@@ -175,6 +175,7 @@ function getTokenVisual(state, token) {
   if (token.origemTipo === "pc") {
     const pc = (state.pcs || []).find((p) => p.id === token.origemId);
     if (!pc) return null;
+    if (pc.ficha) return { foto: pc.foto || null, hpAtual: pc.ficha.pvAtual, hpMax: pc.ficha.pvMax };
     return { foto: pc.foto || null, hpAtual: pc.coracaoAtual, hpMax: pc.coracaoMax };
   }
   if (token.origemTipo === "npc") {
@@ -292,12 +293,40 @@ function renderCombatBox(state) {
 // Fica visível só pra própria dona da ficha (a jogadora escolhe sua Princesa
 // uma vez, guardado no navegador dela) — nunca mostra Coração/stats de outra
 // jogadora nem de NPCs/monstros.
+const DND5E_ATRIBUTOS = [
+  { key: "for", label: "Força" },
+  { key: "des", label: "Destreza" },
+  { key: "con", label: "Constituição" },
+  { key: "int", label: "Inteligência" },
+  { key: "sab", label: "Sabedoria" },
+  { key: "car", label: "Carisma" },
+];
+function modDnd(valor) {
+  return Math.floor((Number(valor || 10) - 10) / 2);
+}
+
 function renderPcStats(state) {
   const box = document.getElementById("pc-stats-box");
   const pcId = getSelectedPcId();
   const pc = pcId && (state.pcs || []).find((p) => p.id === pcId);
   if (!pc) {
     box.style.display = "none";
+    return;
+  }
+  if (state.sistemaId === "dnd5e" && pc.ficha) {
+    const f = pc.ficha;
+    const hpPct = f.pvMax > 0 ? (f.pvAtual / f.pvMax) * 100 : 0;
+    const hpClass = hpPct <= 25 ? "critical" : hpPct <= 50 ? "low" : "";
+    box.innerHTML = `
+      <h2 class="pc-stats-title">${escapeHtml(pc.nome)} <small>— Nível ${f.nivel || 1}</small></h2>
+      <div class="pc-stats-grid">
+        ${DND5E_ATRIBUTOS.map((a) => `<div class="stat-box"><span>${escapeHtml(a.label)}</span><b>${(f.atributos && f.atributos[a.key]) || 10}</b></div>`).join("")}
+        <div class="stat-box"><span>CA</span><b>${f.ca}</b></div>
+        <div class="stat-box"><span>PV</span><b>${f.pvAtual}/${f.pvMax}</b></div>
+        <div class="pc-hp-bar-wrap"><div class="pc-hp-bar ${hpClass}" style="width:${hpPct}%"></div></div>
+      </div>
+    `;
+    box.style.display = "";
     return;
   }
   const hpPct = pc.coracaoMax > 0 ? (pc.coracaoAtual / pc.coracaoMax) * 100 : 0;

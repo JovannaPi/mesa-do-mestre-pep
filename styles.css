@@ -995,6 +995,15 @@ body.foco-mode .btn-foco-toggle { top: 6px; }
 .attr-grid label { color: var(--text-dim); }
 .attr-grid label small { color: var(--text-dim); font-weight: 400; }
 
+.pericias-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 12px;
+  max-height: 220px; overflow-y: auto; padding: 4px 0;
+}
+.pericia-row { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; color: var(--text); }
+.pericia-row input[type="checkbox"] { accent-color: var(--accent-strong); width: 16px; height: 16px; flex-shrink: 0; }
+.pericia-row-label { flex: 1; }
+.pericia-row-mod { color: var(--text-dim); font-size: 0.82rem; min-width: 28px; text-align: right; }
+
 .field-hint { font-size: 0.85rem; color: var(--text-dim); margin: -4px 0 4px; line-height: 1.45; }
 
 .modal-actions {
